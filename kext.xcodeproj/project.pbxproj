@@ -1,0 +1,620 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		DE8B116B13887A52007BD789 /* getmntopts.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D5C13887529009DC919 /* getmntopts.c */; };
+		DE8B116C13887A52007BD789 /* mntopts.h in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D5D13887529009DC919 /* mntopts.h */; };
+		DE8B116D13887A52007BD789 /* mount_fusefs.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D5E13887529009DC919 /* mount_fusefs.c */; };
+		DE8B116E13887A59007BD789 /* load_fusefs.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D5A13887529009DC919 /* load_fusefs.c */; };
+		DEBF0B1313886AAC00A1755B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = DEBF0B1113886AAC00A1755B /* InfoPlist.strings */; };
+		DED872FF138B1E0700DE4149 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DED872FE138B1E0700DE4149 /* CoreFoundation.framework */; };
+		DEE25D27138874AF009DC919 /* fuse_biglock_vnops.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D0A138874AF009DC919 /* fuse_biglock_vnops.c */; };
+		DEE25D28138874AF009DC919 /* fuse_biglock_vnops.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D0B138874AF009DC919 /* fuse_biglock_vnops.h */; };
+		DEE25D29138874AF009DC919 /* fuse_device.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D0C138874AF009DC919 /* fuse_device.c */; };
+		DEE25D2A138874AF009DC919 /* fuse_device.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D0D138874AF009DC919 /* fuse_device.h */; };
+		DEE25D2B138874AF009DC919 /* fuse_file.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D0E138874AF009DC919 /* fuse_file.c */; };
+		DEE25D2C138874AF009DC919 /* fuse_file.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D0F138874AF009DC919 /* fuse_file.h */; };
+		DEE25D2D138874AF009DC919 /* fuse_internal.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D10138874AF009DC919 /* fuse_internal.c */; };
+		DEE25D2E138874AF009DC919 /* fuse_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D11138874AF009DC919 /* fuse_internal.h */; };
+		DEE25D2F138874AF009DC919 /* fuse_ipc.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D12138874AF009DC919 /* fuse_ipc.c */; };
+		DEE25D30138874AF009DC919 /* fuse_ipc.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D13138874AF009DC919 /* fuse_ipc.h */; };
+		DEE25D31138874AF009DC919 /* fuse_kernel.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D14138874AF009DC919 /* fuse_kernel.h */; };
+		DEE25D32138874AF009DC919 /* fuse_kludges.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D15138874AF009DC919 /* fuse_kludges.c */; };
+		DEE25D33138874AF009DC919 /* fuse_kludges.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D16138874AF009DC919 /* fuse_kludges.h */; };
+		DEE25D34138874AF009DC919 /* fuse_knote.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D17138874AF009DC919 /* fuse_knote.c */; };
+		DEE25D35138874AF009DC919 /* fuse_knote.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D18138874AF009DC919 /* fuse_knote.h */; };
+		DEE25D36138874AF009DC919 /* fuse_locking.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D19138874AF009DC919 /* fuse_locking.c */; };
+		DEE25D37138874AF009DC919 /* fuse_locking.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D1A138874AF009DC919 /* fuse_locking.h */; };
+		DEE25D38138874AF009DC919 /* fuse_main.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D1B138874AF009DC919 /* fuse_main.c */; };
+		DEE25D39138874AF009DC919 /* fuse_node.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D1C138874AF009DC919 /* fuse_node.c */; };
+		DEE25D3A138874AF009DC919 /* fuse_node.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D1D138874AF009DC919 /* fuse_node.h */; };
+		DEE25D3B138874AF009DC919 /* fuse_nodehash.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D1E138874AF009DC919 /* fuse_nodehash.c */; };
+		DEE25D3C138874AF009DC919 /* fuse_nodehash.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D1F138874AF009DC919 /* fuse_nodehash.h */; };
+		DEE25D3D138874AF009DC919 /* fuse_sysctl.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D20138874AF009DC919 /* fuse_sysctl.c */; };
+		DEE25D3E138874AF009DC919 /* fuse_sysctl.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D21138874AF009DC919 /* fuse_sysctl.h */; };
+		DEE25D3F138874AF009DC919 /* fuse_vfsops.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D22138874AF009DC919 /* fuse_vfsops.c */; };
+		DEE25D40138874AF009DC919 /* fuse_vfsops.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D23138874AF009DC919 /* fuse_vfsops.h */; };
+		DEE25D41138874AF009DC919 /* fuse_vnops.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D24138874AF009DC919 /* fuse_vnops.c */; };
+		DEE25D42138874AF009DC919 /* fuse_vnops.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D25138874AF009DC919 /* fuse_vnops.h */; };
+		DEE25D43138874AF009DC919 /* fuse.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D26138874AF009DC919 /* fuse.h */; };
+		DEE25D45138874BA009DC919 /* API.txt in Resources */ = {isa = PBXBuildFile; fileRef = DEE25D44138874BA009DC919 /* API.txt */; };
+		DEE25D551388751A009DC919 /* fuse_ioctl.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D511388751A009DC919 /* fuse_ioctl.h */; };
+		DEE25D561388751A009DC919 /* fuse_mount.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D521388751A009DC919 /* fuse_mount.h */; };
+		DEE25D571388751A009DC919 /* fuse_param.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D531388751A009DC919 /* fuse_param.h */; };
+		DEE25D581388751A009DC919 /* fuse_version.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D541388751A009DC919 /* fuse_version.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		DE8B115213887A1E007BD789 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		DE8B116013887A2C007BD789 /* Copy Files */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		DE8B115413887A1E007BD789 /* load_fusefs */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = load_fusefs; sourceTree = BUILT_PRODUCTS_DIR; };
+		DE8B116213887A2C007BD789 /* mount_fusefs */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mount_fusefs; sourceTree = BUILT_PRODUCTS_DIR; };
+		DEBF0B0913886AAC00A1755B /* fuse4x.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = fuse4x.kext; sourceTree = BUILT_PRODUCTS_DIR; };
+		DEBF0B0D13886AAC00A1755B /* Kernel.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Kernel.framework; path = System/Library/Frameworks/Kernel.framework; sourceTree = SDKROOT; };
+		DEBF0B1013886AAC00A1755B /* kext-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "kext-Info.plist"; sourceTree = "<group>"; };
+		DEBF0B1213886AAC00A1755B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		DEBF0B1413886AAC00A1755B /* kext-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "kext-Prefix.pch"; sourceTree = "<group>"; };
+		DED872FE138B1E0700DE4149 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		DEE25D0A138874AF009DC919 /* fuse_biglock_vnops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_biglock_vnops.c; sourceTree = "<group>"; };
+		DEE25D0B138874AF009DC919 /* fuse_biglock_vnops.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_biglock_vnops.h; sourceTree = "<group>"; };
+		DEE25D0C138874AF009DC919 /* fuse_device.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_device.c; sourceTree = "<group>"; };
+		DEE25D0D138874AF009DC919 /* fuse_device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_device.h; sourceTree = "<group>"; };
+		DEE25D0E138874AF009DC919 /* fuse_file.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_file.c; sourceTree = "<group>"; };
+		DEE25D0F138874AF009DC919 /* fuse_file.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_file.h; sourceTree = "<group>"; };
+		DEE25D10138874AF009DC919 /* fuse_internal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_internal.c; sourceTree = "<group>"; };
+		DEE25D11138874AF009DC919 /* fuse_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_internal.h; sourceTree = "<group>"; };
+		DEE25D12138874AF009DC919 /* fuse_ipc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_ipc.c; sourceTree = "<group>"; };
+		DEE25D13138874AF009DC919 /* fuse_ipc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_ipc.h; sourceTree = "<group>"; };
+		DEE25D14138874AF009DC919 /* fuse_kernel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_kernel.h; sourceTree = "<group>"; };
+		DEE25D15138874AF009DC919 /* fuse_kludges.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_kludges.c; sourceTree = "<group>"; };
+		DEE25D16138874AF009DC919 /* fuse_kludges.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_kludges.h; sourceTree = "<group>"; };
+		DEE25D17138874AF009DC919 /* fuse_knote.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_knote.c; sourceTree = "<group>"; };
+		DEE25D18138874AF009DC919 /* fuse_knote.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_knote.h; sourceTree = "<group>"; };
+		DEE25D19138874AF009DC919 /* fuse_locking.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_locking.c; sourceTree = "<group>"; };
+		DEE25D1A138874AF009DC919 /* fuse_locking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_locking.h; sourceTree = "<group>"; };
+		DEE25D1B138874AF009DC919 /* fuse_main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_main.c; sourceTree = "<group>"; };
+		DEE25D1C138874AF009DC919 /* fuse_node.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_node.c; sourceTree = "<group>"; };
+		DEE25D1D138874AF009DC919 /* fuse_node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_node.h; sourceTree = "<group>"; };
+		DEE25D1E138874AF009DC919 /* fuse_nodehash.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_nodehash.c; sourceTree = "<group>"; };
+		DEE25D1F138874AF009DC919 /* fuse_nodehash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_nodehash.h; sourceTree = "<group>"; };
+		DEE25D20138874AF009DC919 /* fuse_sysctl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_sysctl.c; sourceTree = "<group>"; };
+		DEE25D21138874AF009DC919 /* fuse_sysctl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_sysctl.h; sourceTree = "<group>"; };
+		DEE25D22138874AF009DC919 /* fuse_vfsops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_vfsops.c; sourceTree = "<group>"; };
+		DEE25D23138874AF009DC919 /* fuse_vfsops.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_vfsops.h; sourceTree = "<group>"; };
+		DEE25D24138874AF009DC919 /* fuse_vnops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_vnops.c; sourceTree = "<group>"; };
+		DEE25D25138874AF009DC919 /* fuse_vnops.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_vnops.h; sourceTree = "<group>"; };
+		DEE25D26138874AF009DC919 /* fuse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse.h; sourceTree = "<group>"; };
+		DEE25D44138874BA009DC919 /* API.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = API.txt; sourceTree = "<group>"; };
+		DEE25D511388751A009DC919 /* fuse_ioctl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fuse_ioctl.h; path = common/fuse_ioctl.h; sourceTree = "<group>"; };
+		DEE25D521388751A009DC919 /* fuse_mount.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fuse_mount.h; path = common/fuse_mount.h; sourceTree = "<group>"; };
+		DEE25D531388751A009DC919 /* fuse_param.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fuse_param.h; path = common/fuse_param.h; sourceTree = "<group>"; };
+		DEE25D541388751A009DC919 /* fuse_version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fuse_version.h; path = common/fuse_version.h; sourceTree = "<group>"; };
+		DEE25D5A13887529009DC919 /* load_fusefs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = load_fusefs.c; sourceTree = "<group>"; };
+		DEE25D5C13887529009DC919 /* getmntopts.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = getmntopts.c; sourceTree = "<group>"; };
+		DEE25D5D13887529009DC919 /* mntopts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mntopts.h; sourceTree = "<group>"; };
+		DEE25D5E13887529009DC919 /* mount_fusefs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mount_fusefs.c; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DE8B115113887A1E007BD789 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DE8B115F13887A2C007BD789 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DED872FF138B1E0700DE4149 /* CoreFoundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DEBF0B0413886AAC00A1755B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		DEBF0AFC13886AAC00A1755B = {
+			isa = PBXGroup;
+			children = (
+				DED872FE138B1E0700DE4149 /* CoreFoundation.framework */,
+				DEE25D5913887529009DC919 /* load */,
+				DEE25D5B13887529009DC919 /* mount */,
+				DEE25D501388750C009DC919 /* common */,
+				DEBF0B0E13886AAC00A1755B /* kext */,
+				DEBF0B0B13886AAC00A1755B /* Frameworks */,
+				DEBF0B0A13886AAC00A1755B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		DEBF0B0A13886AAC00A1755B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DEBF0B0913886AAC00A1755B /* fuse4x.kext */,
+				DE8B115413887A1E007BD789 /* load_fusefs */,
+				DE8B116213887A2C007BD789 /* mount_fusefs */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DEBF0B0B13886AAC00A1755B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				DEBF0B0C13886AAC00A1755B /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		DEBF0B0C13886AAC00A1755B /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				DEBF0B0D13886AAC00A1755B /* Kernel.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		DEBF0B0E13886AAC00A1755B /* kext */ = {
+			isa = PBXGroup;
+			children = (
+				DEE25D14138874AF009DC919 /* fuse_kernel.h */,
+				DEE25D44138874BA009DC919 /* API.txt */,
+				DEE25D0A138874AF009DC919 /* fuse_biglock_vnops.c */,
+				DEE25D0B138874AF009DC919 /* fuse_biglock_vnops.h */,
+				DEE25D0C138874AF009DC919 /* fuse_device.c */,
+				DEE25D0D138874AF009DC919 /* fuse_device.h */,
+				DEE25D0E138874AF009DC919 /* fuse_file.c */,
+				DEE25D0F138874AF009DC919 /* fuse_file.h */,
+				DEE25D10138874AF009DC919 /* fuse_internal.c */,
+				DEE25D11138874AF009DC919 /* fuse_internal.h */,
+				DEE25D12138874AF009DC919 /* fuse_ipc.c */,
+				DEE25D13138874AF009DC919 /* fuse_ipc.h */,
+				DEE25D15138874AF009DC919 /* fuse_kludges.c */,
+				DEE25D16138874AF009DC919 /* fuse_kludges.h */,
+				DEE25D17138874AF009DC919 /* fuse_knote.c */,
+				DEE25D18138874AF009DC919 /* fuse_knote.h */,
+				DEE25D19138874AF009DC919 /* fuse_locking.c */,
+				DEE25D1A138874AF009DC919 /* fuse_locking.h */,
+				DEE25D1B138874AF009DC919 /* fuse_main.c */,
+				DEE25D1C138874AF009DC919 /* fuse_node.c */,
+				DEE25D1D138874AF009DC919 /* fuse_node.h */,
+				DEE25D1E138874AF009DC919 /* fuse_nodehash.c */,
+				DEE25D1F138874AF009DC919 /* fuse_nodehash.h */,
+				DEE25D20138874AF009DC919 /* fuse_sysctl.c */,
+				DEE25D21138874AF009DC919 /* fuse_sysctl.h */,
+				DEE25D22138874AF009DC919 /* fuse_vfsops.c */,
+				DEE25D23138874AF009DC919 /* fuse_vfsops.h */,
+				DEE25D24138874AF009DC919 /* fuse_vnops.c */,
+				DEE25D25138874AF009DC919 /* fuse_vnops.h */,
+				DEE25D26138874AF009DC919 /* fuse.h */,
+				DEBF0B0F13886AAC00A1755B /* Supporting Files */,
+			);
+			name = kext;
+			sourceTree = "<group>";
+		};
+		DEBF0B0F13886AAC00A1755B /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				DEBF0B1013886AAC00A1755B /* kext-Info.plist */,
+				DEBF0B1113886AAC00A1755B /* InfoPlist.strings */,
+				DEBF0B1413886AAC00A1755B /* kext-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		DEE25D501388750C009DC919 /* common */ = {
+			isa = PBXGroup;
+			children = (
+				DEE25D511388751A009DC919 /* fuse_ioctl.h */,
+				DEE25D521388751A009DC919 /* fuse_mount.h */,
+				DEE25D531388751A009DC919 /* fuse_param.h */,
+				DEE25D541388751A009DC919 /* fuse_version.h */,
+			);
+			name = common;
+			sourceTree = "<group>";
+		};
+		DEE25D5913887529009DC919 /* load */ = {
+			isa = PBXGroup;
+			children = (
+				DEE25D5A13887529009DC919 /* load_fusefs.c */,
+			);
+			path = load;
+			sourceTree = "<group>";
+		};
+		DEE25D5B13887529009DC919 /* mount */ = {
+			isa = PBXGroup;
+			children = (
+				DEE25D5C13887529009DC919 /* getmntopts.c */,
+				DEE25D5D13887529009DC919 /* mntopts.h */,
+				DEE25D5E13887529009DC919 /* mount_fusefs.c */,
+			);
+			path = mount;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		DEBF0B0513886AAC00A1755B /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DEE25D28138874AF009DC919 /* fuse_biglock_vnops.h in Headers */,
+				DEE25D2A138874AF009DC919 /* fuse_device.h in Headers */,
+				DEE25D2C138874AF009DC919 /* fuse_file.h in Headers */,
+				DEE25D2E138874AF009DC919 /* fuse_internal.h in Headers */,
+				DEE25D30138874AF009DC919 /* fuse_ipc.h in Headers */,
+				DEE25D31138874AF009DC919 /* fuse_kernel.h in Headers */,
+				DEE25D33138874AF009DC919 /* fuse_kludges.h in Headers */,
+				DEE25D35138874AF009DC919 /* fuse_knote.h in Headers */,
+				DEE25D37138874AF009DC919 /* fuse_locking.h in Headers */,
+				DEE25D3A138874AF009DC919 /* fuse_node.h in Headers */,
+				DEE25D3C138874AF009DC919 /* fuse_nodehash.h in Headers */,
+				DEE25D3E138874AF009DC919 /* fuse_sysctl.h in Headers */,
+				DEE25D40138874AF009DC919 /* fuse_vfsops.h in Headers */,
+				DEE25D42138874AF009DC919 /* fuse_vnops.h in Headers */,
+				DEE25D43138874AF009DC919 /* fuse.h in Headers */,
+				DEE25D551388751A009DC919 /* fuse_ioctl.h in Headers */,
+				DEE25D561388751A009DC919 /* fuse_mount.h in Headers */,
+				DEE25D571388751A009DC919 /* fuse_param.h in Headers */,
+				DEE25D581388751A009DC919 /* fuse_version.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		DE8B115313887A1E007BD789 /* load_fusefs */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DE8B115C13887A1E007BD789 /* Build configuration list for PBXNativeTarget "load_fusefs" */;
+			buildPhases = (
+				DE8B115013887A1E007BD789 /* Sources */,
+				DE8B115113887A1E007BD789 /* Frameworks */,
+				DE8B115213887A1E007BD789 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = load_fusefs;
+			productName = load_fusefs;
+			productReference = DE8B115413887A1E007BD789 /* load_fusefs */;
+			productType = "com.apple.product-type.tool";
+		};
+		DE8B116113887A2C007BD789 /* mount_fusefs */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DE8B116813887A2C007BD789 /* Build configuration list for PBXNativeTarget "mount_fusefs" */;
+			buildPhases = (
+				DE8B115E13887A2C007BD789 /* Sources */,
+				DE8B115F13887A2C007BD789 /* Frameworks */,
+				DE8B116013887A2C007BD789 /* Copy Files */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = mount_fusefs;
+			productName = mount_fusefs;
+			productReference = DE8B116213887A2C007BD789 /* mount_fusefs */;
+			productType = "com.apple.product-type.tool";
+		};
+		DEBF0B0813886AAC00A1755B /* fuse4x */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DEBF0B1913886AAC00A1755B /* Build configuration list for PBXNativeTarget "fuse4x" */;
+			buildPhases = (
+				DEBF0B0313886AAC00A1755B /* Sources */,
+				DEBF0B0413886AAC00A1755B /* Frameworks */,
+				DEBF0B0513886AAC00A1755B /* Headers */,
+				DEBF0B0613886AAC00A1755B /* Resources */,
+				DEBF0B0713886AAC00A1755B /* Rez */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = fuse4x;
+			productName = kext;
+			productReference = DEBF0B0913886AAC00A1755B /* fuse4x.kext */;
+			productType = "com.apple.product-type.kernel-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DEBF0AFE13886AAC00A1755B /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = DEBF0B0113886AAC00A1755B /* Build configuration list for PBXProject "kext" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = DEBF0AFC13886AAC00A1755B;
+			productRefGroup = DEBF0B0A13886AAC00A1755B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DEBF0B0813886AAC00A1755B /* fuse4x */,
+				DE8B115313887A1E007BD789 /* load_fusefs */,
+				DE8B116113887A2C007BD789 /* mount_fusefs */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DEBF0B0613886AAC00A1755B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DEBF0B1313886AAC00A1755B /* InfoPlist.strings in Resources */,
+				DEE25D45138874BA009DC919 /* API.txt in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXRezBuildPhase section */
+		DEBF0B0713886AAC00A1755B /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXRezBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DE8B115013887A1E007BD789 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DE8B116E13887A59007BD789 /* load_fusefs.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DE8B115E13887A2C007BD789 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DE8B116B13887A52007BD789 /* getmntopts.c in Sources */,
+				DE8B116C13887A52007BD789 /* mntopts.h in Sources */,
+				DE8B116D13887A52007BD789 /* mount_fusefs.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DEBF0B0313886AAC00A1755B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DEE25D27138874AF009DC919 /* fuse_biglock_vnops.c in Sources */,
+				DEE25D29138874AF009DC919 /* fuse_device.c in Sources */,
+				DEE25D2B138874AF009DC919 /* fuse_file.c in Sources */,
+				DEE25D2D138874AF009DC919 /* fuse_internal.c in Sources */,
+				DEE25D2F138874AF009DC919 /* fuse_ipc.c in Sources */,
+				DEE25D32138874AF009DC919 /* fuse_kludges.c in Sources */,
+				DEE25D34138874AF009DC919 /* fuse_knote.c in Sources */,
+				DEE25D36138874AF009DC919 /* fuse_locking.c in Sources */,
+				DEE25D38138874AF009DC919 /* fuse_main.c in Sources */,
+				DEE25D39138874AF009DC919 /* fuse_node.c in Sources */,
+				DEE25D3B138874AF009DC919 /* fuse_nodehash.c in Sources */,
+				DEE25D3D138874AF009DC919 /* fuse_sysctl.c in Sources */,
+				DEE25D3F138874AF009DC919 /* fuse_vfsops.c in Sources */,
+				DEE25D41138874AF009DC919 /* fuse_vnops.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		DEBF0B1113886AAC00A1755B /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				DEBF0B1213886AAC00A1755B /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		DE8B115A13887A1E007BD789 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				HEADER_SEARCH_PATHS = ./common;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		DE8B115B13887A1E007BD789 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				HEADER_SEARCH_PATHS = ./common;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		DE8B116913887A2C007BD789 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				HEADER_SEARCH_PATHS = "./common/**";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = NO;
+				USER_HEADER_SEARCH_PATHS = "";
+			};
+			name = Debug;
+		};
+		DE8B116A13887A2C007BD789 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				HEADER_SEARCH_PATHS = "./common/**";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = NO;
+				USER_HEADER_SEARCH_PATHS = "";
+			};
+			name = Release;
+		};
+		DEBF0B1713886AAC00A1755B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		DEBF0B1813886AAC00A1755B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		DEBF0B1A13886AAC00A1755B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "kext-Prefix.pch";
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				INFOPLIST_FILE = "kext-Info.plist";
+				INSTALL_PATH = "$(SYSTEM_LIBRARY_DIR)/Extensions";
+				LLVM_LTO = NO;
+				MODULE_NAME = org.fuse4x.kext;
+				MODULE_START = fusefs_start;
+				MODULE_STOP = fusefs_stop;
+				MODULE_VERSION = 1.0.0d1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = kext;
+			};
+			name = Debug;
+		};
+		DEBF0B1B13886AAC00A1755B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "kext-Prefix.pch";
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				INFOPLIST_FILE = "kext-Info.plist";
+				INSTALL_PATH = "$(SYSTEM_LIBRARY_DIR)/Extensions";
+				LLVM_LTO = NO;
+				MODULE_NAME = org.fuse4x.kext;
+				MODULE_START = fusefs_start;
+				MODULE_STOP = fusefs_stop;
+				MODULE_VERSION = 1.0.0d1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = kext;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DE8B115C13887A1E007BD789 /* Build configuration list for PBXNativeTarget "load_fusefs" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DE8B115A13887A1E007BD789 /* Debug */,
+				DE8B115B13887A1E007BD789 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DE8B116813887A2C007BD789 /* Build configuration list for PBXNativeTarget "mount_fusefs" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DE8B116913887A2C007BD789 /* Debug */,
+				DE8B116A13887A2C007BD789 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DEBF0B0113886AAC00A1755B /* Build configuration list for PBXProject "kext" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DEBF0B1713886AAC00A1755B /* Debug */,
+				DEBF0B1813886AAC00A1755B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DEBF0B1913886AAC00A1755B /* Build configuration list for PBXNativeTarget "fuse4x" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DEBF0B1A13886AAC00A1755B /* Debug */,
+				DEBF0B1B13886AAC00A1755B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = DEBF0AFE13886AAC00A1755B /* Project object */;
+}
