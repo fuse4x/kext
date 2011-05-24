@@ -31,7 +31,6 @@ struct fuse_mount_args {
     uint32_t fssubtype;           // file system sub type id (type is "fusefs")
     uint32_t init_timeout;        // timeout in seconds for daemon handshake
     uint32_t iosize;              // maximum size for reading or writing
-    uint32_t random;              // random "secret" from device
     uint32_t rdev;                // dev_t for the /dev/fuseN in question
 };
 typedef struct fuse_mount_args fuse_mount_args;

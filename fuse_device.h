@@ -27,7 +27,6 @@ int fuse_devices_stop(void);
 
 fuse_device_t     fuse_device_get(dev_t dev);
 struct fuse_data *fuse_device_get_mpdata(fuse_device_t fdev);
-uint32_t          fuse_device_get_random(fuse_device_t fdev);
 
 void              fuse_device_lock(fuse_device_t fdev);
 void              fuse_device_unlock(fuse_device_t fdev);

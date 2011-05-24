@@ -339,7 +339,6 @@ static uint32_t  fssubtype      = 0;
 static char     *fstypename     = NULL;
 static uint32_t  init_timeout   = FUSE_DEFAULT_INIT_TIMEOUT;
 static uint32_t  iosize         = FUSE_DEFAULT_IOSIZE;
-static uint32_t  drandom        = 0;
 static char     *volname        = NULL;
 
 struct mntval mvals[] = {
@@ -843,11 +842,6 @@ main(int argc, char **argv)
         init_timeout = FUSE_MAX_INIT_TIMEOUT;
     }
 
-    result = ioctl(fd, FUSEDEVIOCGETRANDOM, &drandom);
-    if (result) {
-        errx(EX_UNAVAILABLE, "failed to negotiate with /dev/fuse%d", dindex);
-    }
-
     args.altflags       = altflags;
     args.blocksize      = blocksize;
     args.daemon_timeout = daemon_timeout;
@@ -855,7 +849,6 @@ main(int argc, char **argv)
     args.fssubtype      = fssubtype;
     args.init_timeout   = init_timeout;
     args.iosize         = iosize;
-    args.random         = drandom;
 
     char *daemon_name = NULL;
     char *daemon_path = getenv("MOUNT_FUSEFS_DAEMON_PATH");

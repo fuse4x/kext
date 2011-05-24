@@ -33,7 +33,6 @@ struct fuse_device {
     lck_mtx_t        *mtx;
     int               usecount;
     pid_t             pid;
-    uint32_t          random;
     dev_t             dev;
     void             *cdev;
     struct fuse_data *data;
@@ -82,14 +81,6 @@ fuse_device_get_mpdata(fuse_device_t fdev)
 
 /* Must be called under lock. */
 __inline__
-uint32_t
-fuse_device_get_random(fuse_device_t fdev)
-{
-    return fdev->random;
-}
-
-/* Must be called under lock. */
-__inline__
 void
 fuse_device_close_final(fuse_device_t fdev)
 {
@@ -97,7 +88,6 @@ fuse_device_close_final(fuse_device_t fdev)
         fdata_destroy(fdev->data);
         fdev->data   = NULL;
         fdev->pid    = -1;
-        fdev->random = 0;
     }
 }
 
@@ -200,7 +190,6 @@ fuse_device_open(dev_t dev, __unused int flags, __unused int devtype,
         fdata->fdev  = fdev;
         fdev->data   = fdata;
         fdev->pid    = proc_pid(p);
-        fdev->random = random();
     }
 
     FUSE_DEVICE_LOCAL_UNLOCK(fdev);
@@ -269,7 +258,6 @@ fuse_device_close(dev_t dev, __unused int flags, __unused int devtype,
 
         fdev->data   = NULL;
         fdev->pid    = -1;
-        fdev->random = 0;
         fdata_destroy(data);
     }
 
@@ -500,7 +488,6 @@ fuse_devices_start(void)
         fuse_device_table[i].data     = NULL;
         fuse_device_table[i].dev      = dev;
         fuse_device_table[i].pid      = -1;
-        fuse_device_table[i].random   = 0;
         fuse_device_table[i].usecount = 0;
         fuse_device_table[i].mtx      = lck_mtx_alloc_init(fuse_lock_group,
                                                            fuse_lock_attr);
@@ -572,7 +559,6 @@ fuse_devices_stop(void)
         fuse_device_table[i].cdev   = NULL;
         fuse_device_table[i].dev    = 0;
         fuse_device_table[i].pid    = -1;
-        fuse_device_table[i].random = 0;
         fuse_device_table[i].mtx    = NULL;
     }
 
@@ -632,11 +618,6 @@ fuse_device_ioctl(dev_t dev, u_long cmd, caddr_t udata,
         fuse_lck_mtx_lock(data->timeout_mtx);
         data->timeout_status = FUSE_DAEMON_TIMEOUT_DEAD;
         fuse_lck_mtx_unlock(data->timeout_mtx);
-        ret = 0;
-        break;
-
-    case FUSEDEVIOCGETRANDOM:
-        *(u_int32_t *)udata = fdev->random;
         ret = 0;
         break;
 

@@ -162,7 +162,6 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
     int mntopts = 0;
     int mounted = 0;
 
-    uint32_t drandom  = 0;
     uint32_t max_read = ~0;
 
     size_t len;
@@ -418,13 +417,6 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
     }
 
     fuse_device_lock(fdev);
-
-    drandom = fuse_device_get_random(fdev);
-    if (fusefs_args.random != drandom) {
-        fuse_device_unlock(fdev);
-        IOLog("fuse4x: failing mount because of mismatched random\n");
-        return EINVAL;
-    }
 
     data = fuse_device_get_mpdata(fdev);
 
