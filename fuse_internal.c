@@ -1552,13 +1552,22 @@ fuse_internal_vnode_disappear(vnode_t vp, vfs_context_t context, int how)
 
 __private_extern__
 int
-fuse_internal_init_synchronous(struct fuse_ticket *ftick)
+fuse_internal_init_handler(struct fuse_ticket *ftick, __unused uio_t uio)
 {
     int err = 0;
     struct fuse_init_out *fiio;
     struct fuse_data *data = ftick->tk_data;
 
+    fuse_trace_printf_func();
+
     if ((err = ftick->tk_aw_ohead.error)) {
+        IOLog("fuse4x: user-space initialization failed (%d)\n", err);
+        goto out;
+    }
+
+    err = fticket_pull(ftick, uio);
+    if (err) {
+        IOLog("fuse4x: cannot pull ticket\n");
         goto out;
     }
 
@@ -1617,9 +1626,8 @@ out:
 
 __private_extern__
 int
-fuse_internal_send_init(struct fuse_data *data, vfs_context_t context)
+fuse_send_init(struct fuse_data *data, vfs_context_t context)
 {
-    int err = 0;
     struct fuse_init_in   *fiii;
     struct fuse_dispatcher fdi;
 
@@ -1631,19 +1639,8 @@ fuse_internal_send_init(struct fuse_data *data, vfs_context_t context)
     fiii->max_readahead = data->iosize * 16;
     fiii->flags = 0;
 
-    /* blocking FUSE_INIT up to user space */
-
-    err = fdisp_wait_answ(&fdi);
-    if (err) {
-        IOLog("fuse4x: user-space initialization failed (%d)\n", err);
-        return err;
-    }
-
-    err = fuse_internal_init_synchronous(fdi.tick);
-    if (err) {
-        IOLog("fuse4x: in-kernel initialization failed (%d)\n", err);
-        return err;
-    }
+    fuse_insert_callback(fdi.tick, fuse_internal_init_handler);
+    fuse_insert_message(fdi.tick);
 
     return 0;
 }

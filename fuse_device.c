@@ -403,6 +403,8 @@ fuse_device_write(dev_t dev, uio_t uio, __unused int ioflag)
     }
 
     if (uio_resid(uio) < (user_ssize_t)sizeof(struct fuse_out_header)) {
+        IOLog("fuse4x: Incorrect header size. Got %lld, expected at least %lu\n",
+              uio_resid(uio), sizeof(struct fuse_out_header));
         return EINVAL;
     }
 

@@ -376,15 +376,4 @@ fdisp_simple_putget_vp(struct fuse_dispatcher *fdip, enum fuse_opcode op,
     return fdisp_wait_answ(fdip);
 }
 
-static __inline__
-int
-fdisp_simple_vfs_getattr(struct fuse_dispatcher *fdip,
-                         mount_t                 mp,
-                         vfs_context_t           context)
-{
-   fdisp_init(fdip, 0);
-   fdisp_make(fdip, FUSE_STATFS, mp, FUSE_ROOT_ID, context);
-   return fdisp_wait_answ(fdip);
-}
-
 #endif /* _FUSE_IPC_H_ */
