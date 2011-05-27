@@ -209,25 +209,6 @@ fuse_biglock_vnop_inactive(struct vnop_inactive_args *ap)
 	nodelocked_vnop(ap->a_vp, fuse_vnop_inactive, ap);
 }
 
-/*
- struct vnop_ioctl_args {
- struct vnodeop_desc *a_desc;
- vnode_t              a_vp;
- u_long               a_command;
- caddr_t              a_data;
- int                  a_fflag;
- vfs_context_t        a_context;
- };
- */
-FUSE_VNOP_EXPORT
-int
-fuse_biglock_vnop_ioctl(struct vnop_ioctl_args *ap)
-{
-	/* Note: kpi_vfs.c does not take the node lock if vnode type is VCHR,
-	 * VFIFO or VSOCK. I'm not sure if this is relevant here. */
-	nodelocked_vnop(ap->a_vp, fuse_vnop_ioctl, ap);
-}
-
 #if M_FUSE4X_ENABLE_KQUEUE
 
 /*
@@ -756,7 +737,7 @@ struct vnodeopv_entry_desc fuse_biglock_vnode_operation_entries[] = {
     { &vnop_getxattr_desc,      (fuse_vnode_op_t) fuse_biglock_vnop_getxattr      },
 #endif /* M_FUSE4X_ENABLE_XATTR */
     { &vnop_inactive_desc,      (fuse_vnode_op_t) fuse_biglock_vnop_inactive      },
-    { &vnop_ioctl_desc,         (fuse_vnode_op_t) fuse_biglock_vnop_ioctl         },
+//    { &vnop_ioctl_desc,         (fuse_vnode_op_t) fuse_biglock_vnop_ioctl         },
     { &vnop_link_desc,          (fuse_vnode_op_t) fuse_biglock_vnop_link          },
 #if M_FUSE4X_ENABLE_XATTR
     { &vnop_listxattr_desc,     (fuse_vnode_op_t) fuse_biglock_vnop_listxattr     },

@@ -13,7 +13,6 @@
 #include "fuse_sysctl.h"
 
 #include <stdbool.h>
-#include <fuse_ioctl.h>
 #include <libkern/libkern.h>
 
 #define FUSE_DEVICE_GLOBAL_LOCK()   fuse_lck_mtx_lock(fuse_device_mutex)
@@ -97,7 +96,7 @@ d_open_t   fuse_device_open;
 d_close_t  fuse_device_close;
 d_read_t   fuse_device_read;
 d_write_t  fuse_device_write;
-d_ioctl_t  fuse_device_ioctl;
+// d_ioctl_t  fuse_device_ioctl;
 
 #if M_FUSE4X_ENABLE_DSELECT
 
@@ -112,7 +111,7 @@ static struct cdevsw fuse_device_cdevsw = {
     /* close    */ fuse_device_close,
     /* read     */ fuse_device_read,
     /* write    */ fuse_device_write,
-    /* ioctl    */ fuse_device_ioctl,
+    /* ioctl    */ eno_ioctl,
     /* stop     */ eno_stop,
     /* reset    */ eno_reset,
     /* ttys     */ NULL,
@@ -577,96 +576,6 @@ fuse_devices_stop(void)
 }
 
 /* Control/Debug Utilities */
-
-int
-fuse_device_ioctl(dev_t dev, u_long cmd, caddr_t udata,
-                  __unused int flags, __unused proc_t proc)
-{
-    int ret = EINVAL;
-    struct fuse_device *fdev;
-    struct fuse_data   *data;
-
-    fuse_trace_printf_func();
-
-    fdev = FUSE_DEVICE_FROM_UNIT_FAST(minor(dev));
-    if (!fdev) {
-        return ENXIO;
-    }
-
-    FUSE_DEVICE_LOCAL_LOCK(fdev);
-
-    data = fdev->data;
-    if (!data) {
-        FUSE_DEVICE_LOCAL_UNLOCK(fdev);
-        return ENXIO;
-    }
-
-    switch (cmd) {
-    case FUSEDEVIOCSETIMPLEMENTEDBITS:
-        ret = fuse_set_implemented_custom(data, *(uint64_t *)udata);
-        break;
-
-    case FUSEDEVIOCGETHANDSHAKECOMPLETE:
-        if (data->mount_state == FM_NOTMOUNTED) {
-            ret = ENXIO;
-        } else {
-            *(u_int32_t *)udata = (data->dataflags & FSESS_INITED);
-            ret = 0;
-        }
-        break;
-
-    case FUSEDEVIOCSETDAEMONDEAD:
-        fdata_set_dead(data);
-        fuse_lck_mtx_lock(data->timeout_mtx);
-        data->timeout_status = FUSE_DAEMON_TIMEOUT_DEAD;
-        fuse_lck_mtx_unlock(data->timeout_mtx);
-        ret = 0;
-        break;
-
-    /*
-     * The 'AVFI' (alter-vnode-for-inode) ioctls all require an inode number
-     * as an argument. In the user-space library, you can get the inode number
-     * from a path by using fuse_lookup_inode_by_path_np() [lib/fuse.c].
-     *
-     * To see an example of using this, see the implementation of
-     * fuse_purge_path_np() in lib/fuse_darwin.c.
-     */
-    case FUSEDEVIOCALTERVNODEFORINODE:
-        {
-            HNodeRef hn;
-            vnode_t  vn;
-            fuse_device_t dummy_device = data->fdev;
-
-            struct fuse_avfi_ioctl *avfi = (struct fuse_avfi_ioctl *)udata;
-
-            ret = (int)HNodeLookupRealQuickIfExists(dummy_device,
-                                                    (ino_t)avfi->inode,
-                                                    0, /* fork index */
-                                                    &hn,
-                                                    &vn);
-            if (ret) {
-                break;
-            }
-
-            assert(vn != NULL);
-
-            ret = fuse_internal_ioctl_avfi(vn, (vfs_context_t)0, avfi);
-
-            if (vn) {
-                vnode_put(vn);
-            }
-        }
-        break;
-
-    default:
-        break;
-
-    }
-
-    FUSE_DEVICE_LOCAL_UNLOCK(fdev);
-
-    return ret;
-}
 
 #if M_FUSE4X_ENABLE_DSELECT
 

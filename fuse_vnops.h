@@ -56,7 +56,7 @@ FUSE_VNOP_EXPORT int fuse_vnop_getxattr(struct vnop_getxattr_args *ap);
 
 FUSE_VNOP_EXPORT int fuse_vnop_inactive(struct vnop_inactive_args *ap);
 
-FUSE_VNOP_EXPORT int fuse_vnop_ioctl(struct vnop_ioctl_args *ap);
+// FUSE_VNOP_EXPORT int fuse_vnop_ioctl(struct vnop_ioctl_args *ap);
 
 #if M_FUSE4X_ENABLE_KQUEUE
 FUSE_VNOP_EXPORT int fuse_vnop_kqfilt_add(struct vnop_kqfilt_add_args *ap);

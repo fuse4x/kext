@@ -22,7 +22,6 @@
 #include <sys/vnode.h>
 #include <sys/xattr.h>
 
-#include <fuse_ioctl.h>
 #include "fuse_ipc.h"
 #include "fuse_kludges.h"
 #include "fuse_locking.h"
@@ -694,12 +693,6 @@ fuse_internal_fsync(vnode_t                 vp,
 int
 fuse_internal_fsync_callback(struct fuse_ticket *ftick, uio_t uio);
 
-/* ioctl */
-
-int
-fuse_internal_ioctl_avfi(vnode_t                 vp,
-                         vfs_context_t           context,
-                         struct fuse_avfi_ioctl *avfi);
 
 /* readdir */
 

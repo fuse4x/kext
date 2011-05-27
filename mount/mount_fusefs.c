@@ -28,7 +28,6 @@
 #include <mach/mach.h>
 
 #include "mntopts.h"
-#include <fuse_ioctl.h>
 #include <fuse_mount.h>
 #include <fuse_param.h>
 #include <fuse_version.h>
@@ -546,10 +545,6 @@ check_kext_status(void)
 static void
 signal_idx_atexit_handler(void)
 {
-    if (signal_idx != -1) {
-
-        (void)ioctl(signal_fd, FUSEDEVIOCSETDAEMONDEAD, &signal_fd);
-
         /*
          * Originally, I did kill_fs from here.
          *
@@ -561,7 +556,6 @@ signal_idx_atexit_handler(void)
          * (void)sysctlbyname("fuse4x.control.kill_fs", (void *)&kill_fs_old,
          *                    &oldlen, (void *)&kill_fs_new, newlen);
          */
-    }
 }
 
 // We will be called as follows by the FUSE library:

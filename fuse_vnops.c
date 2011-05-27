@@ -35,7 +35,6 @@
 #include "fuse.h"
 #include "fuse_file.h"
 #include "fuse_internal.h"
-#include <fuse_ioctl.h>
 #include "fuse_ipc.h"
 #include "fuse_kludges.h"
 #include "fuse_knote.h"
@@ -986,81 +985,6 @@ fuse_vnop_inactive(struct vnop_inactive_args *ap)
 
 extern int fuse_setextendedsecurity(mount_t mp, int state);
 
-/*
-    struct vnop_ioctl_args {
-        struct vnodeop_desc *a_desc;
-        vnode_t              a_vp;
-        u_long               a_command;
-        caddr_t              a_data;
-        int                  a_fflag;
-        vfs_context_t        a_context;
-    };
-*/
-FUSE_VNOP_EXPORT
-int
-fuse_vnop_ioctl(struct vnop_ioctl_args *ap)
-{
-    vnode_t       vp      = ap->a_vp;
-    u_long        cmd     = ap->a_command;
-    vfs_context_t context = ap->a_context;
-
-    int ret = EINVAL;
-
-    fuse_trace_printf_vnop();
-
-    if (fuse_isdeadfs(vp)) {
-        return EBADF;
-    }
-
-    switch (cmd) {
-    case FSCTLSETACLSTATE:
-        {
-            int state;
-            mount_t mp;
-            struct fuse_data *data;
-
-            if (ap->a_data == NULL) {
-                return EINVAL;
-            }
-
-            mp = vnode_mount(vp);
-            data = fuse_get_mpdata(mp);
-
-            if (!fuse_vfs_context_issuser(context) &&
-                !(fuse_match_cred(data->daemoncred,
-                                  vfs_context_ucred(context)))) {
-                return EPERM;
-            }
-
-            state = *(int *)ap->a_data;
-
-            return fuse_setextendedsecurity(mp, state);
-        }
-        break;
-
-    case FSCTLALTERVNODEFORINODE:
-        /*
-         * This is the fsctl() version of the AVFI device ioctl's in
-         * fuse_device.c. Since the device ioctl's must be used from
-         * within the file system (we don't allow multiple device opens),
-         * it's rather painful to test/experiment with them. The fsctl
-         * version is easier to use. To simplify things, the "path" in
-         * the fsctl() call /must/ be the root of the file system.
-         */
-        if (!vnode_isvroot(vp)) {
-            return EINVAL;
-        }
-
-        ret = fuse_internal_ioctl_avfi(vp, context,
-                                       (struct fuse_avfi_ioctl *)(ap->a_data));
-        break;
-
-    default:
-        break;
-    }
-
-    return ret;
-}
 
 #if M_FUSE4X_ENABLE_KQUEUE
 
@@ -3751,7 +3675,7 @@ struct vnodeopv_entry_desc fuse_vnode_operation_entries[] = {
     { &vnop_getxattr_desc,      (fuse_vnode_op_t) fuse_vnop_getxattr      },
 #endif /* M_FUSE4X_ENABLE_XATTR */
     { &vnop_inactive_desc,      (fuse_vnode_op_t) fuse_vnop_inactive      },
-    { &vnop_ioctl_desc,         (fuse_vnode_op_t) fuse_vnop_ioctl         },
+//    { &vnop_ioctl_desc,         (fuse_vnode_op_t) fuse_vnop_ioctl         },
     { &vnop_link_desc,          (fuse_vnode_op_t) fuse_vnop_link          },
 #if M_FUSE4X_ENABLE_XATTR
     { &vnop_listxattr_desc,     (fuse_vnode_op_t) fuse_vnop_listxattr     },
