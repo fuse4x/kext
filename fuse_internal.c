@@ -990,7 +990,7 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
     size_t chunksize;
     size_t respsize;
 
-    int mapped = FALSE;
+    bool mapped = false;
     int mode;
     int op;
     int vtype = vnode_vtype(vp);
@@ -1145,7 +1145,7 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
             IOLog("fuse4x: failed to map buffer in strategy\n");
             return EFAULT;
         } else {
-            mapped = TRUE;
+            mapped = true;
         }
 
         while (buf_resid(bp) > 0) {
@@ -1217,7 +1217,7 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
             IOLog("fuse4x: failed to map buffer in strategy\n");
             return EFAULT;
         } else {
-            mapped = TRUE;
+            mapped = true;
         }
 
         /* Write begin */
@@ -1283,7 +1283,7 @@ out:
         buf_seterror(bp, err);
     }
 
-    if (mapped == TRUE) {
+    if (mapped) {
         buf_unmap(bp);
     }
 
