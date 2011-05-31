@@ -343,7 +343,7 @@ fuse_vnop_create(struct vnop_create_args *ap)
     struct vnode_attr    *vap     = ap->a_vap;
     vfs_context_t         context = ap->a_context;
 
-    struct fuse_open_in    *foi;
+    struct fuse_create_in  *fci;
     struct fuse_mknod_in    fmni;
     struct fuse_entry_out  *feo;
     struct fuse_dispatcher  fdi;
@@ -382,18 +382,18 @@ fuse_vnop_create(struct vnop_create_args *ap)
         goto good_old;
     }
 
-    fdisp_init(fdip, sizeof(*foi) + cnp->cn_namelen + 1);
+    fdisp_init(fdip, sizeof(*fci) + cnp->cn_namelen + 1);
     fdisp_make(fdip, FUSE_CREATE, vnode_mount(dvp), parent_nodeid, context);
 
-    foi = fdip->indata;
-    foi->mode = mode;
+    fci = fdip->indata;
+    fci->mode = mode;
 
     /* XXX: We /always/ creat() like this. Wish we were on Linux. */
-    foi->flags = O_CREAT | O_RDWR;
+    fci->flags = O_CREAT | O_RDWR;
 
-    memcpy((char *)fdip->indata + sizeof(*foi), cnp->cn_nameptr,
+    memcpy((char *)fdip->indata + sizeof(*fci), cnp->cn_nameptr,
            cnp->cn_namelen);
-    ((char *)fdip->indata)[sizeof(*foi) + cnp->cn_namelen] = '\0';
+    ((char *)fdip->indata)[sizeof(*fci) + cnp->cn_namelen] = '\0';
 
     err = fdisp_wait_answ(fdip);
 
