@@ -7,11 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		DE8B116B13887A52007BD789 /* getmntopts.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D5C13887529009DC919 /* getmntopts.c */; };
-		DE8B116C13887A52007BD789 /* mntopts.h in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D5D13887529009DC919 /* mntopts.h */; };
-		DE8B116D13887A52007BD789 /* mount_fusefs.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D5E13887529009DC919 /* mount_fusefs.c */; };
 		DEBF0B1313886AAC00A1755B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = DEBF0B1113886AAC00A1755B /* InfoPlist.strings */; };
-		DED872FF138B1E0700DE4149 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DED872FE138B1E0700DE4149 /* CoreFoundation.framework */; };
 		DEE25D27138874AF009DC919 /* fuse_biglock_vnops.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D0A138874AF009DC919 /* fuse_biglock_vnops.c */; };
 		DEE25D28138874AF009DC919 /* fuse_biglock_vnops.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D0B138874AF009DC919 /* fuse_biglock_vnops.h */; };
 		DEE25D29138874AF009DC919 /* fuse_device.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D0C138874AF009DC919 /* fuse_device.c */; };
@@ -47,21 +43,7 @@
 		DEE25D581388751A009DC919 /* fuse_version.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D541388751A009DC919 /* fuse_version.h */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		DE8B116013887A2C007BD789 /* Copy Files */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			name = "Copy Files";
-			runOnlyForDeploymentPostprocessing = 1;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
-		DE8B116213887A2C007BD789 /* mount_fusefs */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mount_fusefs; sourceTree = BUILT_PRODUCTS_DIR; };
 		DEBF0B0913886AAC00A1755B /* fuse4x.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = fuse4x.kext; sourceTree = BUILT_PRODUCTS_DIR; };
 		DEBF0B0D13886AAC00A1755B /* Kernel.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Kernel.framework; path = System/Library/Frameworks/Kernel.framework; sourceTree = SDKROOT; };
 		DEBF0B1013886AAC00A1755B /* kext-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "kext-Info.plist"; sourceTree = "<group>"; };
@@ -101,20 +83,9 @@
 		DEE25D521388751A009DC919 /* fuse_mount.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fuse_mount.h; path = common/fuse_mount.h; sourceTree = "<group>"; };
 		DEE25D531388751A009DC919 /* fuse_param.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fuse_param.h; path = common/fuse_param.h; sourceTree = "<group>"; };
 		DEE25D541388751A009DC919 /* fuse_version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fuse_version.h; path = common/fuse_version.h; sourceTree = "<group>"; };
-		DEE25D5C13887529009DC919 /* getmntopts.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = getmntopts.c; sourceTree = "<group>"; };
-		DEE25D5D13887529009DC919 /* mntopts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mntopts.h; sourceTree = "<group>"; };
-		DEE25D5E13887529009DC919 /* mount_fusefs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mount_fusefs.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		DE8B115F13887A2C007BD789 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				DED872FF138B1E0700DE4149 /* CoreFoundation.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		DEBF0B0413886AAC00A1755B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -129,7 +100,6 @@
 			isa = PBXGroup;
 			children = (
 				DED872FE138B1E0700DE4149 /* CoreFoundation.framework */,
-				DEE25D5B13887529009DC919 /* mount */,
 				DEE25D501388750C009DC919 /* common */,
 				DEBF0B0E13886AAC00A1755B /* kext */,
 				DEBF0B0B13886AAC00A1755B /* Frameworks */,
@@ -141,7 +111,6 @@
 			isa = PBXGroup;
 			children = (
 				DEBF0B0913886AAC00A1755B /* fuse4x.kext */,
-				DE8B116213887A2C007BD789 /* mount_fusefs */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -220,16 +189,6 @@
 			name = common;
 			sourceTree = "<group>";
 		};
-		DEE25D5B13887529009DC919 /* mount */ = {
-			isa = PBXGroup;
-			children = (
-				DEE25D5C13887529009DC919 /* getmntopts.c */,
-				DEE25D5D13887529009DC919 /* mntopts.h */,
-				DEE25D5E13887529009DC919 /* mount_fusefs.c */,
-			);
-			path = mount;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -261,23 +220,6 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		DE8B116113887A2C007BD789 /* mount_fusefs */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = DE8B116813887A2C007BD789 /* Build configuration list for PBXNativeTarget "mount_fusefs" */;
-			buildPhases = (
-				DE8B115E13887A2C007BD789 /* Sources */,
-				DE8B115F13887A2C007BD789 /* Frameworks */,
-				DE8B116013887A2C007BD789 /* Copy Files */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = mount_fusefs;
-			productName = mount_fusefs;
-			productReference = DE8B116213887A2C007BD789 /* mount_fusefs */;
-			productType = "com.apple.product-type.tool";
-		};
 		DEBF0B0813886AAC00A1755B /* fuse4x */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DEBF0B1913886AAC00A1755B /* Build configuration list for PBXNativeTarget "fuse4x" */;
@@ -315,7 +257,6 @@
 			projectRoot = "";
 			targets = (
 				DEBF0B0813886AAC00A1755B /* fuse4x */,
-				DE8B116113887A2C007BD789 /* mount_fusefs */,
 			);
 		};
 /* End PBXProject section */
@@ -343,16 +284,6 @@
 /* End PBXRezBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		DE8B115E13887A2C007BD789 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				DE8B116B13887A52007BD789 /* getmntopts.c in Sources */,
-				DE8B116C13887A52007BD789 /* mntopts.h in Sources */,
-				DE8B116D13887A52007BD789 /* mount_fusefs.c in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		DEBF0B0313886AAC00A1755B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -388,34 +319,6 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		DE8B116913887A2C007BD789 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				HEADER_SEARCH_PATHS = "./common/**";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = NO;
-				USER_HEADER_SEARCH_PATHS = "";
-			};
-			name = Debug;
-		};
-		DE8B116A13887A2C007BD789 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				HEADER_SEARCH_PATHS = "./common/**";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = NO;
-				USER_HEADER_SEARCH_PATHS = "";
-			};
-			name = Release;
-		};
 		DEBF0B1713886AAC00A1755B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -495,15 +398,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		DE8B116813887A2C007BD789 /* Build configuration list for PBXNativeTarget "mount_fusefs" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				DE8B116913887A2C007BD789 /* Debug */,
-				DE8B116A13887A2C007BD789 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		DEBF0B0113886AAC00A1755B /* Build configuration list for PBXProject "kext" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

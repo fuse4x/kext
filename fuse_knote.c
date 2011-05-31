@@ -3,11 +3,10 @@
  * Amit Singh <singh@>
  */
 
-#include <fuse_param.h>
+#include "fuse.h"
 
 #if M_FUSE4X_ENABLE_KQUEUE
 
-#include "fuse.h"
 #include "fuse_knote.h"
 #include "fuse_node.h"
 

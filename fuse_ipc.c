@@ -18,6 +18,15 @@
 #include "fuse_node.h"
 #include "fuse_sysctl.h"
 
+#define FUSE_DAEMON_TIMEOUT_DEFAULT_BUTTON_TITLE   "Keep Trying"
+#define FUSE_DAEMON_TIMEOUT_OTHER_BUTTON_TITLE     "Force Eject"
+#define FUSE_DAEMON_TIMEOUT_ALTERNATE_BUTTON_TITLE "Don't Warn Again"
+#define FUSE_DAEMON_TIMEOUT_ALERT_MESSAGE                                 \
+    "There was a timeout waiting for the file system to respond. You can "  \
+    "eject this volume immediately, but unsaved changes may be lost."
+#define FUSE_DAEMON_TIMEOUT_ALERT_TIMEOUT          120    /* s */
+
+
 static struct fuse_ticket *fticket_alloc(struct fuse_data *data);
 static void                fticket_refresh(struct fuse_ticket *ftick);
 static void                fticket_destroy(struct fuse_ticket *ftick);

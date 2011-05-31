@@ -24,6 +24,11 @@
 #include <fuse_biglock_vnops.h>
 #endif
 
+#define FUSE_MAKEDEV(x, y)              ((dev_t)(((x) << 24) | (y)))
+#define FUSE_CUSTOM_FSID_VAL1           0x55464553
+
+#define FUSE4X_POSTUNMOUNT_SIGNAL         SIGKILL
+
 static const struct timespec kZeroTime = { 0, 0 };
 
 vfstable_t fuse_vfs_table_ref = NULL;
@@ -221,6 +226,9 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         snprintf(vfsstatfsp->f_fstypename, MFSTYPENAMELEN, "%s%s",
                  FUSE_FSTYPENAME_PREFIX, fusefs_args.fstypename);
     }
+
+    if (!*fusefs_args.fsname)
+        return EINVAL;
 
     if ((fusefs_args.daemon_timeout > FUSE_MAX_DAEMON_TIMEOUT) ||
         (fusefs_args.daemon_timeout < FUSE_MIN_DAEMON_TIMEOUT)) {

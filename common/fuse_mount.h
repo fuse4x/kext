@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2006-2008 Google. All Rights Reserved.
- * Amit Singh <singh@>
+ * Copyright (C) 2006-2008 Google, 2011 fuse4x.org. All Rights Reserved.
  */
 
 #ifndef _FUSE_MOUNT_H_
@@ -89,31 +88,7 @@ enum {
     FUSE_MOPT_FSNAME              = 1ULL << 34
 };
 
-#define FUSE_MAKEDEV(x, y)              ((dev_t)(((x) << 24) | (y)))
 #define FUSE_MINOR_MASK                 0x00FFFFFFUL
 #define FUSE_CUSTOM_FSID_DEVICE_MAJOR   255
-#define FUSE_CUSTOM_FSID_VAL1           0x55464553
-
-/* Notifications... */
-
-/* The object. */
-
-#define FUSE_UNOTIFICATIONS_OBJECT FUSE4X_BUNDLE_IDENTIFIER ".unotifications"
-
-/* The notifications themselves. */
-
-#define FUSE_UNOTIFICATIONS_NOTIFY_INITED           \
-    FUSE_UNOTIFICATIONS_OBJECT ".inited"
-
-#define FUSE_UNOTIFICATIONS_NOTIFY_INITTIMEDOUT     \
-    FUSE_UNOTIFICATIONS_OBJECT ".inittimedout"
-
-#define FUSE_UNOTIFICATIONS_NOTIFY_MOUNTED          \
-    FUSE_UNOTIFICATIONS_OBJECT ".mounted"
-
-/* User data keys. */
-
-#define kFUSEDevicePathKey "kFUSEDevicePath"
-#define kFUSEMountPathKey  "kFUSEMountPath"
 
 #endif /* _FUSE_MOUNT_H_ */

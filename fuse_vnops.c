@@ -1,4 +1,8 @@
 /*
+ * Copyright (C) 2011 fuse4x.org. All Rights Reserved.
+ */
+
+/*
  * 'rebel' branch modifications:
  *     Copyright (C) 2010 Tuxera. All Rights Reserved.
  */

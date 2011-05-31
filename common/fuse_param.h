@@ -1,46 +1,12 @@
 /*
- * 'rebel' branch modifications:
- *     Copyright (C) 2010 Tuxera. All Rights Reserved.
- */
-
-/*
- * Copyright (C) 2006-2008 Google. All Rights Reserved.
- * Amit Singh <singh@>
+ * Copyright (C) 2006-2008 Google, 2011 fuse4x.org. All Rights Reserved.
  */
 
 #ifndef _FUSE_PARAM_H_
 #define _FUSE_PARAM_H_
 
-/* Compile-time tunables (M_FUSE4X*) */
-
-#define M_FUSE4X_ENABLE_FIFOFS            0
-#define M_FUSE4X_ENABLE_INTERRUPT         1
-#define M_FUSE4X_ENABLE_SPECFS            0
-#define M_FUSE4X_ENABLE_TSLOCKING         1
-#define M_FUSE4X_ENABLE_UNSUPPORTED       1
-#define M_FUSE4X_ENABLE_XATTR             1
-
-#if M_FUSE4X_ENABLE_UNSUPPORTED
-  #define M_FUSE4X_ENABLE_DSELECT         0
-  #define M_FUSE4X_ENABLE_EXCHANGE        1
-  #define M_FUSE4X_ENABLE_KQUEUE          1
-  #define M_FUSE4X_ENABLE_KUNC            0
-  #if __LP64__
-    #define M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK 1
-  #endif /* __LP64__ */
-#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
-
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
-  #define M_FUSE4X_ENABLE_HUGE_LOCK 0
-  #define M_FUSE4X_ENABLE_LOCK_LOGGING 0
-  #define FUSE_VNOP_EXPORT __private_extern__
-#else
-  #define FUSE_VNOP_EXPORT static
-#endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
 
 /* User Control */
-
-#define FUSE4X_POSTUNMOUNT_SIGNAL         SIGKILL
 
 #define MACOSX_ADMIN_GROUP_NAME            "admin"
 
@@ -51,9 +17,6 @@
 
 #define FUSE4X_BUNDLE_PATH "/Library/Filesystems/fuse4x.fs"
 #define FUSE4X_KEXT        FUSE4X_BUNDLE_PATH "/Support/fuse4x.kext"
-// Temporary use binaries from PATH
-//#define FUSE4X_MOUNT_PROG  FUSE4X_BUNDLE_PATH "/Support/mount_fusefs"
-#define FUSE4X_MOUNT_PROG  "/opt/local/bin/mount_fusefs"
 
 /* Device Interface */
 
@@ -101,22 +64,10 @@
 #define FUSE_MAX_INIT_TIMEOUT                      300    /* s  */
 #define FUSE_INIT_WAIT_INTERVAL                    100000 /* us */
 
-#define FUSE_INIT_TIMEOUT_DEFAULT_BUTTON_TITLE     "OK"
-#define FUSE_INIT_TIMEOUT_NOTICE_MESSAGE                                  \
-  "Timed out waiting for the file system to initialize. The volume has "  \
-  "been ejected. You can use the init_timeout mount option to wait longer."
-
 #define FUSE_DEFAULT_DAEMON_TIMEOUT                60     /* s */
 #define FUSE_MIN_DAEMON_TIMEOUT                    0      /* s */
 #define FUSE_MAX_DAEMON_TIMEOUT                    600    /* s */
 
-#define FUSE_DAEMON_TIMEOUT_DEFAULT_BUTTON_TITLE   "Keep Trying"
-#define FUSE_DAEMON_TIMEOUT_OTHER_BUTTON_TITLE     "Force Eject"
-#define FUSE_DAEMON_TIMEOUT_ALTERNATE_BUTTON_TITLE "Don't Warn Again"
-#define FUSE_DAEMON_TIMEOUT_ALERT_MESSAGE                                 \
-  "There was a timeout waiting for the file system to respond. You can "  \
-  "eject this volume immediately, but unsaved changes may be lost."
-#define FUSE_DAEMON_TIMEOUT_ALERT_TIMEOUT          120    /* s */
 
 #ifdef KERNEL
 

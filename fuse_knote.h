@@ -6,7 +6,7 @@
 #ifndef _FUSE_KNOTE_H_
 #define _FUSE_KNOTE_H_
 
-#include <fuse_param.h>
+#include <fuse.h>
 
 #if M_FUSE4X_ENABLE_KQUEUE
 

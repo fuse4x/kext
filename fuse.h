@@ -34,6 +34,36 @@
 // #define FUSE_TRACE_OP      1
 // #define FUSE_TRACE_VNCACHE 1
 
+
+#define M_FUSE4X_ENABLE_FIFOFS            0
+#define M_FUSE4X_ENABLE_INTERRUPT         1
+#define M_FUSE4X_ENABLE_SPECFS            0
+#define M_FUSE4X_ENABLE_TSLOCKING         1
+#define M_FUSE4X_ENABLE_UNSUPPORTED       1
+#define M_FUSE4X_ENABLE_XATTR             1
+
+#if M_FUSE4X_ENABLE_UNSUPPORTED
+#define M_FUSE4X_ENABLE_DSELECT         0
+#define M_FUSE4X_ENABLE_EXCHANGE        1
+#define M_FUSE4X_ENABLE_KQUEUE          1
+#define M_FUSE4X_ENABLE_KUNC            0
+#if __LP64__
+#define M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK 1
+#endif /* __LP64__ */
+#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
+
+#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
+#define M_FUSE4X_ENABLE_HUGE_LOCK 0
+#define M_FUSE4X_ENABLE_LOCK_LOGGING 0
+#define FUSE_VNOP_EXPORT __private_extern__
+#else
+#define FUSE_VNOP_EXPORT static
+#endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
+
+
+#define FUSE4X_TIMESTAMP __DATE__ ", " __TIME__
+
+
 #define FUSEFS_SIGNATURE 0x55464553 // 'FUSE'
 
 #ifdef FUSE_TRACE
