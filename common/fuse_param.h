@@ -52,13 +52,8 @@
 #define FUSE4X_BUNDLE_PATH "/Library/Filesystems/fuse4x.fs"
 #define FUSE4X_KEXT        FUSE4X_BUNDLE_PATH "/Support/fuse4x.kext"
 // Temporary use binaries from PATH
-//#define FUSE4X_LOAD_PROG   FUSE4X_BUNDLE_PATH "/Support/load_fusefs"
 //#define FUSE4X_MOUNT_PROG  FUSE4X_BUNDLE_PATH "/Support/mount_fusefs"
-#define FUSE4X_LOAD_PROG   "/opt/local/bin/load_fusefs"
 #define FUSE4X_MOUNT_PROG  "/opt/local/bin/mount_fusefs"
-
-#define SYSTEM_KEXTLOAD     "/sbin/kextload"
-#define SYSTEM_KEXTUNLOAD   "/sbin/kextunload"
 
 /* Compatible API version */
 
