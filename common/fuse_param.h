@@ -55,11 +55,6 @@
 //#define FUSE4X_MOUNT_PROG  FUSE4X_BUNDLE_PATH "/Support/mount_fusefs"
 #define FUSE4X_MOUNT_PROG  "/opt/local/bin/mount_fusefs"
 
-/* Compatible API version */
-
-#define FUSE4X_MIN_USER_VERSION_MAJOR     7
-#define FUSE4X_MIN_USER_VERSION_MINOR     5
-
 /* Device Interface */
 
 /*

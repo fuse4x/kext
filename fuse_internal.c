@@ -1508,10 +1508,10 @@ fuse_internal_init_handler(struct fuse_ticket *ftick, __unused uio_t uio)
 
     fiio = fticket_resp(ftick)->base;
 
-    if ((fiio->major < FUSE4X_MIN_USER_VERSION_MAJOR) ||
-        (fiio->minor < FUSE4X_MIN_USER_VERSION_MINOR)) {
+    if ((fiio->major < FUSE_KERNEL_VERSION) ||
+        (fiio->minor < FUSE_KERNEL_MINOR_VERSION)) {
         IOLog("fuse4x: user-space library has outdated protocol version. Required(%d.%d), user returned (%d.%d)\n",
-              FUSE4X_MIN_USER_VERSION_MAJOR, FUSE4X_MIN_USER_VERSION_MINOR,
+              FUSE_KERNEL_VERSION, FUSE_KERNEL_MINOR_VERSION,
               fiio->major, fiio->minor);
         err = EPROTONOSUPPORT;
         goto out;
