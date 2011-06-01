@@ -53,7 +53,6 @@ struct mntopt mopts[] = {
     { "auto_xattr",          0, FUSE_MOPT_AUTO_XATTR,             1 }, // kused
     { "blocksize=",          0, FUSE_MOPT_BLOCKSIZE,              1 }, // kused
     { "daemon_timeout=",     0, FUSE_MOPT_DAEMON_TIMEOUT,         1 }, // kused
-    { "debug",               0, FUSE_MOPT_DEBUG,                  1 }, // kused
     { "default_permissions", 0, FUSE_MOPT_DEFAULT_PERMISSIONS,    1 }, // kused
     { "defer_permissions",   0, FUSE_MOPT_DEFER_PERMISSIONS,      1 }, // kused
     { "direct_io",           0, FUSE_MOPT_DIRECT_IO,              1 }, // kused
@@ -66,7 +65,6 @@ struct mntopt mopts[] = {
     { "iosize=",             0, FUSE_MOPT_IOSIZE,                 1 }, // kused
     { "jail_symlinks",       0, FUSE_MOPT_JAIL_SYMLINKS,          1 }, // kused
     { "kill_on_unmount",     0, FUSE_MOPT_KILL_ON_UNMOUNT,        1 }, // kused
-    { "local",               0, FUSE_MOPT_LOCALVOL,               1 }, // kused
     { "native_xattr",        0, FUSE_MOPT_NATIVE_XATTR,           1 }, // kused
     { "negative_vncache",    0, FUSE_MOPT_NEGATIVE_VNCACHE,       1 }, // kused
     { "sparse",              0, FUSE_MOPT_SPARSE,                 1 }, // kused
@@ -79,8 +77,6 @@ struct mntopt mopts[] = {
     { "appledouble",         1, FUSE_MOPT_NO_APPLEDOUBLE,         1 }, // kused
     { "applexattr",          1, FUSE_MOPT_NO_APPLEXATTR,          1 }, // kused
     { "attrcache",           1, FUSE_MOPT_NO_ATTRCACHE,           1 }, // kused
-    { "browse",              1, FUSE_MOPT_NO_BROWSE,              1 }, // kused
-    { "localcaches",         1, FUSE_MOPT_NO_LOCALCACHES,         1 }, // kused
     { "readahead",           1, FUSE_MOPT_NO_READAHEAD,           1 }, // kused
     { "synconclose",         1, FUSE_MOPT_NO_SYNCONCLOSE,         1 }, // kused
     { "syncwrites",          1, FUSE_MOPT_NO_SYNCWRITES,          1 }, // kused
@@ -774,13 +770,6 @@ main(int argc, char **argv)
     }
 
     /* allow_root and allow_other checks are done in the kernel. */
-
-    if (altflags & FUSE_MOPT_NO_LOCALCACHES) {
-        altflags |= FUSE_MOPT_NO_ATTRCACHE;
-        altflags |= FUSE_MOPT_NO_READAHEAD;
-        altflags |= FUSE_MOPT_NO_UBC;
-        altflags |= FUSE_MOPT_NO_VNCACHE;
-    }
 
     if ((altflags & FUSE_MOPT_NEGATIVE_VNCACHE) &&
         (altflags & FUSE_MOPT_NO_VNCACHE)) {

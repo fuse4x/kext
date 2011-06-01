@@ -214,37 +214,38 @@ enum {
 /* Not-Implemented Bits */
 #define FSESS_NOIMPLBIT(MSG)      (1ULL << FUSE_##MSG)
 
-#define FSESS_DEAD                0x00000001 // session is to be closed
-#define FSESS_OPENED              0x00000002 // session device has been opened
-#define FSESS_INITED              0x00000004 // session has been inited
-#define FSESS_UNCONSCIOUS         0x00000008 // session is temporarily gone
+enum {
+    FSESS_DEAD               = 1 << 0, // session is to be closed
+    FSESS_OPENED             = 1 << 1, // session device has been opened
+    FSESS_INITED             = 1 << 2, // session has been inited
+    FSESS_UNCONSCIOUS        = 1 << 3, // session is temporarily gone
 
-#define FSESS_ALLOW_OTHER         0x00000010
-#define FSESS_ALLOW_ROOT          0x00000020
-#define FSESS_AUTO_XATTR          0x00000040
-#define FSESS_DEFAULT_PERMISSIONS 0x00000080
-#define FSESS_DEFER_PERMISSIONS   0x00000100
-#define FSESS_DIRECT_IO           0x00000200
-#define FSESS_EXTENDED_SECURITY   0x00000400
-#define FSESS_JAIL_SYMLINKS       0x00000800
-#define FSESS_KILL_ON_UNMOUNT     0x00001000
-#define FSESS_LOCALVOL            0x00002000
-#define FSESS_NEGATIVE_VNCACHE    0x00004000
-#define FSESS_NO_ALERTS           0x00008000
-#define FSESS_NO_APPLEDOUBLE      0x00010000
-#define FSESS_NO_APPLEXATTR       0x00020000
-#define FSESS_NO_ATTRCACHE        0x00040000
-#define FSESS_NO_READAHEAD        0x00080000
-#define FSESS_NO_SYNCONCLOSE      0x00100000
-#define FSESS_NO_SYNCWRITES       0x00200000
-#define FSESS_NO_UBC              0x00400000
-#define FSESS_NO_VNCACHE          0x00800000
-#define FSESS_CASE_INSENSITIVE    0x01000000
-#define FSESS_VOL_RENAME          0x02000000
-#define FSESS_XTIMES              0x04000000
-#define FSESS_AUTO_CACHE          0x08000000
-#define FSESS_NATIVE_XATTR        0x10000000
-#define FSESS_SPARSE              0x20000000
+    FSESS_ALLOW_OTHER         = 1 << 4,
+    FSESS_ALLOW_ROOT          = 1 << 5,
+    FSESS_AUTO_XATTR          = 1 << 6,
+    FSESS_DEFAULT_PERMISSIONS = 1 << 7,
+    FSESS_DEFER_PERMISSIONS   = 1 << 8,
+    FSESS_DIRECT_IO           = 1 << 9,
+    FSESS_EXTENDED_SECURITY   = 1 << 10,
+    FSESS_JAIL_SYMLINKS       = 1 << 11,
+    FSESS_KILL_ON_UNMOUNT     = 1 << 12,
+    FSESS_NEGATIVE_VNCACHE    = 1 << 13,
+    FSESS_NO_ALERTS           = 1 << 14,
+    FSESS_NO_APPLEDOUBLE      = 1 << 15,
+    FSESS_NO_APPLEXATTR       = 1 << 16,
+    FSESS_NO_ATTRCACHE        = 1 << 17,
+    FSESS_NO_READAHEAD        = 1 << 18,
+    FSESS_NO_SYNCONCLOSE      = 1 << 19,
+    FSESS_NO_SYNCWRITES       = 1 << 20,
+    FSESS_NO_UBC              = 1 << 21,
+    FSESS_NO_VNCACHE          = 1 << 22,
+    FSESS_CASE_INSENSITIVE    = 1 << 23,
+    FSESS_VOL_RENAME          = 1 << 24,
+    FSESS_XTIMES              = 1 << 25,
+    FSESS_AUTO_CACHE          = 1 << 26,
+    FSESS_NATIVE_XATTR        = 1 << 27,
+    FSESS_SPARSE              = 1 << 28
+};
 
 static __inline__
 struct fuse_data *

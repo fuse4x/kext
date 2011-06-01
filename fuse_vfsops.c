@@ -213,9 +213,9 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
 
     /** Option Processing. **/
 
-    if (fusefs_args.altflags & FUSE_MOPT_FSTYPENAME) {
+    if (*fusefs_args.fstypename) {
         size_t typenamelen = strlen(fusefs_args.fstypename);
-        if ((typenamelen <= 0) || (typenamelen > FUSE_FSTYPENAME_MAXLEN)) {
+        if (typenamelen > FUSE_FSTYPENAME_MAXLEN) {
             return EINVAL;
         }
         snprintf(vfsstatfsp->f_fstypename, MFSTYPENAMELEN, "%s%s",
@@ -251,10 +251,6 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         mntopts |= FSESS_AUTO_XATTR;
     } else if (fusefs_args.altflags & FUSE_MOPT_NATIVE_XATTR) {
         mntopts |= FSESS_NATIVE_XATTR;
-    }
-
-    if (fusefs_args.altflags & FUSE_MOPT_NO_BROWSE) {
-        vfs_setflags(mp, MNT_DONTBROWSE);
     }
 
     if (fusefs_args.altflags & FUSE_MOPT_JAIL_SYMLINKS) {
@@ -320,13 +316,6 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
 
     if (fusefs_args.altflags & FUSE_MOPT_KILL_ON_UNMOUNT) {
         mntopts |= FSESS_KILL_ON_UNMOUNT;
-    }
-
-    if (fusefs_args.altflags & FUSE_MOPT_NO_LOCALCACHES) {
-        mntopts |= FSESS_NO_ATTRCACHE;
-        mntopts |= FSESS_NO_READAHEAD;
-        mntopts |= FSESS_NO_UBC;
-        mntopts |= FSESS_NO_VNCACHE;
     }
 
     if (fusefs_args.altflags & FUSE_MOPT_NO_ATTRCACHE) {
@@ -398,11 +387,6 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
     if (fusefs_args.altflags & FUSE_MOPT_EXTENDED_SECURITY) {
         mntopts |= FSESS_EXTENDED_SECURITY;
         vfs_setextendedsecurity(mp);
-    }
-
-    if (fusefs_args.altflags & FUSE_MOPT_LOCALVOL) {
-        mntopts |= FSESS_LOCALVOL;
-        vfs_setflags(mp, MNT_LOCAL);
     }
 
     /* done checking incoming option bits */
