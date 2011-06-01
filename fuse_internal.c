@@ -1520,16 +1520,10 @@ fuse_internal_init_handler(struct fuse_ticket *ftick, __unused uio_t uio)
     data->fuse_libabi_major = fiio->major;
     data->fuse_libabi_minor = fiio->minor;
 
-    if (fuse_libabi_geq(data, FUSE4X_MIN_USER_VERSION_MAJOR,
-                              FUSE4X_MIN_USER_VERSION_MINOR)) {
-        if (fticket_resp(ftick)->len == sizeof(struct fuse_init_out)) {
-            data->max_write = fiio->max_write;
-        } else {
-            err = EINVAL;
-        }
+    if (fticket_resp(ftick)->len == sizeof(struct fuse_init_out)) {
+        data->max_write = fiio->max_write;
     } else {
-        /* Old fix values */
-        data->max_write = 4096;
+        err = EINVAL;
     }
 
     if (fiio->flags & FUSE_CASE_INSENSITIVE) {

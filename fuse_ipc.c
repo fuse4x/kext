@@ -796,11 +796,7 @@ fuse_body_audit(struct fuse_ticket *ftick, size_t blen)
         break;
 
     case FUSE_STATFS:
-        if (fuse_libabi_geq(ftick->tk_data, 7, 4)) {
-            err = (blen == sizeof(struct fuse_statfs_out)) ? 0 : EINVAL;
-        } else {
-            err = (blen == FUSE_COMPAT_STATFS_SIZE) ? 0 : EINVAL;
-        }
+        err = (blen == sizeof(struct fuse_statfs_out)) ? 0 : EINVAL;
         break;
 
     case FUSE_RELEASE:

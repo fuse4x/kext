@@ -319,15 +319,6 @@ void fuse_insert_callback(struct fuse_ticket *ftick, fuse_handler_t *handler);
 void fuse_insert_message(struct fuse_ticket *ftick);
 void fuse_insert_message_head(struct fuse_ticket *ftick);
 
-static __inline__
-int
-fuse_libabi_geq(struct fuse_data *data, uint32_t abi_maj, uint32_t abi_min)
-{
-    return (data->fuse_libabi_major > abi_maj ||
-            (data->fuse_libabi_major == abi_maj &&
-             data->fuse_libabi_minor >= abi_min));
-}
-
 struct fuse_data *fdata_alloc(struct proc *p);
 void fdata_destroy(struct fuse_data *data);
 int  fdata_dead_get(struct fuse_data *data);
