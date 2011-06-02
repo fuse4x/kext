@@ -1072,7 +1072,9 @@ fdisp_wait_answ(struct fuse_dispatcher *fdip)
             goto out;
         } else {
             /* IPC: explicitly setting to answered */
+#ifndef DONT_TRY_HARD_PREVENT_IO_IN_VAIN
             age = fdip->tick->tk_age;
+#endif
             fticket_set_answered(fdip->tick);
             fuse_lck_mtx_unlock(fdip->tick->tk_aw_mtx);
 #ifndef DONT_TRY_HARD_PREVENT_IO_IN_VAIN
