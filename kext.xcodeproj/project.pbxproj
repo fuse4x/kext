@@ -99,41 +99,7 @@
 		DEBF0AFC13886AAC00A1755B = {
 			isa = PBXGroup;
 			children = (
-				DED872FE138B1E0700DE4149 /* CoreFoundation.framework */,
 				DEE25D501388750C009DC919 /* common */,
-				DEBF0B0E13886AAC00A1755B /* kext */,
-				DEBF0B0B13886AAC00A1755B /* Frameworks */,
-				DEBF0B0A13886AAC00A1755B /* Products */,
-			);
-			sourceTree = "<group>";
-		};
-		DEBF0B0A13886AAC00A1755B /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				DEBF0B0913886AAC00A1755B /* fuse4x.kext */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		DEBF0B0B13886AAC00A1755B /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				DEBF0B0C13886AAC00A1755B /* Other Frameworks */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		DEBF0B0C13886AAC00A1755B /* Other Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				DEBF0B0D13886AAC00A1755B /* Kernel.framework */,
-			);
-			name = "Other Frameworks";
-			sourceTree = "<group>";
-		};
-		DEBF0B0E13886AAC00A1755B /* kext */ = {
-			isa = PBXGroup;
-			children = (
 				DEE25D14138874AF009DC919 /* fuse_kernel.h */,
 				DEE25D44138874BA009DC919 /* API.txt */,
 				DEE25D0A138874AF009DC919 /* fuse_biglock_vnops.c */,
@@ -165,8 +131,34 @@
 				DEE25D25138874AF009DC919 /* fuse_vnops.h */,
 				DEE25D26138874AF009DC919 /* fuse.h */,
 				DEBF0B0F13886AAC00A1755B /* Supporting Files */,
+				DED872FE138B1E0700DE4149 /* CoreFoundation.framework */,
+				DEBF0B0B13886AAC00A1755B /* Frameworks */,
+				DEBF0B0A13886AAC00A1755B /* Products */,
 			);
-			name = kext;
+			sourceTree = "<group>";
+		};
+		DEBF0B0A13886AAC00A1755B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DEBF0B0913886AAC00A1755B /* fuse4x.kext */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DEBF0B0B13886AAC00A1755B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				DEBF0B0C13886AAC00A1755B /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		DEBF0B0C13886AAC00A1755B /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				DEBF0B0D13886AAC00A1755B /* Kernel.framework */,
+			);
+			name = "Other Frameworks";
 			sourceTree = "<group>";
 		};
 		DEBF0B0F13886AAC00A1755B /* Supporting Files */ = {
