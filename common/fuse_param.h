@@ -21,12 +21,12 @@
 /* Device Interface */
 
 /*
- * This is the prefix ("fuse" by default) of the name of a FUSE device node
- * in devfs. The suffix is the device number. "/dev/fuse0" is the first FUSE
+ * This is the prefix ("fuse4x" by default) of the name of a FUSE device node
+ * in devfs. The suffix is the device number. "/dev/fuse4x0" is the first FUSE
  * device by default. If you change the prefix from the default to something
  * else, the user-space FUSE library will need to know about it too.
  */
-#define FUSE4X_DEVICE_BASENAME            "fuse"
+#define FUSE4X_DEVICE_BASENAME            "fuse4x"
 
 /*
  * This is the number of /dev/fuse<n> nodes we will create. <n> goes from
