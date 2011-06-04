@@ -10,8 +10,8 @@
 
 #define MACOSX_ADMIN_GROUP_NAME            "admin"
 
-#define SYSCTL_FUSE4X_TUNABLES_ADMIN      "fuse4x.tunables.admin_group"
-#define SYSCTL_FUSE4X_VERSION_NUMBER      "fuse4x.version.number"
+#define SYSCTL_FUSE4X_TUNABLES_ADMIN      "vfs.generic.fuse4x.tunables.admin_group"
+#define SYSCTL_FUSE4X_VERSION_NUMBER      "vfs.generic.fuse4x.version.number"
 
 /* Paths */
 
