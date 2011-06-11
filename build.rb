@@ -29,8 +29,3 @@ system("sudo mkdir -p #{install_path}") if root_dir
 
 system("sudo cp -R build/#{configuration}/fuse4x.kext #{install_path}") or abort
 system("sudo chown -R root:wheel #{install_path}/fuse4x.kext") or abort
-
-unless root_dir
-  # we need to reload the kext
-  system('sudo kextload -b org.fuse4x.kext.fuse4x') or abort('cannot load the kext')
-end

@@ -37,6 +37,7 @@
 		<key>com.apple.kpi.unsupported</key>
 		<string>10.7.0</string>
 	</dict>
-
+	<key>OSBundleAllowUserLoad</key>
+	<true/>
 </dict>
 </plist>
