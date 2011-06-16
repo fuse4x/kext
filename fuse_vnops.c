@@ -748,7 +748,11 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
         }
     }
 
-    if ((err = fdisp_simple_putget_vp(&fdi, FUSE_GETATTR, vp, context))) {
+    fdisp_init(&fdi, sizeof(struct fuse_getattr_in));
+    fdisp_make_vp(&fdi, FUSE_GETATTR, vp, context);
+    bzero(fdi.indata, sizeof(struct fuse_getattr_in));
+
+    if ((err = fdisp_wait_answ(&fdi))) {
         if ((err == ENOTCONN) && vnode_isvroot(vp)) {
             /* see comment at similar place in fuse_statfs() */
             goto fake;
@@ -1291,13 +1295,13 @@ fuse_vnop_lookup(struct vnop_lookup_args *ap)
         pdp = VTOFUD(dvp)->parentvp;
         nodeid = VTOI(pdp);
         parent_nodeid = VTOFUD(dvp)->parent_nodeid;
-        fdisp_init(&fdi, 0);
+        fdisp_init(&fdi, sizeof(struct fuse_getattr_in));
         op = FUSE_GETATTR;
         goto calldaemon;
     } else if (isdot) {
         nodeid = VTOI(dvp);
         parent_nodeid = VTOFUD(dvp)->parent_nodeid;
-        fdisp_init(&fdi, 0);
+        fdisp_init(&fdi, sizeof(struct fuse_getattr_in));
         op = FUSE_GETATTR;
         goto calldaemon;
     } else {
@@ -1338,6 +1342,8 @@ calldaemon:
     if (op == FUSE_LOOKUP) {
         memcpy(fdi.indata, cnp->cn_nameptr, cnp->cn_namelen);
         ((char *)fdi.indata)[cnp->cn_namelen] = '\0';
+    } else if (op == FUSE_GETATTR) {
+        bzero(fdi.indata, sizeof(struct fuse_getattr_in));
     }
 
     lookup_err = fdisp_wait_answ(&fdi);
@@ -1984,7 +1990,12 @@ ok:
             struct fuse_dispatcher fdi;
             fuse_invalidate_attr(vp);
             hint |= NOTE_ATTRIB;
-            serr = fdisp_simple_putget_vp(&fdi, FUSE_GETATTR, vp, context);
+
+            fdisp_init(&fdi, sizeof(struct fuse_getattr_in));
+            fdisp_make_vp(&fdi, FUSE_GETATTR, vp, context);
+            bzero(fdi.indata, sizeof(struct fuse_getattr_in));
+
+            serr = fdisp_wait_answ(&fdi);
             if (!serr) {
                 /* XXX: Could check the sanity/volatility of va_mode here. */
                 if ((((struct fuse_attr_out*)fdi.answ)->attr.mode & S_IFMT)) {
