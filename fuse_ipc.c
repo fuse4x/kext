@@ -283,8 +283,6 @@ again:
 
         if (kr != KERN_SUCCESS) {
             /* force ejection if we couldn't show the dialog */
-            IOLog("fuse4x: force ejecting (no response from user space %d)\n",
-                  kr);
             rf = kKUNCOtherResponse;
         }
 
@@ -300,7 +298,7 @@ again:
         case kKUNCCancelResponse:    /* No Selection     */
             data->timeout_status = FUSE_DAEMON_TIMEOUT_NONE;
             if (rf == kKUNCAlternateResponse) {
-                data->daemon_timeout_p = (struct timespec *)0;
+                data->daemon_timeout_p = NULL;
             }
             fuse_lck_mtx_unlock(data->timeout_mtx);
             goto again;
@@ -316,6 +314,9 @@ again:
 
 alreadydead:
         if (!fdata_dead_get(data)) {
+            struct vfsstatfs *statfs = vfs_statfs(data->mp);
+            IOLog("fuse4x: daemon (pid=%d, mountpoint=%s) did not respond in %ld seconds. Mark the filesystem as dead.\n",
+                  data->daemonpid, statfs->f_mntonname, data->daemon_timeout.tv_sec);
             fdata_set_dead(data);
         }
         err = ENOTCONN;

@@ -272,19 +272,22 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
      */
     if (fusefs_args.altflags & FUSE_MOPT_ALLOW_ROOT) {
         int is_member = 0;
-        if ((kauth_cred_ismember_gid(kauth_cred_get(), fuse_admin_group,
-                                     &is_member) == 0) && is_member) {
-            mntopts |= FSESS_ALLOW_ROOT;
-        } else {
-            IOLog("fuse4x: caller not a member of fuse4x admin group (%d)\n",
-                  fuse_admin_group);
+        if ((kauth_cred_ismember_gid(kauth_cred_get(), fuse_admin_group, &is_member) != 0) || !is_member) {
+            IOLog("fuse4x: caller is not a member of fuse4x admin group. "
+                  "Either add user (id=%d) to group (id=%d), "
+                  "or set correct '" SYSCTL_FUSE4X_TUNABLES_ADMIN "' sysctl value.\n",
+                  kauth_cred_get()->cr_uid, fuse_admin_group);
             return EPERM;
         }
+        mntopts |= FSESS_ALLOW_ROOT;
     } else if (fusefs_args.altflags & FUSE_MOPT_ALLOW_OTHER) {
         if (!fuse_allow_other && !fuse_vfs_context_issuser(context)) {
             int is_member = 0;
-            if ((kauth_cred_ismember_gid(kauth_cred_get(), fuse_admin_group,
-                                         &is_member) != 0) || !is_member) {
+            if ((kauth_cred_ismember_gid(kauth_cred_get(), fuse_admin_group, &is_member) != 0) || !is_member) {
+                IOLog("fuse4x: caller is not a member of fuse4x admin group. "
+                      "Either add user (id=%d) to group (id=%d), "
+                      "or set correct '" SYSCTL_FUSE4X_TUNABLES_ADMIN "' sysctl value.\n",
+                      kauth_cred_get()->cr_uid, fuse_admin_group);
                 return EPERM;
             }
         }
@@ -353,6 +356,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
 
         /* Cannot mix 'nosyncwrites' with 'noubc' or 'noreadahead'. */
         if (mntopts & (FSESS_NO_READAHEAD | FSESS_NO_UBC)) {
+            IOLog("fuse4x: cannot mix 'nosyncwrites' with 'noubc' or 'noreadahead'\n");
             return EINVAL;
         }
 
@@ -408,6 +412,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
 
     fdev = fuse_device_get(fusefs_args.rdev);
     if (!fdev) {
+        IOLog("fuse4x: invalid device file (number=%d)\n", fusefs_args.rdev);
         return EINVAL;
     }
 
@@ -457,6 +462,8 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         vfs_context_ucred(context)->cr_uid != data->daemoncred->cr_uid) {
         fuse_device_unlock(fdev);
         err = EPERM;
+        IOLog("fuse4x: fuse daemon running by user_id=%d does not have privileges to mount on directory %s owned by user_id=%d\n",
+              data->daemoncred->cr_uid, vfsstatfsp->f_mntonname, vfs_context_ucred(context)->cr_uid);
         goto out;
     }
 
@@ -469,7 +476,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
     if (data->daemon_timeout.tv_sec) {
         data->daemon_timeout_p = &(data->daemon_timeout);
     } else {
-        data->daemon_timeout_p = (struct timespec *)0;
+        data->daemon_timeout_p = NULL;
     }
 
     data->init_timeout.tv_sec = fusefs_args.init_timeout;
@@ -654,7 +661,7 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
 
     fuse_rootvp = data->rootvp;
 
-    IOLog("%s: Calling vflush(mp, fuse_rootvp, flags=0x%X);\n", __FUNCTION__, flags);
+    fuse_trace_printf("%s: Calling vflush(mp, fuse_rootvp, flags=0x%X);\n", __FUNCTION__, flags);
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
     fuse_biglock_unlock(data->biglock);
 #endif
@@ -662,7 +669,7 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
     fuse_biglock_lock(data->biglock);
 #endif
-    IOLog("%s:   Done.\n", __FUNCTION__);
+    fuse_trace_printf("%s:   Done.\n", __FUNCTION__);
     if (err) {
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
         fuse_biglock_unlock(data->biglock);
@@ -684,9 +691,9 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
     fdisp_init(&fdi, 0 /* no data to send along */);
     fdisp_make(&fdi, FUSE_DESTROY, mp, FUSE_ROOT_ID, context);
 
-    IOLog("%s: Waiting for reply from FUSE_DESTROY.\n", __FUNCTION__);
+    fuse_trace_printf("%s: Waiting for reply from FUSE_DESTROY.\n", __FUNCTION__);
     err = fdisp_wait_answ(&fdi);
-    IOLog("%s:   Reply received.\n", __FUNCTION__);
+    fuse_trace_printf("%s:   Reply received.\n", __FUNCTION__);
     if (!err) {
         fuse_ticket_drop(fdi.tick);
     }
@@ -702,7 +709,7 @@ alreadydead:
     needsignal = data->dataflags & FSESS_KILL_ON_UNMOUNT;
     daemonpid = data->daemonpid;
 
-    IOLog("%s: Calling vnode_rele(fuse_rootp);\n", __FUNCTION__);
+    fuse_trace_printf("%s: Calling vnode_rele(fuse_rootp);\n", __FUNCTION__);
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
     fuse_biglock_unlock(data->biglock);
 #endif
@@ -710,11 +717,11 @@ alreadydead:
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
     fuse_biglock_lock(data->biglock);
 #endif
-    IOLog("%s:   Done.\n", __FUNCTION__);
+    fuse_trace_printf("%s:   Done.\n", __FUNCTION__);
 
     data->rootvp = NULLVP;
 
-    IOLog("%s: Calling vflush(mp, NULLVP, FORCECLOSE);\n", __FUNCTION__);
+    fuse_trace_printf("%s: Calling vflush(mp, NULLVP, FORCECLOSE);\n", __FUNCTION__);
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
     fuse_biglock_unlock(data->biglock);
 #endif
@@ -722,7 +729,7 @@ alreadydead:
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
     fuse_biglock_lock(data->biglock);
 #endif
-    IOLog("%s:   Done.\n", __FUNCTION__);
+    fuse_trace_printf("%s:   Done.\n", __FUNCTION__);
 
     fuse_device_lock(fdev);
 
