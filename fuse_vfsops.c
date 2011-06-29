@@ -397,6 +397,9 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         vfs_setextendedsecurity(mp);
     }
 
+    if (fusefs_args.altflags & FUSE_MOPT_LOCALVOL) {
+        vfs_setflags(mp, MNT_LOCAL);
+    }
     /* done checking incoming option bits */
 
     err = 0;
