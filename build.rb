@@ -31,4 +31,10 @@ install_path = root_dir ? File.join(root_dir, KEXT_DIR) : KEXT_DIR
 system("sudo mkdir -p #{install_path}") if root_dir
 
 system("sudo cp -R build/#{configuration}/fuse4x.kext #{install_path}") or abort
+# Install load_fuse4x tool. The tool should have +s bit set to allow
+# non-priveleged users mount fuse4x filesystem and init sysctl
+system("sudo mkdir -p #{install_path}/fuse4x.kext/Support") or abort
+system("sudo cp build/#{configuration}/load_fuse4x #{install_path}/fuse4x.kext/Support") or abort
+system("sudo chmod +s #{install_path}/fuse4x.kext/Support/load_fuse4x")
+
 system("sudo chown -R root:wheel #{install_path}/fuse4x.kext") or abort
