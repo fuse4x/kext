@@ -27,8 +27,6 @@
 #define FUSE_MAKEDEV(x, y)              ((dev_t)(((x) << 24) | (y)))
 #define FUSE_CUSTOM_FSID_VAL1           0x55464553
 
-#define FUSE4X_POSTUNMOUNT_SIGNAL         SIGKILL
-
 static const struct timespec kZeroTime = { 0, 0 };
 
 vfstable_t fuse_vfs_table_ref = NULL;
@@ -325,10 +323,6 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         vfs_getnewfsid(mp);
     }
 
-    if (fusefs_args.altflags & FUSE_MOPT_KILL_ON_UNMOUNT) {
-        mntopts |= FSESS_KILL_ON_UNMOUNT;
-    }
-
     if (fusefs_args.altflags & FUSE_MOPT_NO_ATTRCACHE) {
         mntopts |= FSESS_NO_ATTRCACHE;
     }
@@ -606,8 +600,6 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
 {
     int   err        = 0;
     int   flags      = 0;
-    int   needsignal = 0;
-    pid_t daemonpid  = 0;
 
     fuse_device_t          fdev;
     struct fuse_data      *data;
@@ -706,9 +698,6 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
 
 alreadydead:
 
-    needsignal = data->dataflags & FSESS_KILL_ON_UNMOUNT;
-    daemonpid = data->daemonpid;
-
     fuse_trace_printf("%s: Calling vnode_rele(fuse_rootp);\n", __FUNCTION__);
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
     fuse_biglock_unlock(data->biglock);
@@ -751,10 +740,6 @@ alreadydead:
     }
 
     fuse_device_unlock(fdev);
-
-    if (daemonpid && needsignal) {
-        proc_signal(daemonpid, FUSE4X_POSTUNMOUNT_SIGNAL);
-    }
 
     return 0;
 }

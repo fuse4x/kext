@@ -228,7 +228,6 @@ enum {
     FSESS_DIRECT_IO           = 1 << 9,
     FSESS_EXTENDED_SECURITY   = 1 << 10,
     FSESS_JAIL_SYMLINKS       = 1 << 11,
-    FSESS_KILL_ON_UNMOUNT     = 1 << 12,
     FSESS_NEGATIVE_VNCACHE    = 1 << 13,
     FSESS_NO_ALERTS           = 1 << 14,
     FSESS_NO_APPLEDOUBLE      = 1 << 15,
