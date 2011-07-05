@@ -18,15 +18,6 @@
 #include "fuse_node.h"
 #include "fuse_sysctl.h"
 
-#define FUSE_DAEMON_TIMEOUT_DEFAULT_BUTTON_TITLE   "Keep Trying"
-#define FUSE_DAEMON_TIMEOUT_OTHER_BUTTON_TITLE     "Force Eject"
-#define FUSE_DAEMON_TIMEOUT_ALTERNATE_BUTTON_TITLE "Don't Warn Again"
-#define FUSE_DAEMON_TIMEOUT_ALERT_MESSAGE                                 \
-    "There was a timeout waiting for the file system to respond. You can "  \
-    "eject this volume immediately, but unsaved changes may be lost."
-#define FUSE_DAEMON_TIMEOUT_ALERT_TIMEOUT          120    /* s */
-
-
 static struct fuse_ticket *fticket_alloc(struct fuse_data *data);
 static void                fticket_refresh(struct fuse_ticket *ftick);
 static void                fticket_destroy(struct fuse_ticket *ftick);
@@ -224,95 +215,6 @@ again:
                       data->daemon_timeout_p);
     if (err == EAGAIN) { /* same as EWOULDBLOCK */
 
-        kern_return_t kr;
-        unsigned int rf;
-
-        fuse_lck_mtx_lock(data->timeout_mtx);
-
-        if (data->dataflags & FSESS_NO_ALERTS) {
-            data->timeout_status = FUSE_DAEMON_TIMEOUT_DEAD;
-            fuse_lck_mtx_unlock(data->timeout_mtx);
-            goto alreadydead;
-        }
-
-        switch (data->timeout_status) {
-
-        case FUSE_DAEMON_TIMEOUT_NONE:
-            data->timeout_status = FUSE_DAEMON_TIMEOUT_PROCESSING;
-            fuse_lck_mtx_unlock(data->timeout_mtx);
-            break;
-
-        case FUSE_DAEMON_TIMEOUT_PROCESSING:
-            fuse_lck_mtx_unlock(data->timeout_mtx);
-            goto again;
-            break; /* NOTREACHED */
-
-        case FUSE_DAEMON_TIMEOUT_DEAD:
-            fuse_lck_mtx_unlock(data->timeout_mtx);
-            goto alreadydead;
-            break; /* NOTREACHED */
-
-        default:
-            IOLog("fuse4x: invalid timeout status (%d)\n",
-                  data->timeout_status);
-            fuse_lck_mtx_unlock(data->timeout_mtx);
-            goto again;
-            break; /* NOTREACHED */
-        }
-
-        /*
-         * We will "hang" while this is showing.
-         */
-
-#if M_FUSE4X_ENABLE_KUNC
-        kr = KUNCUserNotificationDisplayAlert(
-                 FUSE_DAEMON_TIMEOUT_ALERT_TIMEOUT,   // timeout
-                 0,                                   // flags (stop alert)
-                 NULL,                                // iconPath
-                 NULL,                                // soundPath
-                 NULL,                                // localizationPath
-                 data->volname,                       // alertHeader
-                 FUSE_DAEMON_TIMEOUT_ALERT_MESSAGE,
-                 FUSE_DAEMON_TIMEOUT_DEFAULT_BUTTON_TITLE,
-                 FUSE_DAEMON_TIMEOUT_ALTERNATE_BUTTON_TITLE,
-                 FUSE_DAEMON_TIMEOUT_OTHER_BUTTON_TITLE,
-                 &rf);
-#else
-        kr = KERN_FAILURE;
-#endif
-
-        if (kr != KERN_SUCCESS) {
-            /* force ejection if we couldn't show the dialog */
-            rf = kKUNCOtherResponse;
-        }
-
-        fuse_lck_mtx_lock(data->timeout_mtx);
-        switch (rf) {
-        case kKUNCOtherResponse:     /* Force Eject      */
-            data->timeout_status = FUSE_DAEMON_TIMEOUT_DEAD;
-            fuse_lck_mtx_unlock(data->timeout_mtx);
-            break;
-
-        case kKUNCDefaultResponse:   /* Keep Trying      */
-        case kKUNCAlternateResponse: /* Don't Warn Again */
-        case kKUNCCancelResponse:    /* No Selection     */
-            data->timeout_status = FUSE_DAEMON_TIMEOUT_NONE;
-            if (rf == kKUNCAlternateResponse) {
-                data->daemon_timeout_p = NULL;
-            }
-            fuse_lck_mtx_unlock(data->timeout_mtx);
-            goto again;
-            break; /* NOTREACHED */
-
-        default:
-            IOLog("fuse4x: unknown response from alert panel (kr=%d, rf=%d)\n",
-                  kr, rf);
-            data->timeout_status = FUSE_DAEMON_TIMEOUT_DEAD;
-            fuse_lck_mtx_unlock(data->timeout_mtx);
-            break;
-        }
-
-alreadydead:
         if (!fdata_dead_get(data)) {
             struct vfsstatfs *statfs = vfs_statfs(data->mp);
             IOLog("fuse4x: daemon (pid=%d, mountpoint=%s) did not respond in %ld seconds. Mark the filesystem as dead.\n",
@@ -442,9 +344,6 @@ fdata_alloc(struct proc *p)
     data->rename_lock = lck_rw_alloc_init(fuse_lock_group, fuse_lock_attr);
 #endif
 
-    data->timeout_status = FUSE_DAEMON_TIMEOUT_NONE;
-    data->timeout_mtx    = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
-
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
 #if !M_FUSE4X_ENABLE_HUGE_LOCK
     data->biglock        = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
@@ -472,9 +371,6 @@ fdata_destroy(struct fuse_data *data)
     lck_rw_free(data->rename_lock, fuse_lock_group);
     data->rename_lock = NULL;
 #endif
-
-    data->timeout_status = FUSE_DAEMON_TIMEOUT_NONE;
-    lck_mtx_free(data->timeout_mtx, fuse_lock_group);
 
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
 #if !M_FUSE4X_ENABLE_HUGE_LOCK

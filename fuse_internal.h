@@ -27,17 +27,6 @@
 #include "fuse_locking.h"
 #include "fuse_node.h"
 
-#if M_FUSE4X_ENABLE_KUNC
-#include <UserNotification/KUNCUserNotifications.h>
-#else
-enum {
-    kKUNCDefaultResponse   = 0,
-    kKUNCAlternateResponse = 1,
-    kKUNCOtherResponse     = 2,
-    kKUNCCancelResponse    = 3
-};
-#endif
-
 struct fuse_attr;
 struct fuse_data;
 struct fuse_dispatcher;

@@ -193,8 +193,6 @@ struct fuse_data {
     uint32_t                   fssubtype;
     char                       volname[MAXPATHLEN];
 
-    uint32_t                   timeout_status;
-    lck_mtx_t                 *timeout_mtx;
     struct timespec            daemon_timeout;
     struct timespec           *daemon_timeout_p;
     struct timespec            init_timeout;
@@ -229,7 +227,6 @@ enum {
     FSESS_EXTENDED_SECURITY   = 1 << 10,
     FSESS_JAIL_SYMLINKS       = 1 << 11,
     FSESS_NEGATIVE_VNCACHE    = 1 << 13,
-    FSESS_NO_ALERTS           = 1 << 14,
     FSESS_NO_APPLEDOUBLE      = 1 << 15,
     FSESS_NO_APPLEXATTR       = 1 << 16,
     FSESS_NO_ATTRCACHE        = 1 << 17,

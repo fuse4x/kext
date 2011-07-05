@@ -46,7 +46,6 @@
 #define M_FUSE4X_ENABLE_DSELECT         0
 #define M_FUSE4X_ENABLE_EXCHANGE        1
 #define M_FUSE4X_ENABLE_KQUEUE          1
-#define M_FUSE4X_ENABLE_KUNC            0
 #if __LP64__
 #define M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK 1
 #endif /* __LP64__ */
