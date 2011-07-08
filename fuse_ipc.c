@@ -210,7 +210,6 @@ fticket_wait_answer(struct fuse_ticket *ftick)
         goto out;
     }
 
-again:
     err = fuse_msleep(ftick, ftick->tk_aw_mtx, PCATCH, "fu_ans", data->daemon_timeout_p);
 
     if (err == EAGAIN) { /* same as EWOULDBLOCK */
@@ -837,14 +836,14 @@ static int
 fuse_standard_handler(struct fuse_ticket *ftick, uio_t uio)
 {
     int err = 0;
-    int dropflag = 0;
+    bool dropflag = false;
 
     err = fticket_pull(ftick, uio);
 
     fuse_lck_mtx_lock(ftick->tk_aw_mtx);
 
     if (fticket_answered(ftick)) {
-        dropflag = 1;
+        dropflag = true;
     } else {
         fticket_set_answered(ftick);
         ftick->tk_aw_errno = err;
