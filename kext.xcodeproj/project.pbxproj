@@ -388,6 +388,7 @@
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -399,6 +400,7 @@
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -448,6 +450,7 @@
 				INFOPLIST_FILE = "kext-Info.plist";
 				INSTALL_PATH = "$(SYSTEM_LIBRARY_DIR)/Extensions";
 				LLVM_LTO = NO;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				MODULE_NAME = org.fuse4x.kext;
 				MODULE_START = fusefs_start;
 				MODULE_STOP = fusefs_stop;
@@ -471,6 +474,7 @@
 				INFOPLIST_FILE = "kext-Info.plist";
 				INSTALL_PATH = "$(SYSTEM_LIBRARY_DIR)/Extensions";
 				LLVM_LTO = NO;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				MODULE_NAME = org.fuse4x.kext;
 				MODULE_START = fusefs_start;
 				MODULE_STOP = fusefs_stop;
@@ -491,6 +495,7 @@
 				DE134AF213BD566100113A90 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		DEBF0B0113886AAC00A1755B /* Build configuration list for PBXProject "kext" */ = {
 			isa = XCConfigurationList;

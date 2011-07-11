@@ -2,13 +2,20 @@
  * Copyright (C) fuse4x.org 2011 All Rights Reserved.
  */
 #include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
 #include <sys/sysctl.h>
 #include <sys/mount.h>
 #include <grp.h>
+
+#ifdef AVAILABLE_MAC_OS_X_VERSION_10_6_AND_LATER
 #include <IOKit/kext/KextManager.h>
+#endif
 
 #include <fuse_param.h>
 #include <fuse_version.h>
+
+#define KEXTLOAD_PROGRAM "/sbin/kextload"
 
 int
 main(__unused int argc, __unused const char *argv[])
@@ -20,9 +27,9 @@ main(__unused int argc, __unused const char *argv[])
         return EXIT_SUCCESS;
     }
 
+#ifdef AVAILABLE_MAC_OS_X_VERSION_10_6_AND_LATER
     CFStringRef kextPath = CFSTR(FUSE4X_KEXT_PATH);
-    CFURLRef kextUrl = CFURLCreateWithFileSystemPath(
-        kCFAllocatorDefault, kextPath, kCFURLPOSIXPathStyle, true);
+    CFURLRef kextUrl = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, kextPath, kCFURLPOSIXPathStyle, true);
     OSReturn result = KextManagerLoadKextWithURL(kextUrl, NULL);
     CFRelease(kextUrl);
     CFRelease(kextPath);
@@ -30,6 +37,31 @@ main(__unused int argc, __unused const char *argv[])
         fprintf(stderr, "Cannot load kext from " FUSE4X_KEXT_PATH "\n");
         return EXIT_FAILURE;
     }
+#else
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        perror("fork");
+        return EXIT_FAILURE;
+    }
+
+    if (pid == 0) {
+        if (execl(KEXTLOAD_PROGRAM, KEXTLOAD_PROGRAM, FUSE4X_KEXT_PATH, NULL) < 0) {
+            perror("execl");
+            _exit(EXIT_FAILURE);
+        }
+    } else {
+        int status;
+        if (waitpid(pid, &status, 0) < 0) {
+            perror("waitpid");
+            return EXIT_FAILURE;
+        };
+
+        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+            return EXIT_FAILURE;
+        }
+    }
+#endif
 
     /* now do any kext-load-time settings we need to do as root */
     struct group *g = getgrnam(MACOSX_ADMIN_GROUP_NAME);
