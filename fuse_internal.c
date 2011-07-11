@@ -1463,6 +1463,7 @@ fuse_internal_vnode_disappear(vnode_t vp, vfs_context_t context, int how)
             IOLog("fuse4x: disappearing act: revoke failed (%d)\n", err);
         }
 
+#if __LP64__
         /* Checking whether the vnode is in the process of being recycled
          * to avoid the 'vnode reclaim in progress' kernel panic.
          *
@@ -1472,14 +1473,17 @@ fuse_internal_vnode_disappear(vnode_t vp, vfs_context_t context, int how)
          * that we got here.
          */
         if(!vnode_isrecycled(vp)) {
+#endif
             err = vnode_recycle(vp);
             if (err) {
                 IOLog("fuse4x: disappearing act: recycle failed (%d)\n", err);
             }
+#if __LP64__
         } else {
                 IOLog("fuse4x: Avoided 'vnode reclaim in progress' kernel "
                         "panic. What now?\n");
         }
+#endif
     }
 }
 
