@@ -15,11 +15,6 @@
 #include <libkern/locks.h>
 #include <IOKit/IOLib.h>
 
-#ifndef _FUSE_KERNEL_H_
-#define _FUSE_KERNEL_H_
-#include "fuse_kernel.h"
-#endif
-
 #include <fuse_param.h>
 #include <fuse_version.h>
 
@@ -190,41 +185,6 @@ FUSE_OSFree(void *addr, size_t size, OSMallocTag tag)
 #define FUSE_OSFree(addr, size, tag)       OSFree((addr), (uint32_t)(size), (tag))
 
 #endif /* FUSE_COUNT_MEMORY */
-
-static __inline__
-void *
-FUSE_OSRealloc_nocopy(void *oldptr, size_t oldsize, size_t newsize)
-{
-    void *data;
-
-    data = FUSE_OSMalloc(newsize, fuse_malloc_tag);
-    if (!data) {
-        panic("fuse4x: OSMalloc failed in realloc");
-    }
-
-    FUSE_OSFree(oldptr, oldsize, fuse_malloc_tag);
-    OSAddAtomic(1, (SInt32 *)&fuse_realloc_count);
-
-    return data;
-}
-
-static __inline__
-void *
-FUSE_OSRealloc_nocopy_canfail(void *oldptr, size_t oldsize, size_t newsize)
-{
-    void *data;
-
-    data = FUSE_OSMalloc(newsize, fuse_malloc_tag);
-    if (!data) {
-        goto out;
-    } else {
-        FUSE_OSFree(oldptr, oldsize, fuse_malloc_tag);
-        OSAddAtomic(1, (SInt32 *)&fuse_realloc_count);
-    }
-
-out:
-    return data;
-}
 
 typedef enum fuse_op_waitfor {
     FUSE_OP_BACKGROUNDED = 0,

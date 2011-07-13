@@ -43,6 +43,42 @@ static __inline__ void fuse_setup_ihead(struct fuse_in_header *ihead,
 
 static fuse_handler_t  fuse_standard_handler;
 
+
+static __inline__
+void *
+FUSE_OSRealloc_nocopy(void *oldptr, size_t oldsize, size_t newsize)
+{
+    void *data;
+
+    data = FUSE_OSMalloc(newsize, fuse_malloc_tag);
+    if (!data) {
+        panic("fuse4x: OSMalloc failed in realloc");
+    }
+
+    FUSE_OSFree(oldptr, oldsize, fuse_malloc_tag);
+    OSAddAtomic(1, (SInt32 *)&fuse_realloc_count);
+
+    return data;
+}
+
+static __inline__
+void *
+FUSE_OSRealloc_nocopy_canfail(void *oldptr, size_t oldsize, size_t newsize)
+{
+    void *data;
+
+    data = FUSE_OSMalloc(newsize, fuse_malloc_tag);
+    if (!data) {
+        goto out;
+    } else {
+        FUSE_OSFree(oldptr, oldsize, fuse_malloc_tag);
+        OSAddAtomic(1, (SInt32 *)&fuse_realloc_count);
+    }
+
+out:
+    return data;
+}
+
 void
 fiov_init(struct fuse_iov *fiov, size_t size)
 {

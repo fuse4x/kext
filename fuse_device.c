@@ -4,6 +4,7 @@
  */
 
 #include "fuse.h"
+#include "fuse_kernel.h"
 #include "fuse_device.h"
 #include "fuse_ipc.h"
 #include "fuse_internal.h"

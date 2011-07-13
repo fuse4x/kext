@@ -8,6 +8,7 @@
 #include <sys/sysctl.h>
 
 #include "fuse.h"
+#include "fuse_kernel.h"
 #include "fuse_device.h"
 #include "fuse_sysctl.h"
 #include <fuse_param.h>

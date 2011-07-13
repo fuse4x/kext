@@ -26,6 +26,7 @@
 #include "fuse_kludges.h"
 #include "fuse_locking.h"
 #include "fuse_node.h"
+#include "fuse_kernel.h"
 
 struct fuse_attr;
 struct fuse_data;

@@ -9,6 +9,7 @@
 #include "fuse_file.h"
 #include "fuse_knote.h"
 #include "fuse_nodehash.h"
+#include "fuse_kernel.h"
 #include <fuse_param.h>
 
 extern errno_t (**fuse_vnode_operations)(void *);
