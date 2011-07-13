@@ -21,10 +21,9 @@
 #endif
 
 #include <fuse_param.h>
-#include <fuse_sysctl.h>
 #include <fuse_version.h>
 
-#define FUSE_COUNT_MEMORY     1
+// #define FUSE_COUNT_MEMORY  1
 // #define FUSE_DEBUG         1
 // #define FUSE_KDEBUG        1
 // #define FUSE_KTRACE_OP     1
@@ -58,7 +57,6 @@
 #else
 #define FUSE_VNOP_EXPORT static
 #endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
-
 
 #define FUSE4X_TIMESTAMP __DATE__ ", " __TIME__
 
@@ -160,8 +158,6 @@ extern OSMallocTag fuse_malloc_tag;
 
 #ifdef FUSE_COUNT_MEMORY
 
-#define FUSE_OSAddAtomic(amount, value) OSAddAtomic((amount), (value))
-
 extern int32_t fuse_memory_allocated;
 
 static __inline__
@@ -174,7 +170,7 @@ FUSE_OSMalloc(size_t size, OSMallocTag tag)
         panic("fuse4x: memory allocation failed (size=%lu)", size);
     }
 
-    FUSE_OSAddAtomic((UInt32)size, (SInt32 *)&fuse_memory_allocated);
+    OSAddAtomic((UInt32)size, (SInt32 *)&fuse_memory_allocated);
 
     return addr;
 }
@@ -185,14 +181,13 @@ FUSE_OSFree(void *addr, size_t size, OSMallocTag tag)
 {
     OSFree(addr, (uint32_t)size, tag);
 
-    FUSE_OSAddAtomic(-(UInt32)(size), (SInt32 *)&fuse_memory_allocated);
+    OSAddAtomic(-(UInt32)(size), (SInt32 *)&fuse_memory_allocated);
 }
 
 #else
 
-#define FUSE_OSAddAtomic(amount, value)    {}
 #define FUSE_OSMalloc(size, tag)           OSMalloc((uint32_t)(size), (tag))
-#define FUSE_OSFree(addr, size, tag)       OSFree((addr), (size), (tag))
+#define FUSE_OSFree(addr, size, tag)       OSFree((addr), (uint32_t)(size), (tag))
 
 #endif /* FUSE_COUNT_MEMORY */
 
@@ -208,7 +203,7 @@ FUSE_OSRealloc_nocopy(void *oldptr, size_t oldsize, size_t newsize)
     }
 
     FUSE_OSFree(oldptr, oldsize, fuse_malloc_tag);
-    FUSE_OSAddAtomic(1, (SInt32 *)&fuse_realloc_count);
+    OSAddAtomic(1, (SInt32 *)&fuse_realloc_count);
 
     return data;
 }
@@ -224,7 +219,7 @@ FUSE_OSRealloc_nocopy_canfail(void *oldptr, size_t oldsize, size_t newsize)
         goto out;
     } else {
         FUSE_OSFree(oldptr, oldsize, fuse_malloc_tag);
-        FUSE_OSAddAtomic(1, (SInt32 *)&fuse_realloc_count);
+        OSAddAtomic(1, (SInt32 *)&fuse_realloc_count);
     }
 
 out:

@@ -55,7 +55,7 @@ fiov_init(struct fuse_iov *fiov, size_t size)
         panic("fuse4x: OSMalloc failed in fiov_init");
     }
 
-    FUSE_OSAddAtomic(1, (SInt32 *)&fuse_iov_current);
+    OSAddAtomic(1, (SInt32 *)&fuse_iov_current);
 
     bzero(fiov->base, msize);
 
@@ -69,7 +69,7 @@ fiov_teardown(struct fuse_iov *fiov)
     FUSE_OSFree(fiov->base, fiov->allocated_size, fuse_malloc_tag);
     fiov->allocated_size = 0;
 
-    FUSE_OSAddAtomic(-1, (SInt32 *)&fuse_iov_current);
+    OSAddAtomic(-1, (SInt32 *)&fuse_iov_current);
 }
 
 void
@@ -138,7 +138,7 @@ fticket_alloc(struct fuse_data *data)
         panic("fuse4x: OSMalloc failed in fticket_alloc");
     }
 
-    FUSE_OSAddAtomic(1, (SInt32 *)&fuse_tickets_current);
+    OSAddAtomic(1, (SInt32 *)&fuse_tickets_current);
 
     bzero(ftick, sizeof(struct fuse_ticket));
 
@@ -187,7 +187,7 @@ fticket_destroy(struct fuse_ticket *ftick)
 
     FUSE_OSFree(ftick, sizeof(struct fuse_ticket), fuse_malloc_tag);
 
-    FUSE_OSAddAtomic(-1, (SInt32 *)&fuse_tickets_current);
+    OSAddAtomic(-1, (SInt32 *)&fuse_tickets_current);
 }
 
 static int

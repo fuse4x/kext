@@ -472,7 +472,7 @@ bringup:
          */
         fufh->open_count = 1;
 
-        FUSE_OSAddAtomic(1, (SInt32 *)&fuse_fh_current);
+        OSAddAtomic(1, (SInt32 *)&fuse_fh_current);
     }
 
     cache_purge_negatives(dvp);
@@ -1313,15 +1313,15 @@ fuse_vnop_lookup(struct vnop_lookup_args *ap)
                 fuse_vncache_purge(*vpp);
                 vnode_put(*vpp);
                 *vpp = NULL;
-                FUSE_OSAddAtomic(1, (SInt32 *)&fuse_lookup_cache_overrides);
+                OSAddAtomic(1, (SInt32 *)&fuse_lookup_cache_overrides);
                 err = 0;
                 break; /* pretend it's a miss */
             }
-            FUSE_OSAddAtomic(1, (SInt32 *)&fuse_lookup_cache_hits);
+            OSAddAtomic(1, (SInt32 *)&fuse_lookup_cache_hits);
             return 0;
 
         case 0: /* no match in cache (or aged out) */
-            FUSE_OSAddAtomic(1, (SInt32 *)&fuse_lookup_cache_misses);
+            OSAddAtomic(1, (SInt32 *)&fuse_lookup_cache_misses);
             break;
 
         case ENOENT: /* negative match */
@@ -1684,7 +1684,7 @@ retry:
 
     if (FUFH_IS_VALID(fufh)) {
         FUFH_USE_INC(fufh);
-        FUSE_OSAddAtomic(1, (SInt32 *)&fuse_fh_reuse_count);
+        OSAddAtomic(1, (SInt32 *)&fuse_fh_reuse_count);
         goto out;
     }
 
@@ -1945,7 +1945,7 @@ fuse_vnop_open(struct vnop_open_args *ap)
 
     if (FUFH_IS_VALID(fufh)) {
         FUFH_USE_INC(fufh);
-        FUSE_OSAddAtomic(1, (SInt32 *)&fuse_fh_reuse_count);
+        OSAddAtomic(1, (SInt32 *)&fuse_fh_reuse_count);
         goto ok; /* return 0 */
     }
 
@@ -2449,7 +2449,7 @@ fuse_vnop_readdir(struct vnop_readdir_args *ap)
         }
         freefufh = 1;
     } else {
-        FUSE_OSAddAtomic(1, (SInt32 *)&fuse_fh_reuse_count);
+        OSAddAtomic(1, (SInt32 *)&fuse_fh_reuse_count);
     }
 
 #define DIRCOOKEDSIZE FUSE_DIRENT_ALIGN(FUSE_NAME_OFFSET + MAXNAMLEN + 1)
@@ -2624,7 +2624,7 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
                               vnode_isinuse(vp, 0), aux_count);
 #endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
                     } /* if counts did not match (both=1 for match currently) */
-                    FUSE_OSAddAtomic(1, (SInt32 *)&fuse_fh_zombies);
+                    OSAddAtomic(1, (SInt32 *)&fuse_fh_zombies);
                 } /* !deadfs */
 
                 (void)fuse_filehandle_put(vp, context, type,
@@ -2647,7 +2647,7 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
     if (HNodeDetachVNode(hn, vp)) {
         FSNodeScrub(fvdat);
         HNodeScrubDone(hn);
-        FUSE_OSAddAtomic(-1, (SInt32 *)&fuse_vnodes_current);
+        OSAddAtomic(-1, (SInt32 *)&fuse_vnodes_current);
     }
 
     return 0;

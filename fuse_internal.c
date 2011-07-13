@@ -1005,7 +1005,7 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
 
     } else { /* good fufh */
 
-        FUSE_OSAddAtomic(1, (SInt32 *)&fuse_fh_reuse_count);
+        OSAddAtomic(1, (SInt32 *)&fuse_fh_reuse_count);
 
         /* We're using an existing fufh of type fufh_type. */
     }

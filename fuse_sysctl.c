@@ -34,11 +34,13 @@ uint32_t fuse_lookup_cache_overrides = 0;                                  // r
 uint32_t fuse_max_freetickets        = FUSE_DEFAULT_MAX_FREE_TICKETS;      // rw
 uint32_t fuse_max_tickets            = 0;                                  // rw
 int32_t  fuse_mount_count            = 0;                                  // r
-int32_t  fuse_memory_allocated       = 0;                                  // r
 int32_t  fuse_realloc_count          = 0;                                  // r
 int32_t  fuse_tickets_current        = 0;                                  // r
 uint32_t fuse_userkernel_bufsize     = FUSE_DEFAULT_USERKERNEL_BUFSIZE;    // rw
 int32_t  fuse_vnodes_current         = 0;                                  // r
+#ifdef FUSE_COUNT_MEMORY
+int32_t  fuse_memory_allocated       = 0;                                  // r
+#endif
 
 SYSCTL_DECL(_vfs_generic);
 SYSCTL_NODE(_vfs_generic, OID_AUTO, fuse4x, CTLFLAG_RW, 0,
@@ -209,12 +211,14 @@ SYSCTL_INT(_vfs_generic_fuse4x_resourceusage, OID_AUTO, ipc_iovs, CTLFLAG_RD,
            &fuse_iov_current, 0, "");
 SYSCTL_INT(_vfs_generic_fuse4x_resourceusage, OID_AUTO, ipc_tickets, CTLFLAG_RD,
            &fuse_tickets_current, 0, "");
-SYSCTL_INT(_vfs_generic_fuse4x_resourceusage, OID_AUTO, memory_bytes, CTLFLAG_RD,
-           &fuse_memory_allocated, 0, "");
 SYSCTL_INT(_vfs_generic_fuse4x_resourceusage, OID_AUTO, mounts, CTLFLAG_RD,
            &fuse_mount_count, 0, "");
 SYSCTL_INT(_vfs_generic_fuse4x_resourceusage, OID_AUTO, vnodes, CTLFLAG_RD,
            &fuse_vnodes_current, 0, "");
+#ifdef FUSE_COUNT_MEMORY
+SYSCTL_INT(_vfs_generic_fuse4x_resourceusage, OID_AUTO, memory_bytes, CTLFLAG_RD,
+           &fuse_memory_allocated, 0, "");
+#endif
 
 /* fuse.tunables */
 SYSCTL_INT(_vfs_generic_fuse4x_tunables, OID_AUTO, admin_group, CTLFLAG_RW,
@@ -268,7 +272,9 @@ static struct sysctl_oid *fuse_sysctl_list[] =
     &sysctl__vfs_generic_fuse4x_resourceusage_filehandles_zombies,
     &sysctl__vfs_generic_fuse4x_resourceusage_ipc_iovs,
     &sysctl__vfs_generic_fuse4x_resourceusage_ipc_tickets,
+#ifdef FUSE_COUNT_MEMORY
     &sysctl__vfs_generic_fuse4x_resourceusage_memory_bytes,
+#endif
     &sysctl__vfs_generic_fuse4x_resourceusage_mounts,
     &sysctl__vfs_generic_fuse4x_resourceusage_vnodes,
     &sysctl__vfs_generic_fuse4x_tunables_admin_group,
