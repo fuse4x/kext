@@ -64,10 +64,10 @@ struct HNode {
     uint64_t ino;
 
     /* [2] [3] */
-    boolean_t attachOutstanding;
+    bool attachOutstanding;
 
     /* [2] true if someone is waiting for attachOutstanding to go false */
-    boolean_t waiting;
+    bool waiting;
 
     /* [2] size of forkVNodes array, must be non-zero */
     size_t forkVNodesSize;
@@ -369,7 +369,7 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
     HNodeRef   thisNode;
     HNodeRef   newNode;
     vnode_t   *newForkBuffer;
-    boolean_t  needsUnlock;
+    bool       needsUnlock;
     vnode_t    resultVN;
     uint32_t   vid;
 
@@ -389,7 +389,7 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
 
     newNode = NULL;
     newForkBuffer = NULL;
-    needsUnlock = TRUE;
+    needsUnlock = true;
     resultVN = NULL;
 
     lck_mtx_lock(gHashMutex);
@@ -513,7 +513,7 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
                  * overkill.
                  */
 
-                thisNode->waiting = TRUE;
+                thisNode->waiting = true;
 
                 (void)fuse_msleep(thisNode, gHashMutex, PINOD,
                                   "HNodeLookupCreatingIfNecessary", NULL);
@@ -611,7 +611,7 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
                  * until the caller has finished with it.
                  */
 
-                thisNode->attachOutstanding = TRUE;
+                thisNode->attachOutstanding = true;
                 thisNode->forkVNodesCount += 1;
 
                 /* Results for the caller. */
@@ -652,7 +652,7 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
                     assert(thisNode != NULL);
                     assert(resultVN == NULL);
                     resultVN = candidateVN;
-                    needsUnlock = FALSE;
+                    needsUnlock = false;
                 } else {
                     /* We're going to loop and retry, so relock the mutex. */
 
@@ -708,11 +708,11 @@ HNodeAttachComplete(HNodeRef hnode)
     LCK_MTX_ASSERT(gHashMutex, LCK_MTX_ASSERT_OWNED);
 
     assert(hnode->attachOutstanding);
-    hnode->attachOutstanding = FALSE;
+    hnode->attachOutstanding = false;
 
     if (hnode->waiting) {
         fuse_wakeup(hnode);
-        hnode->waiting = FALSE;
+        hnode->waiting = false;
     }
 }
 
@@ -721,17 +721,17 @@ HNodeAttachComplete(HNodeRef hnode)
  * the HNode is gone and we remove it from the hash table and return
  * true indicating to our caller that they need to clean it up.
  */
-static boolean_t
+static bool
 HNodeForkVNodeDecrement(HNodeRef hnode)
 {
-    boolean_t scrubIt;
+    bool scrubIt;
 
     assert(hnode != NULL);
     assert(hnode->magic == gMagic);
 
     LCK_MTX_ASSERT(gHashMutex, LCK_MTX_ASSERT_OWNED);
 
-    scrubIt = FALSE;
+    scrubIt = false;
 
     hnode->forkVNodesCount -= 1;
     assert(hnode->forkVNodesCount >= 0);
@@ -743,7 +743,7 @@ HNodeForkVNodeDecrement(HNodeRef hnode)
 
         gHashNodeCount -= 1;
 
-        scrubIt = TRUE;
+        scrubIt = true;
     }
 
     return scrubIt;
@@ -779,10 +779,10 @@ HNodeAttachVNodeSucceeded(HNodeRef hnode, size_t forkIndex, vnode_t vn)
     lck_mtx_unlock(gHashMutex);
 }
 
-extern boolean_t
+extern bool
 HNodeAttachVNodeFailed(HNodeRef hnode, __unused size_t forkIndex)
 {
-    boolean_t   scrubIt;
+    bool   scrubIt;
 
     lck_mtx_lock(gHashMutex);
 
@@ -809,12 +809,12 @@ HNodeAttachVNodeFailed(HNodeRef hnode, __unused size_t forkIndex)
     return scrubIt;
 }
 
-extern boolean_t
+extern bool
 HNodeDetachVNode(HNodeRef hnode, vnode_t vn)
 {
     errno_t   junk;
     size_t    forkIndex;
-    boolean_t scrubIt;
+    bool scrubIt;
 
     lck_mtx_lock(gHashMutex);
 
@@ -982,7 +982,7 @@ HNodeLookupRealQuickIfExists(fuse_device_t dev,
 {
     errno_t   err = EAGAIN;
     HNodeRef  thisNode;
-    boolean_t needsUnlock;
+    bool      needsUnlock;
     vnode_t   resultVN;
     uint32_t  vid;
 
@@ -992,7 +992,7 @@ HNodeLookupRealQuickIfExists(fuse_device_t dev,
     assert(*vnPtr == NULL);
     assert(gHashMutex != NULL);
 
-    needsUnlock = TRUE;
+    needsUnlock = true;
     resultVN = NULL;
 
     lck_mtx_lock(gHashMutex);
@@ -1024,7 +1024,7 @@ HNodeLookupRealQuickIfExists(fuse_device_t dev,
             vid = vnode_vid(candidateVN);
             lck_mtx_unlock(gHashMutex);
             err = vnode_getwithvid(candidateVN, vid);
-            needsUnlock = FALSE;
+            needsUnlock = false;
             if (err == 0) {
                 assert(thisNode != NULL);
                 assert(resultVN == NULL);

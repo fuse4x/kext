@@ -30,6 +30,7 @@
 #include "fuse_ipc.h"
 #include "fuse_node.h"
 #include "fuse_locking.h"
+#include <stdbool.h>
 
 lck_attr_t     *fuse_lock_attr    = NULL;
 lck_grp_attr_t *fuse_group_attr   = NULL;
@@ -434,7 +435,7 @@ void fusefs_recursive_lock_lock(fusefs_recursive_lock *lock)
 /* Currently not exported in header as we don't use it anywhere. */
 /* Can't find lck_mtx_try_lock in headers, so this function can't compile. */
 #if 0
-boolean_t fusefs_recursive_lock_try_lock(fusefs_recursive_lock *lock)
+bool fusefs_recursive_lock_try_lock(fusefs_recursive_lock *lock)
 {
     if (lock->thread == current_thread()) {
         lock->count++;
@@ -467,7 +468,7 @@ void fusefs_recursive_lock_unlock(fusefs_recursive_lock *lock)
 
 /* Currently not exported in header as we don't use it anywhere. */
 #if 0
-boolean_t fusefs_recursive_lock_have_lock(fusefs_recursive_lock *lock)
+bool fusefs_recursive_lock_have_lock(fusefs_recursive_lock *lock)
 {
     return lock->thread == current_thread();
 }

@@ -25,6 +25,7 @@
 #define _FUSE_NODEHASH_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <sys/systm.h>
 #include <sys/vnode.h>
 #include <libkern/OSMalloc.h>
@@ -536,7 +537,7 @@ extern void      HNodeAttachVNodeSucceeded(HNodeRef hnode,
 //
 // If this routine returns true, you must scrub the FSNode associated with the HNode
 // and then call HNodeScrubDone on the HNode.
-extern boolean_t HNodeAttachVNodeFailed(HNodeRef hnode, size_t forkIndex);
+extern bool HNodeAttachVNodeFailed(HNodeRef hnode, size_t forkIndex);
 
 // Detaches a vnode from an HNode.  You must [should?] only call this from your
 // VNOPReclaim routine.
@@ -548,7 +549,7 @@ extern boolean_t HNodeAttachVNodeFailed(HNodeRef hnode, size_t forkIndex);
 //
 // Note
 // This routine removes the FS reference on the vnode (it calls vnode_removefsref).
-extern boolean_t HNodeDetachVNode(HNodeRef hnode, vnode_t vn);
+extern bool HNodeDetachVNode(HNodeRef hnode, vnode_t vn);
 
 // Deallocates an HNode.  You must call this routine on an HNode if either
 // HNodeAttachVNodeFailed or HNodeDetachVNode returns true.

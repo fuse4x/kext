@@ -11,6 +11,7 @@
 #include "fuse_nodehash.h"
 #include "fuse_kernel.h"
 #include <fuse_param.h>
+#include <stdbool.h>
 
 extern errno_t (**fuse_vnode_operations)(void *);
 
@@ -58,7 +59,7 @@ struct fuse_vnode_data {
 
     /** check **/
     uint32_t   fMagic;
-    boolean_t  fInitialised;
+    bool       fInitialised;
 
     /** self **/
     vnode_t    vp;

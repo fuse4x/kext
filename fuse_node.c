@@ -14,6 +14,7 @@
 #include "fuse_locking.h"
 #include "fuse_node.h"
 #include "fuse_sysctl.h"
+#include <stdbool.h>
 
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
 #include "fuse_biglock_vnops.h"
@@ -56,7 +57,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
         return EINVAL;
     }
 
-    int      markroot   = (flags & FN_IS_ROOT) ? TRUE : FALSE;
+    bool     markroot   = (flags & FN_IS_ROOT) ? true : false;
     uint64_t size       = (flags & FN_IS_ROOT) ? 0    : feo->attr.size;
     uint32_t rdev       = (flags & FN_IS_ROOT) ? 0    : feo->attr.rdev;
     uint64_t generation = feo->generation;
@@ -76,7 +77,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
 
             /* check */
             fvdat->fMagic       = kFSNodeMagic;
-            fvdat->fInitialised = TRUE;
+            fvdat->fInitialised = true;
 
             /* self */
             fvdat->vp           = NULLVP; /* hold on */
@@ -165,7 +166,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
                 (void)rdev;
             }
 
-            params.vnfs_marksystem = FALSE;
+            params.vnfs_marksystem = false;
             params.vnfs_cnp        = NULL;
             params.vnfs_flags      = VNFS_NOCACHE | VNFS_CANTCACHE;
             params.vnfs_filesize   = size;
@@ -182,7 +183,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
         }
 
         if (err == 0) {
-            if (markroot == TRUE) {
+            if (markroot) {
                 fvdat->parentvp = vn;
             } else {
                 fvdat->parentvp = dvp;
