@@ -21,6 +21,7 @@
 #include <sys/uio.h>
 #include <sys/vnode.h>
 #include <sys/xattr.h>
+#include <AvailabilityMacros.h>
 
 #include "fuse_ipc.h"
 #include "fuse_kludges.h"
@@ -59,19 +60,28 @@ extern const char *vnode_getname(vnode_t vp);
 extern void  vnode_putname(const char *name);
 #endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
 
+
 static __inline__
 int
 fuse_match_cred(kauth_cred_t daemoncred, kauth_cred_t requestcred)
 {
-    if ((daemoncred->cr_uid == requestcred->cr_uid)             &&
-        (daemoncred->cr_uid == requestcred->cr_ruid)            &&
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
+    posix_cred_t daemonpcred = &(daemoncred->cr_posix);
+    posix_cred_t requestpcred = &(requestcred->cr_posix);
+#else
+    kauth_cred_t daemonpcred = daemoncred;
+    kauth_cred_t requestpcred = requestcred;
+#endif
+    
+    if ((daemonpcred->cr_uid == requestpcred->cr_uid)             &&
+        (daemonpcred->cr_uid == requestpcred->cr_ruid)            &&
 
         // THINK_ABOUT_THIS_LATER
-        // (daemoncred->cr_uid == requestcred->cr_svuid)        &&
+        // (daemonpcred->cr_uid == requestpcred->cr_svuid)        &&
 
-        (daemoncred->cr_groups[0] == requestcred->cr_groups[0]) &&
-        (daemoncred->cr_groups[0] == requestcred->cr_rgid)      &&
-        (daemoncred->cr_groups[0] == requestcred->cr_svgid)) {
+        (daemonpcred->cr_groups[0] == requestpcred->cr_groups[0]) &&
+        (daemonpcred->cr_groups[0] == requestpcred->cr_rgid)      &&
+        (daemonpcred->cr_groups[0] == requestpcred->cr_svgid)) {
         return 0;
     }
 
@@ -82,7 +92,7 @@ static __inline__
 int
 fuse_vfs_context_issuser(vfs_context_t context)
 {
-    return (vfs_context_ucred(context)->cr_uid == 0);
+    return (kauth_cred_getuid(vfs_context_ucred(context)) == 0);
 }
 
 static __inline__

@@ -270,7 +270,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
             IOLog("fuse4x: caller is not a member of fuse4x admin group. "
                   "Either add user (id=%d) to group (id=%d), "
                   "or set correct '" SYSCTL_FUSE4X_TUNABLES_ADMIN "' sysctl value.\n",
-                  kauth_cred_get()->cr_uid, fuse_admin_group);
+                  kauth_cred_getuid(kauth_cred_get()), fuse_admin_group);
             return EPERM;
         }
         mntopts |= FSESS_ALLOW_ROOT;
@@ -281,7 +281,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
                 IOLog("fuse4x: caller is not a member of fuse4x admin group. "
                       "Either add user (id=%d) to group (id=%d), "
                       "or set correct '" SYSCTL_FUSE4X_TUNABLES_ADMIN "' sysctl value.\n",
-                      kauth_cred_get()->cr_uid, fuse_admin_group);
+                      kauth_cred_getuid(kauth_cred_get()), fuse_admin_group);
                 return EPERM;
             }
         }
@@ -449,11 +449,11 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
     }
 
     if (fuse_vfs_context_issuser(context) &&
-        vfs_context_ucred(context)->cr_uid != data->daemoncred->cr_uid) {
+        kauth_cred_getuid(vfs_context_ucred(context)) != kauth_cred_getuid(data->daemoncred)) {
         fuse_device_unlock(fdev);
         err = EPERM;
         IOLog("fuse4x: fuse daemon running by user_id=%d does not have privileges to mount on directory %s owned by user_id=%d\n",
-              data->daemoncred->cr_uid, vfsstatfsp->f_mntonname, vfs_context_ucred(context)->cr_uid);
+              kauth_cred_getuid(data->daemoncred), vfsstatfsp->f_mntonname, kauth_cred_getuid(vfs_context_ucred(context)));
         goto out;
     }
 
@@ -519,7 +519,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         vfsstatfsp->f_files  = vfs_attr.f_files;
         vfsstatfsp->f_ffree  = vfs_attr.f_ffree;
         // vfsstatfsp->f_fsid already handled above
-        vfsstatfsp->f_owner  = data->daemoncred->cr_uid;
+        vfsstatfsp->f_owner  = kauth_cred_getuid(data->daemoncred);
         vfsstatfsp->f_flags  = vfs_flags(mp);
         // vfsstatfsp->f_fstypename already handled above
         // vfsstatfsp->f_mntonname handled elsewhere
