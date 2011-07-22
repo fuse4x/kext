@@ -7,8 +7,9 @@
 #include <sys/sysctl.h>
 #include <sys/mount.h>
 #include <grp.h>
+#include <AvailabilityMacros.h>
 
-#ifdef AVAILABLE_MAC_OS_X_VERSION_10_6_AND_LATER
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
 #include <IOKit/kext/KextManager.h>
 #endif
 
@@ -27,7 +28,7 @@ main(__unused int argc, __unused const char *argv[])
         return EXIT_SUCCESS;
     }
 
-#ifdef AVAILABLE_MAC_OS_X_VERSION_10_6_AND_LATER
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
     CFStringRef kextPath = CFSTR(FUSE4X_KEXT_PATH);
     CFURLRef kextUrl = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, kextPath, kCFURLPOSIXPathStyle, true);
     OSReturn result = KextManagerLoadKextWithURL(kextUrl, NULL);
