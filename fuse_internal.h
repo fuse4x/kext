@@ -72,7 +72,7 @@ fuse_match_cred(kauth_cred_t daemoncred, kauth_cred_t requestcred)
     kauth_cred_t daemonpcred = daemoncred;
     kauth_cred_t requestpcred = requestcred;
 #endif
-    
+
     if ((daemonpcred->cr_uid == requestpcred->cr_uid)             &&
         (daemonpcred->cr_uid == requestpcred->cr_ruid)            &&
 

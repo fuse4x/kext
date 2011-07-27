@@ -2952,7 +2952,7 @@ struct vnop_select_args {
 */
 FUSE_VNOP_EXPORT
 int
-fuse_vnop_select(__unused struct vnop_select_args *ap)
+fuse_vnop_select(struct vnop_select_args *ap)
 {
     fuse_trace_printf_vnop_novp();
 
