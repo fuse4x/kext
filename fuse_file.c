@@ -58,7 +58,7 @@ fuse_filehandle_get(vnode_t       vp,
         isdir = 1;
         op = FUSE_OPENDIR;
         if (fufh_type != FUFH_RDONLY) {
-            IOLog("fuse4x: non-rdonly fufh requested for directory\n");
+            log("fuse4x: non-rdonly fufh requested for directory\n");
             fufh_type = FUFH_RDONLY;
         }
     }
@@ -85,7 +85,7 @@ fuse_filehandle_get(vnode_t       vp,
             cache_purge(vp);
         }
 #if M_FUSE4X_ENABLE_UNSUPPORTED
-        IOLog("fuse4x: filehandle_get: failed for %s "
+        log("fuse4x: filehandle_get: failed for %s "
               "(type=%d, err=%d, caller=%p)\n",
               (vname) ? vname : "?", fufh_type, err,
                __builtin_return_address(0));

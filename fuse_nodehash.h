@@ -555,7 +555,7 @@ extern bool HNodeDetachVNode(HNodeRef hnode, vnode_t vn);
 // HNodeAttachVNodeFailed or HNodeDetachVNode returns true.
 extern void      HNodeScrubDone(HNodeRef hnode);
 
-// Prints the current state of this module using printf.  This is a debugging aid
+// Prints the current state of this module using log().  This is a debugging aid
 // only.  It makes a best attempt to be thead safe, but there are still race conditions.
 void             HNodePrintState(void);
 

@@ -167,7 +167,7 @@ fuse_internal_access(vnode_t                   vp,
         vname = vnode_getname(vp);
 #endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
 
-        IOLog("fuse4x: disappearing vnode %p (name=%s type=%d action=%x)\n",
+        log("fuse4x: disappearing vnode %p (name=%s type=%d action=%x)\n",
               vp, (vname) ? vname : "?", vnode_vtype(vp), action);
 
 #if M_FUSE4X_ENABLE_UNSUPPORTED
@@ -308,7 +308,7 @@ fuse_internal_fsync_callback(struct fuse_ticket *ftick, __unused uio_t uio)
         } else if (fticket_opcode(ftick) == FUSE_FSYNCDIR) {
             fuse_clear_implemented(ftick->tk_data, FSESS_NOIMPLBIT(FSYNCDIR));
         } else {
-            IOLog("fuse4x: unexpected opcode in sync handling\n");
+            log("fuse4x: unexpected opcode in sync handling\n");
         }
     }
 
@@ -848,7 +848,7 @@ fuse_internal_remove(vnode_t               dvp,
 #endif
             vfs_unbusy(mp);
         } else {
-            IOLog("fuse4x: skipping link count fixup upon remove\n");
+            log("fuse4x: skipping link count fixup upon remove\n");
         }
     }
 
@@ -1020,11 +1020,11 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
              return EIO;
          }
 
-         IOLog("fuse4x: strategy failed to get fh "
+         log("fuse4x: strategy failed to get fh "
                "(vtype=%d, fufh_type=%d, err=%d)\n", vtype, fufh_type, err);
 
          if (!vfs_issynchronous(mp)) {
-             IOLog("fuse4x: asynchronous write failed!\n");
+             log("fuse4x: asynchronous write failed!\n");
          }
 
          buf_seterror(bp, EIO);
@@ -1041,11 +1041,11 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
 #define B_ERROR 0x00080000 /* I/O error occurred. */
 
     if (bflags & B_INVAL) {
-        IOLog("fuse4x: buffer does not contain valid information\n");
+        log("fuse4x: buffer does not contain valid information\n");
     }
 
     if (bflags & B_ERROR) {
-        IOLog("fuse4x: an I/O error has occured\n");
+        log("fuse4x: an I/O error has occured\n");
     }
 
     if (buf_count(bp) == 0) {
@@ -1078,7 +1078,7 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
         }
 
         if (buf_map(bp, &bufdat)) {
-            IOLog("fuse4x: failed to map buffer in strategy\n");
+            log("fuse4x: failed to map buffer in strategy\n");
             return EFAULT;
         } else {
             mapped = true;
@@ -1150,7 +1150,7 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
         off_t diff;
 
         if (buf_map(bp, &bufdat)) {
-            IOLog("fuse4x: failed to map buffer in strategy\n");
+            log("fuse4x: failed to map buffer in strategy\n");
             return EFAULT;
         } else {
             mapped = true;
@@ -1461,7 +1461,7 @@ fuse_internal_vnode_disappear(vnode_t vp, vfs_context_t context, int how)
     if (how != REVOKE_NONE) {
         err = fuse_internal_revoke(vp, REVOKEALL, context, how);
         if (err) {
-            IOLog("fuse4x: disappearing act: revoke failed (%d)\n", err);
+            log("fuse4x: disappearing act: revoke failed (%d)\n", err);
         }
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
@@ -1477,11 +1477,11 @@ fuse_internal_vnode_disappear(vnode_t vp, vfs_context_t context, int how)
 #endif
             err = vnode_recycle(vp);
             if (err) {
-                IOLog("fuse4x: disappearing act: recycle failed (%d)\n", err);
+                log("fuse4x: disappearing act: recycle failed (%d)\n", err);
             }
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
         } else {
-                IOLog("fuse4x: Avoided 'vnode reclaim in progress' kernel "
+                log("fuse4x: Avoided 'vnode reclaim in progress' kernel "
                         "panic. What now?\n");
         }
 #endif
@@ -1501,13 +1501,13 @@ fuse_internal_init_handler(struct fuse_ticket *ftick, __unused uio_t uio)
     fuse_trace_printf_func();
 
     if ((err = ftick->tk_aw_ohead.error)) {
-        IOLog("fuse4x: user-space initialization failed (%d)\n", err);
+        log("fuse4x: user-space initialization failed (%d)\n", err);
         goto out;
     }
 
     err = fticket_pull(ftick, uio);
     if (err) {
-        IOLog("fuse4x: cannot pull ticket\n");
+        log("fuse4x: cannot pull ticket\n");
         goto out;
     }
 
@@ -1515,7 +1515,7 @@ fuse_internal_init_handler(struct fuse_ticket *ftick, __unused uio_t uio)
 
     if ((fiio->major < FUSE_KERNEL_VERSION) ||
         (fiio->minor < FUSE_KERNEL_MINOR_VERSION)) {
-        IOLog("fuse4x: user-space library has outdated protocol version. Required(%d.%d), user returned (%d.%d)\n",
+        log("fuse4x: user-space library has outdated protocol version. Required(%d.%d), user returned (%d.%d)\n",
               FUSE_KERNEL_VERSION, FUSE_KERNEL_MINOR_VERSION,
               fiio->major, fiio->minor);
         err = EPROTONOSUPPORT;
@@ -1592,16 +1592,16 @@ fuse_internal_print_vnodes_callback(vnode_t vp, __unused void *cargs)
 #endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
 
     if (vname) {
-        IOLog("fuse4x: vp=%p ino=%lld parent=%lld inuse=%d %s\n",
+        log("fuse4x: vp=%p ino=%lld parent=%lld inuse=%d %s\n",
               vp, fvdat->nodeid, fvdat->parent_nodeid,
               vnode_isinuse(vp, 0), vname);
     } else {
         if (fvdat->nodeid == FUSE_ROOT_ID) {
-            IOLog("fuse4x: vp=%p ino=%lld parent=%lld inuse=%d /\n",
+            log("fuse4x: vp=%p ino=%lld parent=%lld inuse=%d /\n",
                   vp, fvdat->nodeid, fvdat->parent_nodeid,
                   vnode_isinuse(vp, 0));
         } else {
-            IOLog("fuse4x: vp=%p ino=%lld parent=%lld inuse=%d\n",
+            log("fuse4x: vp=%p ino=%lld parent=%lld inuse=%d\n",
                   vp, fvdat->nodeid, fvdat->parent_nodeid,
                   vnode_isinuse(vp, 0));
         }
@@ -1638,11 +1638,11 @@ fuse_preflight_log(vnode_t vp, fufh_type_t fufh_type, int err, char *message)
 #endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
 
     if (vname) {
-        IOLog("fuse4x: file handle preflight "
+        log("fuse4x: file handle preflight "
               "(caller=%s, type=%d, err=%d, name=%s)\n",
               message, fufh_type, err, vname);
     } else {
-        IOLog("fuse4x: file handle preflight "
+        log("fuse4x: file handle preflight "
               "(caller=%s, type=%d, err=%d)\n", message, fufh_type, err);
     }
 

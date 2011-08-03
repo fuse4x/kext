@@ -11,8 +11,10 @@
 #ifndef _FUSE_LOCKING_H_
 #define _FUSE_LOCKING_H_
 
-#include "fuse_node.h"
 #include <IOKit/IOLocks.h>
+
+#include "fuse.h"
+#include "fuse_node.h"
 
 enum fusefslocktype {
     FUSEFS_SHARED_LOCK    = 1,
@@ -48,20 +50,20 @@ extern lck_mtx_t      *fuse_device_mutex;
 #define fuse_lck_mtx_lock(m)                                                  \
     {                                                                         \
         proc_t __FUNCTION__ ## p = current_proc();                            \
-        IOLog("0: lck_mtx_lock(%p): %s@%d by %d\n", (m), __FUNCTION__,        \
+        log("0: lck_mtx_lock(%p): %s@%d by %d\n", (m), __FUNCTION__,          \
            __LINE__, (__FUNCTION__ ## p) ? proc_pid(__FUNCTION__ ## p) : 0);  \
         lck_mtx_lock((m));                                                    \
-        IOLog("1: lck_mtx_lock(%p): %s@%d by %d\n", (m), __FUNCTION__,        \
+        log("1: lck_mtx_lock(%p): %s@%d by %d\n", (m), __FUNCTION__,          \
            __LINE__, (__FUNCTION__ ## p) ? proc_pid(__FUNCTION__ ## p) : 0);  \
     }
 
 #define fuse_lck_mtx_unlock(m)                                                \
     {                                                                         \
         proc_t __FUNCTION__ ## p = current_proc();                            \
-        IOLog("1: lck_mtx_unlock(%p): %s@%d by %d\n", (m), __FUNCTION__,      \
+        log("1: lck_mtx_unlock(%p): %s@%d by %d\n", (m), __FUNCTION__,        \
            __LINE__, (__FUNCTION__ ## p) ? proc_pid(__FUNCTION__ ## p) : 0);  \
         lck_mtx_unlock((m));                                                  \
-        IOLog("0: lck_mtx_unlock(%p): %s@%d by %d\n", (m), __FUNCTION__,      \
+        log("0: lck_mtx_unlock(%p): %s@%d by %d\n", (m), __FUNCTION__,        \
            __LINE__, (__FUNCTION__ ## p) ? proc_pid(__FUNCTION__ ## p) : 0);  \
     }
 
@@ -92,10 +94,6 @@ extern fusefs_recursive_lock* fusefs_recursive_lock_alloc(void);
 extern void fusefs_recursive_lock_free(fusefs_recursive_lock* lock);
 extern void fusefs_recursive_lock_lock(fusefs_recursive_lock *lock);
 extern void fusefs_recursive_lock_unlock(fusefs_recursive_lock *lock);
-
-#if M_FUSE4X_ENABLE_LOCK_LOGGING
-extern lck_mtx_t *fuse_log_lock;
-#endif /* M_FUSE4X_ENABLE_LOCK_LOGGING */
 
 #if M_FUSE4X_ENABLE_HUGE_LOCK
 extern fusefs_recursive_lock *fuse_huge_lock;

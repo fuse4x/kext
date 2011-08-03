@@ -267,7 +267,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
     if (fusefs_args.altflags & FUSE_MOPT_ALLOW_ROOT) {
         int is_member = 0;
         if ((kauth_cred_ismember_gid(kauth_cred_get(), fuse_admin_group, &is_member) != 0) || !is_member) {
-            IOLog("fuse4x: caller is not a member of fuse4x admin group. "
+            log("fuse4x: caller is not a member of fuse4x admin group. "
                   "Either add user (id=%d) to group (id=%d), "
                   "or set correct '" SYSCTL_FUSE4X_TUNABLES_ADMIN "' sysctl value.\n",
                   kauth_cred_getuid(kauth_cred_get()), fuse_admin_group);
@@ -278,7 +278,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         if (!fuse_allow_other && !fuse_vfs_context_issuser(context)) {
             int is_member = 0;
             if ((kauth_cred_ismember_gid(kauth_cred_get(), fuse_admin_group, &is_member) != 0) || !is_member) {
-                IOLog("fuse4x: caller is not a member of fuse4x admin group. "
+                log("fuse4x: caller is not a member of fuse4x admin group. "
                       "Either add user (id=%d) to group (id=%d), "
                       "or set correct '" SYSCTL_FUSE4X_TUNABLES_ADMIN "' sysctl value.\n",
                       kauth_cred_getuid(kauth_cred_get()), fuse_admin_group);
@@ -346,7 +346,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
 
         /* Cannot mix 'nosyncwrites' with 'noubc' or 'noreadahead'. */
         if (mntopts & (FSESS_NO_READAHEAD | FSESS_NO_UBC)) {
-            IOLog("fuse4x: cannot mix 'nosyncwrites' with 'noubc' or 'noreadahead'\n");
+            log("fuse4x: cannot mix 'nosyncwrites' with 'noubc' or 'noreadahead'\n");
             return EINVAL;
         }
 
@@ -402,7 +402,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
 
     fdev = fuse_device_get(fusefs_args.rdev);
     if (!fdev) {
-        IOLog("fuse4x: invalid device file (number=%d)\n", fusefs_args.rdev);
+        log("fuse4x: invalid device file (number=%d)\n", fusefs_args.rdev);
         return EINVAL;
     }
 
@@ -452,7 +452,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         kauth_cred_getuid(vfs_context_ucred(context)) != kauth_cred_getuid(data->daemoncred)) {
         fuse_device_unlock(fdev);
         err = EPERM;
-        IOLog("fuse4x: fuse daemon running by user_id=%d does not have privileges to mount on directory %s owned by user_id=%d\n",
+        log("fuse4x: fuse daemon running by user_id=%d does not have privileges to mount on directory %s owned by user_id=%d\n",
               kauth_cred_getuid(data->daemoncred), vfsstatfsp->f_mntonname, kauth_cred_getuid(vfs_context_ucred(context)));
         goto out;
     }
@@ -638,12 +638,12 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
          * quite pure to do that though.
          *
          *    flags |= FORCECLOSE;
-         *    IOLog("fuse4x: forcing unmount on a dead file system\n");
+         *    log("fuse4x: forcing unmount on a dead file system\n");
          */
 
     } else if (!(data->dataflags & FSESS_INITED)) {
         flags |= FORCECLOSE;
-        IOLog("fuse4x: forcing unmount on not-yet-alive file system\n");
+        log("fuse4x: forcing unmount on not-yet-alive file system\n");
         fdata_set_dead(data);
     }
 

@@ -203,7 +203,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
 
     if (err == 0) {
         if (vnode_vtype(vn) != vtyp) {
-            IOLog("fuse4x: vnode changed type behind us (old=%d, new=%d)\n",
+            log("fuse4x: vnode changed type behind us (old=%d, new=%d)\n",
                   vnode_vtype(vn), vtyp);
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
             fuse_biglock_unlock(mntdata->biglock);
@@ -215,7 +215,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
             vnode_put(vn);
             err = EIO;
         } else if (VTOFUD(vn)->generation != generation) {
-            IOLog("fuse4x: vnode changed generation\n");
+            log("fuse4x: vnode changed generation\n");
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
             fuse_biglock_unlock(mntdata->biglock);
 #endif

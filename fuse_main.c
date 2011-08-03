@@ -50,6 +50,7 @@ fini_stuff(void)
         fuse_huge_lock = NULL;
     }
 #endif /* M_FUSE4X_ENABLE_HUGE_LOCK */
+#endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
 
 #if M_FUSE4X_ENABLE_LOCK_LOGGING
     if (fuse_log_lock) {
@@ -57,7 +58,6 @@ fini_stuff(void)
         fuse_log_lock = NULL;
     }
 #endif /* M_FUSE4X_ENABLE_LOCK_LOGGING */
-#endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
 
     if (fuse_lock_group) {
         lck_grp_free(fuse_lock_group);
@@ -110,7 +110,6 @@ init_stuff(void)
         }
     }
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
 #if M_FUSE4X_ENABLE_LOCK_LOGGING
     if (ret == KERN_SUCCESS) {
         fuse_log_lock = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
@@ -120,6 +119,7 @@ init_stuff(void)
     }
 #endif /* M_FUSE4X_ENABLE_LOCK_LOGGING */
 
+#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
 #if M_FUSE4X_ENABLE_HUGE_LOCK
     if (ret == KERN_SUCCESS) {
         fuse_huge_lock = fusefs_recursive_lock_alloc();
@@ -166,8 +166,7 @@ fusefs_start(__unused kmod_info_t *ki, __unused void *d)
 
     fuse_sysctl_start();
 
-    IOLog("fuse4x: starting (version %s, %s)\n",
-          FUSE4X_VERSION, FUSE4X_TIMESTAMP);
+    log("fuse4x: starting (version %s, %s)\n", FUSE4X_VERSION, FUSE4X_TIMESTAMP);
 
     return KERN_SUCCESS;
 
@@ -201,8 +200,7 @@ fusefs_stop(__unused kmod_info_t *ki, __unused void *d)
 
     fuse_sysctl_stop();
 
-    IOLog("fuse4x: stopping (version %s, %s)\n",
-          FUSE4X_VERSION, FUSE4X_TIMESTAMP);
+    IOLog("fuse4x: stopping (version %s, %s)\n", FUSE4X_VERSION, FUSE4X_TIMESTAMP);
 
     return KERN_SUCCESS;
 }

@@ -939,27 +939,27 @@ HNodePrintState(void)
     /* Print the snapshot. */
 
     if (err == 0) {
-        printf("HNodePrintState\n");
+        log("HNodePrintState\n");
         for (nodeIndex = 0; nodeIndex < nodeCount; nodeIndex++) {
             HNode  *thisNode;
             size_t  forkIndex;
 
             thisNode = &nodes[nodeIndex];
 
-            printf("{%p.%lld %c%c ", thisNode->dev, thisNode->ino,
+            log("{%p.%lld %c%c ", thisNode->dev, thisNode->ino,
                    " A"[thisNode->attachOutstanding], " W"[thisNode->waiting]);
 
             for (forkIndex = 0; forkIndex < thisNode->forkVNodesSize;
                  forkIndex++) {
                 if (forkIndex > 0) {
-                    printf(" ");
+                    log(" ");
                 }
-                printf("%p", thisNode->forkVNodes[forkIndex]);
+                log("%p", thisNode->forkVNodes[forkIndex]);
             }
-            printf("}");
+            log("}");
 
             if (nodes[nodeIndex].hashLink.le_next == NULL) {
-                printf("\n");
+                log("\n");
             }
         }
     }

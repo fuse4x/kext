@@ -7,43 +7,10 @@
 #define _FUSE_BIGLOCK_VNOPS_H_
 
 #include <fuse_param.h>
+#include "fuse.h"
 #include "fuse_locking.h"
 
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
-
-#if M_FUSE4X_ENABLE_LOCK_LOGGING
-#define rawlog(msg, args...) IOLog(msg, ##args)
-
-#define log(fmt, args...) \
-	do { \
-		lck_mtx_lock(fuse_log_lock); \
-		rawlog(fmt, ##args); \
-		rawlog("\n"); \
-		lck_mtx_unlock(fuse_log_lock); \
-	} while(0)
-
-#define log_enter(params_format, args...) \
-	do { \
-		lck_mtx_lock(fuse_log_lock); \
-		rawlog("[%s:%d] Entering %s: ", __FILE__, __LINE__, __FUNCTION__); \
-		rawlog(params_format, ##args); \
-		rawlog("\n"); \
-		lck_mtx_unlock(fuse_log_lock); \
-	} while(0)
-
-#define log_leave(return_format, args...) \
-	do { \
-		lck_mtx_lock(fuse_log_lock); \
-		rawlog("[%s:%d] Leaving %s: ", __FILE__, __LINE__, __FUNCTION__); \
-		rawlog(return_format, ##args); \
-		rawlog("\n"); \
-		lck_mtx_unlock(fuse_log_lock); \
-	} while(0)
-#else
-#define log(fmt, args...) do {} while(0)
-#define log_enter(params_format, args...) do {} while(0)
-#define log_leave(return_format, args...) do {} while(0)
-#endif /* M_FUSE4X_ENABLE_LOCK_LOGGING */
 
 #if M_FUSE4X_ENABLE_HUGE_LOCK
 #define fuse_hugelock_lock() \

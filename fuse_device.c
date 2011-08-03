@@ -147,7 +147,7 @@ fuse_device_open(dev_t dev, __unused int flags, __unused int devtype,
     fdev = FUSE_DEVICE_FROM_UNIT_FAST(unit);
     if (!fdev) {
         FUSE_DEVICE_GLOBAL_UNLOCK();
-        IOLog("fuse4x: device found with no softc\n");
+        log("fuse4x: device found with no softc\n");
         return ENXIO;
     }
 
@@ -404,7 +404,7 @@ fuse_device_write(dev_t dev, uio_t uio, __unused int ioflag)
     }
 
     if (uio_resid(uio) < (user_ssize_t)sizeof(struct fuse_out_header)) {
-        IOLog("fuse4x: Incorrect header size. Got %lld, expected at least %lu\n",
+        log("fuse4x: Incorrect header size. Got %lld, expected at least %lu\n",
               uio_resid(uio), sizeof(struct fuse_out_header));
         return EINVAL;
     }
@@ -416,12 +416,12 @@ fuse_device_write(dev_t dev, uio_t uio, __unused int ioflag)
     /* begin audit */
 
     if (uio_resid(uio) + sizeof(struct fuse_out_header) != ohead.len) {
-        IOLog("fuse4x: message body size does not match that in the header\n");
+        log("fuse4x: message body size does not match that in the header\n");
         return EINVAL;
     }
 
     if (uio_resid(uio) && ohead.error) {
-        IOLog("fuse4x: non-zero error for a message with a body\n");
+        log("fuse4x: non-zero error for a message with a body\n");
         return EINVAL;
     }
 
@@ -536,7 +536,7 @@ fuse_devices_stop(void)
             fuse_interface_available = true;
             FUSE_DEVICE_GLOBAL_UNLOCK();
             proc_name(fuse_device_table[i].pid, p_comm, MAXCOMLEN + 1);
-            IOLog("fuse4x: /dev/fuse%d is still active (pid=%d %s)\n",
+            log("fuse4x: /dev/fuse%d is still active (pid=%d %s)\n",
                   i, fuse_device_table[i].pid, p_comm);
             return KERN_FAILURE;
         }
@@ -546,7 +546,7 @@ fuse_devices_stop(void)
             FUSE_DEVICE_GLOBAL_UNLOCK();
             proc_name(fuse_device_table[i].pid, p_comm, MAXCOMLEN + 1);
             /* The pid can't possibly be active here. */
-            IOLog("fuse4x: /dev/fuse%d has a lingering mount (pid=%d, %s)\n",
+            log("fuse4x: /dev/fuse%d has a lingering mount (pid=%d, %s)\n",
                   i, fuse_device_table[i].pid, p_comm);
             return KERN_FAILURE;
         }
@@ -565,7 +565,7 @@ fuse_devices_stop(void)
 
     ret = cdevsw_remove(fuse_cdev_major, &fuse_device_cdevsw);
     if (ret != fuse_cdev_major) {
-        IOLog("fuse4x: fuse_cdev_major != return from cdevsw_remove()\n");
+        log("fuse4x: fuse_cdev_major != return from cdevsw_remove()\n");
     }
 
     fuse_cdev_major = -1;

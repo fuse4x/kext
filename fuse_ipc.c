@@ -251,7 +251,7 @@ fticket_wait_answer(struct fuse_ticket *ftick)
     if (err == EAGAIN) { /* same as EWOULDBLOCK */
         if (fdata_set_dead(data)) {
             struct vfsstatfs *statfs = vfs_statfs(data->mp);
-            IOLog("fuse4x: daemon (pid=%d, mountpoint=%s) did not respond in %ld seconds. Mark the filesystem as dead.\n",
+            log("fuse4x: daemon (pid=%d, mountpoint=%s) did not respond in %ld seconds. Mark the filesystem as dead.\n",
                     data->daemonpid, statfs->f_mntonname, data->daemon_timeout.tv_sec);
         }
 
@@ -274,7 +274,7 @@ out:
     fuse_lck_mtx_unlock(ftick->tk_aw_mtx);
 
     if (!(err || fticket_answered(ftick))) {
-        IOLog("fuse4x: requester was woken up but still no answer");
+        log("fuse4x: requester was woken up but still no answer");
         err = ENXIO;
     }
 
@@ -294,12 +294,12 @@ fticket_aw_pull_uio(struct fuse_ticket *ftick, uio_t uio)
             err = fiov_adjust_canfail(fticket_resp(ftick), len);
             if (err) {
                 fticket_set_killl(ftick);
-                IOLog("fuse4x: failed to pull uio (error=%d)\n", err);
+                log("fuse4x: failed to pull uio (error=%d)\n", err);
                 break;
             }
             err = uiomove(fticket_resp(ftick)->base, (int)len, uio);
             if (err) {
-                IOLog("fuse4x: FT_A_FIOV error is %d (%p, %ld, %p)\n",
+                log("fuse4x: FT_A_FIOV error is %d (%p, %ld, %p)\n",
                       err, fticket_resp(ftick)->base, len, uio);
             }
             break;
@@ -308,7 +308,7 @@ fticket_aw_pull_uio(struct fuse_ticket *ftick, uio_t uio)
             ftick->tk_aw_bufsize = len;
             err = uiomove(ftick->tk_aw_bufdata, (int)len, uio);
             if (err) {
-                IOLog("fuse4x: FT_A_BUF error is %d (%p, %ld, %p)\n",
+                log("fuse4x: FT_A_BUF error is %d (%p, %ld, %p)\n",
                       err, ftick->tk_aw_bufdata, len, uio);
             }
             break;
@@ -836,7 +836,7 @@ fuse_body_audit(struct fuse_ticket *ftick, size_t blen)
         break;
 
     default:
-        IOLog("fuse4x: opcodes out of sync (%d)\n", opcode);
+        log("fuse4x: opcodes out of sync (%d)\n", opcode);
         panic("fuse4x: opcodes out of sync (%d)", opcode);
     }
 

@@ -50,7 +50,7 @@ fuse_filehandle_xlate_from_mmap(int fflags)
     } else if (fflags & (PROT_READ | PROT_EXEC)) {
         return FUFH_RDONLY;
     } else {
-        IOLog("fuse4x: mmap being attempted with no region accessibility\n");
+        log("fuse4x: mmap being attempted with no region accessibility\n");
         return FUFH_INVALID;
     }
 }

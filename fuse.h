@@ -28,6 +28,7 @@
 // #define FUSE_TRACE_OP      1
 // #define FUSE_TRACE_VNCACHE 1
 
+// #define M_FUSE4X_ENABLE_LOCK_LOGGING 1
 
 #define M_FUSE4X_ENABLE_FIFOFS            0
 #define M_FUSE4X_ENABLE_INTERRUPT         1
@@ -47,11 +48,30 @@
 
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
 #define M_FUSE4X_ENABLE_HUGE_LOCK 0
-#define M_FUSE4X_ENABLE_LOCK_LOGGING 0
 #define FUSE_VNOP_EXPORT __private_extern__
 #else
 #define FUSE_VNOP_EXPORT static
 #endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
+
+
+#if M_FUSE4X_ENABLE_LOCK_LOGGING
+extern lck_mtx_t *fuse_log_lock;
+
+// In case if tracing (lock,sleep,operations,..) enabled it produces a lot of log output.
+// Because these logs are written from multiple threads they interference with each other.
+// To make log more readable we need to searialize the output. It is done in log() function
+// in case if M_FUSE4X_ENABLE_LOCK_LOGGING defined.
+#define log(fmt, args...) \
+    do { \
+        lck_mtx_lock(fuse_log_lock); \
+        IOLog(fmt, ##args); \
+        lck_mtx_unlock(fuse_log_lock); \
+    } while(0)
+
+#else
+#define log(fmt, args...) IOLog(fmt, ##args)
+#endif /* M_FUSE4X_ENABLE_LOCK_LOGGING */
+
 
 #define FUSE4X_TIMESTAMP __DATE__ ", " __TIME__
 
@@ -59,17 +79,17 @@
 #define FUSEFS_SIGNATURE 0x55464553 // 'FUSE'
 
 #ifdef FUSE_TRACE
-#define fuse_trace_printf(fmt, ...) IOLog(fmt, ## __VA_ARGS__)
-#define fuse_trace_printf_func()    IOLog("%s\n", __FUNCTION__)
+#define fuse_trace_printf(fmt, ...) log(fmt, ## __VA_ARGS__)
+#define fuse_trace_printf_func()    log("%s\n", __FUNCTION__)
 #else
 #define fuse_trace_printf(fmt, ...) {}
 #define fuse_trace_printf_func()    {}
 #endif
 
 #ifdef FUSE_TRACE_OP
-#define fuse_trace_printf_vfsop()     IOLog("%s\n", __FUNCTION__)
-#define fuse_trace_printf_vnop_novp() IOLog("%s\n", __FUNCTION__)
-#define fuse_trace_printf_vnop()      IOLog("%s vp=%p\n", __FUNCTION__, vp)
+#define fuse_trace_printf_vfsop()     log("%s\n", __FUNCTION__)
+#define fuse_trace_printf_vnop_novp() log("%s\n", __FUNCTION__)
+#define fuse_trace_printf_vnop()      log("%s vp=%p\n", __FUNCTION__, vp)
 #else
 #define fuse_trace_printf_vfsop()     {}
 #define fuse_trace_printf_vnop()      {}
@@ -84,23 +104,23 @@ fuse_msleep(void *chan, lck_mtx_t *mtx, int pri, const char *wmesg,
 {
     int ret;
 
-    IOLog("0: msleep(%p, %s)\n", (chan), (wmesg));
+    log("0: msleep(%p, %s)\n", (chan), (wmesg));
     ret = msleep(chan, mtx, pri, wmesg, ts);
-    IOLog("1: msleep(%p, %s)\n", (chan), (wmesg));
+    log("1: msleep(%p, %s)\n", (chan), (wmesg));
 
     return ret;
 }
-#define fuse_wakeup(chan)                          \
-{                                                  \
-    IOLog("1: wakeup(%p)\n", (chan));              \
-    wakeup((chan));                                \
-    IOLog("0: wakeup(%p)\n", (chan));              \
+#define fuse_wakeup(chan)                        \
+{                                                \
+    log("1: wakeup(%p)\n", (chan));              \
+    wakeup((chan));                              \
+    log("0: wakeup(%p)\n", (chan));              \
 }
-#define fuse_wakeup_one(chan)                      \
-{                                                  \
-    IOLog("1: wakeup_one(%p)\n", (chan));          \
-    wakeup_one((chan));                            \
-    IOLog("0: wakeup_one(%p)\n", (chan));          \
+#define fuse_wakeup_one(chan)                    \
+{                                                \
+    log("1: wakeup_one(%p)\n", (chan));          \
+    wakeup_one((chan));                          \
+    log("0: wakeup_one(%p)\n", (chan));          \
 }
 #else
 #define fuse_msleep(chan, mtx, pri, wmesg, ts) \
@@ -118,7 +138,7 @@ fuse_msleep(void *chan, lck_mtx_t *mtx, int pri, const char *wmesg,
 
 #ifdef FUSE_DEBUG
 #define debug_printf(fmt, ...) \
-  IOLog("%s[%s:%d]: " fmt, __FUNCTION__, __FILE__, __LINE__, ## __VA_ARGS__)
+  log("%s[%s:%d]: " fmt, __FUNCTION__, __FILE__, __LINE__, ## __VA_ARGS__)
 #else
 #define debug_printf(fmt, ...) {}
 #endif
@@ -126,7 +146,7 @@ fuse_msleep(void *chan, lck_mtx_t *mtx, int pri, const char *wmesg,
 #ifdef FUSE_KDEBUG
 #undef debug_printf
 #define debug_printf(fmt, ...) \
-  IOLog("%s[%s:%d]: " fmt, __FUNCTION__, __FILE__, __LINE__, ## __VA_ARGS__);\
+  log("%s[%s:%d]: " fmt, __FUNCTION__, __FILE__, __LINE__, ## __VA_ARGS__);\
   kprintf("%s[%s:%d]: " fmt, __FUNCTION__, __FILE__, __LINE__, ## __VA_ARGS__)
 #define kdebug_printf(fmt, ...) debug_printf(fmt, ## __VA_ARGS__)
 #else
@@ -136,7 +156,7 @@ fuse_msleep(void *chan, lck_mtx_t *mtx, int pri, const char *wmesg,
 #define FUSE_ASSERT(a)                                                    \
     {                                                                     \
         if (!(a)) {                                                       \
-            IOLog("File "__FILE__", line %d: assertion ' %s ' failed.\n", \
+            log("File "__FILE__", line %d: assertion ' %s ' failed.\n",   \
                   __LINE__, #a);                                          \
         }                                                                 \
     }
