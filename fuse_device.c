@@ -628,6 +628,8 @@ fuse_device_kill(int unit, struct proc *p)
     int error = ENOENT;
     struct fuse_device *fdev;
 
+    fuse_trace_printf_func();
+
     if ((unit < 0) || (unit >= FUSE4X_NDEVICES)) {
         return EINVAL;
     }

@@ -433,6 +433,8 @@ fdata_dead_get(struct fuse_data *data)
 bool
 fdata_set_dead(struct fuse_data *data)
 {
+    fuse_trace_printf_func();
+
     fuse_lck_mtx_lock(data->ms_mtx);
     if (fdata_dead_get(data)) {
         fuse_lck_mtx_unlock(data->ms_mtx);

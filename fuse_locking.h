@@ -47,25 +47,19 @@ extern lck_mtx_t      *fuse_device_mutex;
 
 #ifdef FUSE_TRACE_LK
 
-#define fuse_lck_mtx_lock(m)                                                  \
-    {                                                                         \
-        proc_t __FUNCTION__ ## p = current_proc();                            \
-        log("0: lck_mtx_lock(%p): %s@%d by %d\n", (m), __FUNCTION__,          \
-           __LINE__, (__FUNCTION__ ## p) ? proc_pid(__FUNCTION__ ## p) : 0);  \
-        lck_mtx_lock((m));                                                    \
-        log("1: lck_mtx_lock(%p): %s@%d by %d\n", (m), __FUNCTION__,          \
-           __LINE__, (__FUNCTION__ ## p) ? proc_pid(__FUNCTION__ ## p) : 0);  \
-    }
+#define fuse_lck_mtx_lock(m)                                                                 \
+{                                                                                            \
+    log("0: lck_mtx_lock(%p): %s@%d by %d\n", (m), __FUNCTION__, __LINE__, proc_selfpid());  \
+    lck_mtx_lock((m));                                                                       \
+    log("1: lck_mtx_lock(%p): %s@%d by %d\n", (m), __FUNCTION__, __LINE__, proc_selfpid());  \
+}
 
-#define fuse_lck_mtx_unlock(m)                                                \
-    {                                                                         \
-        proc_t __FUNCTION__ ## p = current_proc();                            \
-        log("1: lck_mtx_unlock(%p): %s@%d by %d\n", (m), __FUNCTION__,        \
-           __LINE__, (__FUNCTION__ ## p) ? proc_pid(__FUNCTION__ ## p) : 0);  \
-        lck_mtx_unlock((m));                                                  \
-        log("0: lck_mtx_unlock(%p): %s@%d by %d\n", (m), __FUNCTION__,        \
-           __LINE__, (__FUNCTION__ ## p) ? proc_pid(__FUNCTION__ ## p) : 0);  \
-    }
+#define fuse_lck_mtx_unlock(m)                                                                 \
+{                                                                                              \
+    log("0: lck_mtx_unlock(%p): %s@%d by %d\n", (m), __FUNCTION__, __LINE__, proc_selfpid());  \
+    lck_mtx_unlock((m));                                                                       \
+    log("1: lck_mtx_unlock(%p): %s@%d by %d\n", (m), __FUNCTION__, __LINE__, proc_selfpid());  \
+}
 
 #define fuse_lck_rw_lock_shared(l)      lck_rw_lock_shared((l))
 #define fuse_lck_rw_lock_exclusive(l)   lck_rw_lock_exclusive((l))

@@ -80,16 +80,16 @@ extern lck_mtx_t *fuse_log_lock;
 
 #ifdef FUSE_TRACE
 #define fuse_trace_printf(fmt, ...) log(fmt, ## __VA_ARGS__)
-#define fuse_trace_printf_func()    log("%s\n", __FUNCTION__)
+#define fuse_trace_printf_func()    log("%s by %d\n", __FUNCTION__, proc_selfpid())
 #else
 #define fuse_trace_printf(fmt, ...) {}
 #define fuse_trace_printf_func()    {}
 #endif
 
 #ifdef FUSE_TRACE_OP
-#define fuse_trace_printf_vfsop()     log("%s\n", __FUNCTION__)
-#define fuse_trace_printf_vnop_novp() log("%s\n", __FUNCTION__)
-#define fuse_trace_printf_vnop()      log("%s vp=%p\n", __FUNCTION__, vp)
+#define fuse_trace_printf_vfsop()     log("%s by %d\n", __FUNCTION__, proc_selfpid())
+#define fuse_trace_printf_vnop_novp() log("%s by %d\n", __FUNCTION__, proc_selfpid())
+#define fuse_trace_printf_vnop()      log("%s vp=%p by %d\n", __FUNCTION__, vp, proc_selfpid())
 #else
 #define fuse_trace_printf_vfsop()     {}
 #define fuse_trace_printf_vnop()      {}
@@ -98,35 +98,30 @@ extern lck_mtx_t *fuse_log_lock;
 
 #ifdef FUSE_TRACE_MSLEEP
 
-static __inline__ int
-fuse_msleep(void *chan, lck_mtx_t *mtx, int pri, const char *wmesg,
-            struct timespec *ts)
-{
-    int ret;
-
-    log("0: msleep(%p, %s)\n", (chan), (wmesg));
-    ret = msleep(chan, mtx, pri, wmesg, ts);
-    log("1: msleep(%p, %s)\n", (chan), (wmesg));
-
-    return ret;
+#define fuse_msleep(chan, mtx, pri, wmesg, ts)                                                        \
+({                                                                                                    \
+    log("0: msleep(%p, %s): %s@%d by %d\n", (chan), (wmesg), __FUNCTION__, __LINE__, proc_selfpid()); \
+    int __FUNCTION__ ## ret = msleep((chan), (mtx), (pri), (wmesg), (ts));                            \
+    log("1: msleep(%p, %s): %s@%d by %d\n", (chan), (wmesg), __FUNCTION__, __LINE__, proc_selfpid()); \
+                                                                                                      \
+    __FUNCTION__ ## ret;                                                                              \
+})
+#define fuse_wakeup(chan)                                                                \
+{                                                                                        \
+    log("0: wakeup(%p): %s@%d by %d\n", (chan), __FUNCTION__, __LINE__, proc_selfpid()); \
+    wakeup((chan));                                                                      \
+    log("1: wakeup(%p): %s@%d by %d\n", (chan), __FUNCTION__, __LINE__, proc_selfpid()); \
 }
-#define fuse_wakeup(chan)                        \
-{                                                \
-    log("1: wakeup(%p)\n", (chan));              \
-    wakeup((chan));                              \
-    log("0: wakeup(%p)\n", (chan));              \
-}
-#define fuse_wakeup_one(chan)                    \
-{                                                \
-    log("1: wakeup_one(%p)\n", (chan));          \
-    wakeup_one((chan));                          \
-    log("0: wakeup_one(%p)\n", (chan));          \
+#define fuse_wakeup_one(chan)                                                                \
+{                                                                                            \
+    log("0: wakeup_one(%p): %s@%d by %d\n", (chan), __FUNCTION__, __LINE__, proc_selfpid()); \
+    wakeup_one((chan));                                                                      \
+    log("1: wakeup_one(%p): %s@%d by %d\n", (chan), __FUNCTION__, __LINE__, proc_selfpid()); \
 }
 #else
-#define fuse_msleep(chan, mtx, pri, wmesg, ts) \
-    msleep((chan), (mtx), (pri), (wmesg), (ts))
-#define fuse_wakeup(chan)     wakeup((chan))
-#define fuse_wakeup_one(chan) wakeup_one((chan))
+#define fuse_msleep(chan, mtx, pri, wmesg, ts) msleep((chan), (mtx), (pri), (wmesg), (ts))
+#define fuse_wakeup(chan)                      wakeup((chan))
+#define fuse_wakeup_one(chan)                  wakeup_one((chan))
 #endif
 
 #ifdef FUSE_KTRACE_OP
@@ -152,14 +147,6 @@ fuse_msleep(void *chan, lck_mtx_t *mtx, int pri, const char *wmesg,
 #else
 #define kdebug_printf(fmt, ...) {}
 #endif
-
-#define FUSE_ASSERT(a)                                                    \
-    {                                                                     \
-        if (!(a)) {                                                       \
-            log("File "__FILE__", line %d: assertion ' %s ' failed.\n",   \
-                  __LINE__, #a);                                          \
-        }                                                                 \
-    }
 
 #define E_NONE 0
 
