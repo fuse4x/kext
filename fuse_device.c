@@ -51,7 +51,7 @@ fuse_device_get(dev_t dev)
     int unit = minor(dev);
 
     if ((unit < 0) || (unit >= FUSE4X_NDEVICES)) {
-        return (fuse_device_t)0;
+        return NULL;
     }
 
     return FUSE_DEVICE_FROM_UNIT_FAST(unit);
