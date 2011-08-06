@@ -84,11 +84,9 @@ __inline__
 void
 fuse_device_close_final(fuse_device_t fdev)
 {
-    if (fdev) {
-        fdata_destroy(fdev->data);
-        fdev->data   = NULL;
-        fdev->pid    = -1;
-    }
+    fdata_destroy(fdev->data);
+    fdev->data   = NULL;
+    fdev->pid    = -1;
 }
 
 /* /dev/fuseN implementation */
@@ -253,12 +251,8 @@ fuse_device_close(dev_t dev, __unused int flags, __unused int devtype,
         /* Left mpdata for unmount to destroy. */
 
     } else {
-
         /* We're not mounted. Can destroy mpdata. */
-
-        fdev->data   = NULL;
-        fdev->pid    = -1;
-        fdata_destroy(data);
+        fuse_device_close_final(fdev);
     }
 
     FUSE_DEVICE_LOCAL_UNLOCK(fdev);
