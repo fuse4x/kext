@@ -97,6 +97,7 @@ fuse_reject_answers(struct fuse_data *data)
 {
     struct fuse_ticket *ftick;
 
+    fuse_lck_mtx_lock(data->aw_mtx);
     while ((ftick = fuse_aw_pop(data))) {
         fuse_lck_mtx_lock(ftick->tk_aw_mtx);
         fticket_set_answered(ftick);
@@ -104,6 +105,7 @@ fuse_reject_answers(struct fuse_data *data)
         fuse_wakeup(ftick);
         fuse_lck_mtx_unlock(ftick->tk_aw_mtx);
     }
+    fuse_lck_mtx_unlock(data->aw_mtx);
 }
 
 /* /dev/fuseN implementation */
@@ -243,21 +245,13 @@ fuse_device_close(dev_t dev, __unused int flags, __unused int devtype,
 
     data->dataflags &= ~FSESS_OPENED;
 
-    fuse_lck_mtx_lock(data->aw_mtx);
+    fuse_reject_answers(data);
 
 #if M_FUSE4X_ENABLE_DSELECT
     selwakeup((struct selinfo*)&data->d_rsel);
 #endif /* M_FUSE4X_ENABLE_DSELECT */
 
-    if (data->dataflags & FSESS_MOUNTED) {
-
-        /* Uh-oh, the device is closing but we're still mounted. */
-        fuse_reject_answers(data);
-        fuse_lck_mtx_unlock(data->aw_mtx);
-
-        /* Left mpdata for unmount to destroy. */
-
-    } else {
+    if (!(data->dataflags & FSESS_MOUNTED)) {
         /* We're not mounted. Can destroy mpdata. */
         fuse_device_close_final(fdev);
     }
@@ -682,9 +676,7 @@ fuse_device_kill(int unit, struct proc *p)
                 /* The following can block. */
                 fdata_set_dead(fdata);
 
-                fuse_lck_mtx_lock(fdata->aw_mtx);
                 fuse_reject_answers(fdata);
-                fuse_lck_mtx_unlock(fdata->aw_mtx);
 
                 error = 0;
             }
