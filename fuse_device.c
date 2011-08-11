@@ -232,7 +232,7 @@ fuse_device_close(dev_t dev, __unused int flags, __unused int devtype,
     selwakeup((struct selinfo*)&data->d_rsel);
 #endif /* M_FUSE4X_ENABLE_DSELECT */
 
-    if (data->mount_state == FM_MOUNTED) {
+    if (data->dataflags & FSESS_MOUNTED) {
 
         /* Uh-oh, the device is closing but we're still mounted. */
 

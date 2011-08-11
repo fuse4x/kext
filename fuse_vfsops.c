@@ -420,7 +420,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
     fuse_biglock_lock(biglock);
 #endif
 
-    if (data->mount_state != FM_NOTMOUNTED) {
+    if (data->dataflags & FSESS_MOUNTED) {
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
         fuse_biglock_unlock(biglock);
 #endif
@@ -434,7 +434,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         goto out;
     }
 
-    data->mount_state = FM_MOUNTED;
+    data->dataflags |= FSESS_MOUNTED;
     OSAddAtomic(1, (SInt32 *)&fuse_mount_count);
     mounted = 1;
 
@@ -548,7 +548,7 @@ out:
             OSAddAtomic(-1, (SInt32 *)&fuse_mount_count);
         }
         if (data) {
-            data->mount_state = FM_NOTMOUNTED;
+            data->dataflags &= ~FSESS_MOUNTED;
             if (!(data->dataflags & FSESS_OPENED)) {
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
                 assert(biglock == data->biglock);
@@ -719,7 +719,7 @@ alreadydead:
     fuse_device_lock(fdev);
 
     vfs_setfsprivate(mp, NULL);
-    data->mount_state = FM_NOTMOUNTED;
+    data->dataflags &= ~FSESS_MOUNTED;
     OSAddAtomic(-1, (SInt32 *)&fuse_mount_count);
 
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK

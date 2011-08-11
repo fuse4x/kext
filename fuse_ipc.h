@@ -147,13 +147,10 @@ fticket_invalidate(struct fuse_ticket *ftick)
 
 int fticket_pull(struct fuse_ticket *ftick, uio_t uio);
 
-enum mount_state { FM_NOTMOUNTED, FM_MOUNTED };
-
 struct fuse_data {
     fuse_device_t              fdev;
     mount_t                    mp;
     vnode_t                    rootvp;
-    enum mount_state           mount_state;
     kauth_cred_t               daemoncred;
     pid_t                      daemonpid;
     uint32_t                   dataflags;     /* effective fuse_data flags */
@@ -208,10 +205,10 @@ struct fuse_data {
 #define FSESS_NOIMPLBIT(MSG)      (1ULL << FUSE_##MSG)
 
 enum {
-    FSESS_DEAD               = 1 << 0, // session is to be closed
-    FSESS_OPENED             = 1 << 1, // session device has been opened
+    FSESS_OPENED             = 1 << 0, // session device has been opened
+    FSESS_MOUNTED            = 1 << 1, // device has been mounted
     FSESS_INITED             = 1 << 2, // session has been inited
-    FSESS_UNCONSCIOUS        = 1 << 3, // session is temporarily gone
+    FSESS_DEAD               = 1 << 3, // session is to be closed
 
     FSESS_ALLOW_OTHER         = 1 << 4,
     FSESS_ALLOW_ROOT          = 1 << 5,
@@ -243,7 +240,7 @@ struct fuse_data *
 fuse_get_mpdata(mount_t mp)
 {
     /*
-     * data->mount_state should be FM_MOUNTED for it to be valid
+     * data->dataflags should have FSESS_MOUNTED bit set for it to be valid
      */
     return (struct fuse_data *)vfs_fsprivate(mp);
 }
