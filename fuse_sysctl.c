@@ -289,7 +289,7 @@ static struct sysctl_oid *fuse_sysctl_list[] =
     &sysctl__vfs_generic_fuse4x_version_api_minor,
     &sysctl__vfs_generic_fuse4x_version_number,
     &sysctl__vfs_generic_fuse4x_version_string,
-    (struct sysctl_oid *)0
+    NULL
 };
 
 void
