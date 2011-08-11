@@ -377,11 +377,9 @@ fdata_alloc(struct proc *p)
     data->rename_lock = lck_rw_alloc_init(fuse_lock_group, fuse_lock_attr);
 #endif
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
-#if !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
     data->biglock        = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
-#endif /* !M_FUSE4X_ENABLE_HUGE_LOCK */
-#endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
+#endif
 
     return data;
 }
@@ -405,12 +403,10 @@ fdata_destroy(struct fuse_data *data)
     data->rename_lock = NULL;
 #endif
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
-#if !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
     lck_mtx_free(data->biglock, fuse_lock_group);
     data->biglock = NULL;
-#endif /* !M_FUSE4X_ENABLE_HUGE_LOCK */
-#endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
+#endif
 
     while ((ftick = fuse_pop_allticks(data))) {
         fticket_destroy(ftick);

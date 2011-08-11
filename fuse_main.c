@@ -43,14 +43,12 @@ fini_stuff(void)
         fuse_device_mutex = NULL;
     }
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
-#if M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && M_FUSE4X_ENABLE_HUGE_LOCK
     if (fuse_huge_lock) {
         fusefs_recursive_lock_free(fuse_huge_lock);
         fuse_huge_lock = NULL;
     }
-#endif /* M_FUSE4X_ENABLE_HUGE_LOCK */
-#endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
+#endif
 
 #if M_FUSE4X_ENABLE_LOCK_LOGGING
     if (fuse_log_lock) {
@@ -119,16 +117,14 @@ init_stuff(void)
     }
 #endif /* M_FUSE4X_ENABLE_LOCK_LOGGING */
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
-#if M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && M_FUSE4X_ENABLE_HUGE_LOCK
     if (ret == KERN_SUCCESS) {
         fuse_huge_lock = fusefs_recursive_lock_alloc();
         if (fuse_huge_lock == NULL) {
             ret = ENOMEM;
         }
     }
-#endif /* M_FUSE4X_ENABLE_HUGE_LOCK */
-#endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
+#endif
 
     if (ret != KERN_SUCCESS) {
         fini_stuff();
