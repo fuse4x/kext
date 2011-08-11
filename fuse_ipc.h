@@ -29,10 +29,6 @@
 #include <libkern/OSMalloc.h>
 #include <libkern/locks.h>
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
-#include <IOKit/IOLocks.h>
-#endif
-
 #include "fuse.h"
 #include "fuse_kernel.h"
 #include "fuse_device.h"
