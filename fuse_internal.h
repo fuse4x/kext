@@ -686,8 +686,7 @@ int
 fuse_internal_fsync(vnode_t                 vp,
                     vfs_context_t           context,
                     struct fuse_filehandle *fufh,
-                    void                   *param,
-                    fuse_op_waitfor_t       waitfor);
+                    void                   *param);
 
 int
 fuse_internal_fsync_callback(struct fuse_ticket *ftick, uio_t uio);

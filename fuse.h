@@ -185,10 +185,6 @@ FUSE_OSFree(void *addr, size_t size, OSMallocTag tag)
 
 #endif /* FUSE_COUNT_MEMORY */
 
-typedef enum fuse_op_waitfor {
-    FUSE_OP_BACKGROUNDED = 0,
-    FUSE_OP_FOREGROUNDED = 1,
-} fuse_op_waitfor_t;
 
 #define FUSE4X_TIMESTAMP __DATE__ ", " __TIME__
 

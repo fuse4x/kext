@@ -321,7 +321,7 @@ skipdir:
     FUFH_USE_DEC(fufh);
 
     if (!FUFH_IS_VALID(fufh)) {
-        (void)fuse_filehandle_put(vp, context, fufh_type, FUSE_OP_FOREGROUNDED);
+        (void)fuse_filehandle_put(vp, context, fufh_type);
     }
 
     return err;
@@ -671,8 +671,7 @@ fuse_vnop_fsync(struct vnop_fsync_args *ap)
     for (type = 0; type < FUFH_MAXTYPE; type++) {
         fufh = &(fvdat->fufh[type]);
         if (FUFH_IS_VALID(fufh)) {
-            tmp_err = fuse_internal_fsync(vp, context, fufh, &fdi,
-                                          FUSE_OP_FOREGROUNDED);
+            tmp_err = fuse_internal_fsync(vp, context, fufh, &fdi);
             if (tmp_err) {
                 err = tmp_err;
             }
@@ -983,8 +982,7 @@ fuse_vnop_inactive(struct vnop_inactive_args *ap)
 
         if (FUFH_IS_VALID(fufh)) {
             FUFH_USE_RESET(fufh);
-            (void)fuse_filehandle_put(vp, context, fufh_type,
-                                      FUSE_OP_FOREGROUNDED);
+            (void)fuse_filehandle_put(vp, context, fufh_type);
         }
     }
 
@@ -1785,7 +1783,7 @@ fuse_vnop_mnomap(struct vnop_mnomap_args *ap)
      *         fufh->fufh_flags &= ~FUFH_MAPPED;
      *         if (fufh->open_count == 0) {
      *             (void)fuse_filehandle_put(vp, context, type,
-     *                                       FUSE_OP_BACKGROUNDED);
+     *                                       wait_for_completion = false);
      *         }
      *     }
      * }
@@ -2463,8 +2461,7 @@ fuse_vnop_readdir(struct vnop_readdir_args *ap)
 
     if (freefufh) {
         FUFH_USE_DEC(fufh);
-        (void)fuse_filehandle_put(vp, context, FUFH_RDONLY,
-                                  FUSE_OP_FOREGROUNDED);
+        (void)fuse_filehandle_put(vp, context, FUFH_RDONLY);
     }
 
     fuse_invalidate_attr(vp);
@@ -2570,8 +2567,7 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
             int aux_count = fufh->aux_count;
             FUFH_USE_RESET(fufh);
             if (vfs_isforce(vnode_mount(vp))) {
-                (void)fuse_filehandle_put(vp, context, type,
-                                          FUSE_OP_FOREGROUNDED);
+                (void)fuse_filehandle_put(vp, context, type);
             } else {
 
                 /*
@@ -2627,8 +2623,7 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
                     OSAddAtomic(1, (SInt32 *)&fuse_fh_zombies);
                 } /* !deadfs */
 
-                (void)fuse_filehandle_put(vp, context, type,
-                                          FUSE_OP_FOREGROUNDED);
+                (void)fuse_filehandle_put(vp, context, type);
 
             } /* !forced unmount */
         } /* valid fufh */

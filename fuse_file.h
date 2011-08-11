@@ -169,6 +169,6 @@ int fuse_filehandle_get(vnode_t vp, vfs_context_t context,
                         fufh_type_t fufh_type, int mode);
 
 int fuse_filehandle_put(vnode_t vp, vfs_context_t context,
-                        fufh_type_t fufh_type, fuse_op_waitfor_t waitfor);
+                        fufh_type_t fufh_type);
 
 #endif /* _FUSE_FILE_H_ */

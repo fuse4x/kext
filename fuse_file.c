@@ -121,8 +121,7 @@ fuse_filehandle_get(vnode_t       vp,
 }
 
 int
-fuse_filehandle_put(vnode_t vp, vfs_context_t context, fufh_type_t fufh_type,
-                    fuse_op_waitfor_t waitfor)
+fuse_filehandle_put(vnode_t vp, vfs_context_t context, fufh_type_t fufh_type)
 {
     struct fuse_dispatcher  fdi;
     struct fuse_release_in *fri;
@@ -132,6 +131,8 @@ fuse_filehandle_put(vnode_t vp, vfs_context_t context, fufh_type_t fufh_type,
     int err   = 0;
     int isdir = 0;
     int op    = FUSE_RELEASE;
+
+    const bool wait_for_completion = true;
 
     fuse_trace_printf("fuse_filehandle_put(vp=%p, fufh_type=%d)\n",
                       vp, fufh_type);
@@ -159,7 +160,7 @@ fuse_filehandle_put(vnode_t vp, vfs_context_t context, fufh_type_t fufh_type,
     fri->fh = fufh->fh_id;
     fri->flags = fufh->open_flags;
 
-    if (waitfor == FUSE_OP_FOREGROUNDED) {
+    if (wait_for_completion) {
         if ((err = fdisp_wait_answ(&fdi))) {
             goto out;
         } else {

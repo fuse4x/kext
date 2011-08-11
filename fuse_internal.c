@@ -322,13 +322,14 @@ int
 fuse_internal_fsync(vnode_t                 vp,
                     vfs_context_t           context,
                     struct fuse_filehandle *fufh,
-                    void                   *param,
-                    fuse_op_waitfor_t       waitfor)
+                    void                   *param)
 {
     int err = 0;
     int op = FUSE_FSYNC;
     struct fuse_fsync_in *ffsi;
     struct fuse_dispatcher *fdip = param;
+
+    const bool wait_for_completion = true;
 
     fuse_trace_printf_func();
 
@@ -344,7 +345,7 @@ fuse_internal_fsync(vnode_t                 vp,
 
     ffsi->fsync_flags = 1; /* datasync */
 
-    if (waitfor == FUSE_OP_FOREGROUNDED) {
+    if (wait_for_completion) {
         if ((err = fdisp_wait_answ(fdip))) {
             if (err == ENOSYS) {
                 if (op == FUSE_FSYNC) {
