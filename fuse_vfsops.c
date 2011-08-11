@@ -24,8 +24,9 @@
 #include <fuse_biglock_vnops.h>
 #endif
 
-#define FUSE_MAKEDEV(x, y)              ((dev_t)(((x) << 24) | (y)))
-#define FUSE_CUSTOM_FSID_VAL1           0x55464553
+#define FUSE_MAKEDEV(x, y)     ((dev_t)(((x) << 24) | (y)))
+#define FUSEFS_SIGNATURE       0x55464553 // 'FUSE'
+#define FUSE_CUSTOM_FSID_VAL1  FUSEFS_SIGNATURE
 
 static const struct timespec kZeroTime = { 0, 0 };
 

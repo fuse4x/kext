@@ -72,12 +72,6 @@ extern lck_mtx_t *fuse_log_lock;
 #define log(fmt, args...) IOLog(fmt, ##args)
 #endif /* M_FUSE4X_ENABLE_LOCK_LOGGING */
 
-
-#define FUSE4X_TIMESTAMP __DATE__ ", " __TIME__
-
-
-#define FUSEFS_SIGNATURE 0x55464553 // 'FUSE'
-
 #ifdef FUSE_TRACE
 #define fuse_trace_printf(fmt, ...) log(fmt, ## __VA_ARGS__)
 #define fuse_trace_printf_func()    log("%s by %d\n", __FUNCTION__, proc_selfpid())
@@ -197,5 +191,7 @@ typedef enum fuse_op_waitfor {
     FUSE_OP_BACKGROUNDED = 0,
     FUSE_OP_FOREGROUNDED = 1,
 } fuse_op_waitfor_t;
+
+#define FUSE4X_TIMESTAMP __DATE__ ", " __TIME__
 
 #endif /* _FUSE4X_H_ */
