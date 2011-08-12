@@ -407,12 +407,12 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         return EINVAL;
     }
 
-    fuse_device_lock(fdev);
+    fuse_lck_mtx_lock(fdev->mtx);
 
-    data = fuse_device_get_mpdata(fdev);
+    data = fdev->data;
 
     if (!data) {
-        fuse_device_unlock(fdev);
+        fuse_lck_mtx_unlock(fdev->mtx);
         return ENXIO;
     }
 
@@ -425,12 +425,12 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
         fuse_biglock_unlock(biglock);
 #endif
-        fuse_device_unlock(fdev);
+        fuse_lck_mtx_unlock(fdev->mtx);
         return EALREADY;
     }
 
     if (!(data->dataflags & FSESS_OPENED)) {
-        fuse_device_unlock(fdev);
+        fuse_lck_mtx_unlock(fdev->mtx);
         err = ENXIO;
         goto out;
     }
@@ -440,7 +440,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
     mounted = true;
 
     if (fdata_dead_get(data)) {
-        fuse_device_unlock(fdev);
+        fuse_lck_mtx_unlock(fdev->mtx);
         err = ENOTCONN;
         goto out;
     }
@@ -451,7 +451,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
 
     if (fuse_vfs_context_issuser(context) &&
         kauth_cred_getuid(vfs_context_ucred(context)) != kauth_cred_getuid(data->daemoncred)) {
-        fuse_device_unlock(fdev);
+        fuse_lck_mtx_unlock(fdev->mtx);
         err = EPERM;
         log("fuse4x: fuse daemon running by user_id=%d does not have privileges to mount on directory %s owned by user_id=%d\n",
               kauth_cred_getuid(data->daemoncred), vfsstatfsp->f_mntonname, kauth_cred_getuid(vfs_context_ucred(context)));
@@ -501,7 +501,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
 
     vfs_setfsprivate(mp, data);
 
-    fuse_device_unlock(fdev);
+    fuse_lck_mtx_unlock(fdev->mtx);
 
     /* Send a handshake message to the daemon. */
     fuse_send_init(data, context);
@@ -543,8 +543,8 @@ out:
     if (err) {
         vfs_setfsprivate(mp, NULL);
 
-        fuse_device_lock(fdev);
-        data = fuse_device_get_mpdata(fdev); /* again */
+        fuse_lck_mtx_lock(fdev->mtx);
+        data = fdev->data; /* again */
         if (mounted) {
             OSAddAtomic(-1, (SInt32 *)&fuse_mount_count);
         }
@@ -559,7 +559,7 @@ out:
                 /* data is gone now */
             }
         }
-        fuse_device_unlock(fdev);
+        fuse_lck_mtx_unlock(fdev->mtx);
     } else {
         vnode_t fuse_rootvp = NULLVP;
         err = fuse_vfsop_root(mp, &fuse_rootvp, context);
@@ -580,13 +580,13 @@ out:
     }
 
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
-    fuse_device_lock(fdev);
-    data = fuse_device_get_mpdata(fdev); /* ...and again */
+    fuse_lck_mtx_lock(fdev->mtx);
+    data = fdev->data; /* ...and again */
     if(data) {
         assert(data->biglock == biglock);
         fuse_biglock_unlock(biglock);
     }
-    fuse_device_unlock(fdev);
+    fuse_lck_mtx_unlock(fdev->mtx);
 #endif
 
     return err;
@@ -717,7 +717,7 @@ alreadydead:
 #endif
     fuse_trace_printf("%s:   Done.\n", __FUNCTION__);
 
-    fuse_device_lock(fdev);
+    fuse_lck_mtx_lock(fdev->mtx);
 
     vfs_setfsprivate(mp, NULL);
     data->dataflags &= ~FSESS_MOUNTED;
@@ -736,7 +736,7 @@ alreadydead:
         /* fdev->data is gone now */
     }
 
-    fuse_device_unlock(fdev);
+    fuse_lck_mtx_unlock(fdev->mtx);
 
     return 0;
 }

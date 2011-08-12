@@ -13,7 +13,14 @@ struct fuse_data;
 
 /* softc */
 
-struct fuse_device;
+struct fuse_device {
+    lck_mtx_t        *mtx;
+    int               usecount;
+    pid_t             pid;
+    dev_t             dev;
+    void             *cdev;
+    struct fuse_data *data;
+};
 typedef struct fuse_device * fuse_device_t;
 
 /* Global */
@@ -24,11 +31,6 @@ int fuse_devices_stop(void);
 /* Per Device */
 
 fuse_device_t     fuse_device_get(dev_t dev);
-struct fuse_data *fuse_device_get_mpdata(fuse_device_t fdev);
-
-void              fuse_device_lock(fuse_device_t fdev);
-void              fuse_device_unlock(fuse_device_t fdev);
-
 void              fuse_device_close_final(fuse_device_t fdev);
 
 /* Control/Debug Utilities */

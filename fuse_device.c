@@ -16,11 +16,6 @@
 #include <stdbool.h>
 #include <libkern/libkern.h>
 
-#define FUSE_DEVICE_GLOBAL_LOCK()   fuse_lck_mtx_lock(fuse_device_mutex)
-#define FUSE_DEVICE_GLOBAL_UNLOCK() fuse_lck_mtx_unlock(fuse_device_mutex)
-#define FUSE_DEVICE_LOCAL_LOCK(d)   fuse_lck_mtx_lock((d)->mtx)
-#define FUSE_DEVICE_LOCAL_UNLOCK(d) fuse_lck_mtx_unlock((d)->mtx)
-
 #define TAILQ_FOREACH_SAFE(var, head, field, tvar)           \
         for ((var) = TAILQ_FIRST((head));                    \
             (var) && ((tvar) = TAILQ_NEXT((var), field), 1); \
@@ -28,15 +23,6 @@
 
 static int  fuse_cdev_major          = -1;
 static bool fuse_interface_available = false;
-
-struct fuse_device {
-    lck_mtx_t        *mtx;
-    int               usecount;
-    pid_t             pid;
-    dev_t             dev;
-    void             *cdev;
-    struct fuse_data *data;
-};
 
 static struct fuse_device fuse_device_table[FUSE4X_NDEVICES];
 
@@ -55,28 +41,6 @@ fuse_device_get(dev_t dev)
     }
 
     return FUSE_DEVICE_FROM_UNIT_FAST(unit);
-}
-
-__inline__
-void
-fuse_device_lock(fuse_device_t fdev)
-{
-    FUSE_DEVICE_LOCAL_LOCK(fdev);
-}
-
-__inline__
-void
-fuse_device_unlock(fuse_device_t fdev)
-{
-    FUSE_DEVICE_LOCAL_UNLOCK(fdev);
-}
-
-/* Must be called under lock. */
-__inline__
-struct fuse_data *
-fuse_device_get_mpdata(fuse_device_t fdev)
-{
-    return fdev->data;
 }
 
 /* Must be called under lock. */
@@ -157,29 +121,29 @@ fuse_device_open(dev_t dev, __unused int flags, __unused int devtype,
 
     unit = minor(dev);
     if ((unit >= FUSE4X_NDEVICES) || (unit < 0)) {
-        FUSE_DEVICE_GLOBAL_UNLOCK();
+        fuse_lck_mtx_unlock(fuse_device_mutex);
         return ENOENT;
     }
 
     fdev = FUSE_DEVICE_FROM_UNIT_FAST(unit);
     if (!fdev) {
-        FUSE_DEVICE_GLOBAL_UNLOCK();
+        fuse_lck_mtx_unlock(fuse_device_mutex);
         log("fuse4x: device found with no softc\n");
         return ENXIO;
     }
 
-    FUSE_DEVICE_GLOBAL_LOCK();
+    fuse_lck_mtx_lock(fuse_device_mutex);
 
     if (fdev->usecount != 0) {
-        FUSE_DEVICE_GLOBAL_UNLOCK();
+        fuse_lck_mtx_unlock(fuse_device_mutex);
         return EBUSY;
     }
 
     fdev->usecount++;
 
-    FUSE_DEVICE_LOCAL_LOCK(fdev);
+    fuse_lck_mtx_lock(fdev->mtx);
 
-    FUSE_DEVICE_GLOBAL_UNLOCK();
+    fuse_lck_mtx_unlock(fuse_device_mutex);
 
     /* Could block. */
     fdata = fdata_alloc(p);
@@ -191,13 +155,13 @@ fuse_device_open(dev_t dev, __unused int flags, __unused int devtype,
          * user daemon is dead.
          */
 
-        FUSE_DEVICE_GLOBAL_LOCK();
+        fuse_lck_mtx_lock(fuse_device_mutex);
 
         fdev->usecount--;
 
-        FUSE_DEVICE_LOCAL_UNLOCK(fdev);
+        fuse_lck_mtx_unlock(fdev->mtx);
 
-        FUSE_DEVICE_GLOBAL_UNLOCK();
+        fuse_lck_mtx_unlock(fuse_device_mutex);
 
         fdata_destroy(fdata);
 
@@ -209,7 +173,7 @@ fuse_device_open(dev_t dev, __unused int flags, __unused int devtype,
         fdev->pid    = proc_pid(p);
     }
 
-    FUSE_DEVICE_LOCAL_UNLOCK(fdev);
+    fuse_lck_mtx_unlock(fdev->mtx);
 
     return KERN_SUCCESS;
 }
@@ -241,7 +205,7 @@ fuse_device_close(dev_t dev, __unused int flags, __unused int devtype,
 
     fdata_set_dead(data);
 
-    FUSE_DEVICE_LOCAL_LOCK(fdev);
+    fuse_lck_mtx_lock(fdev->mtx);
 
     data->dataflags &= ~FSESS_OPENED;
 
@@ -256,9 +220,9 @@ fuse_device_close(dev_t dev, __unused int flags, __unused int devtype,
         fuse_device_close_final(fdev);
     }
 
-    FUSE_DEVICE_LOCAL_UNLOCK(fdev);
+    fuse_lck_mtx_unlock(fdev->mtx);
 
-    FUSE_DEVICE_GLOBAL_LOCK();
+    fuse_lck_mtx_lock(fuse_device_mutex);
 
     /*
      * Even if usecount goes 0 here, at open time, we check if fdev->data
@@ -268,7 +232,7 @@ fuse_device_close(dev_t dev, __unused int flags, __unused int devtype,
      */
     fdev->usecount--;
 
-    FUSE_DEVICE_GLOBAL_UNLOCK();
+    fuse_lck_mtx_unlock(fuse_device_mutex);
 
     return KERN_SUCCESS;
 }
@@ -512,10 +476,10 @@ fuse_devices_stop(void)
 
     fuse_interface_available = false;
 
-    FUSE_DEVICE_GLOBAL_LOCK();
+    fuse_lck_mtx_lock(fuse_device_mutex);
 
     if (fuse_cdev_major == -1) {
-        FUSE_DEVICE_GLOBAL_UNLOCK();
+        fuse_lck_mtx_unlock(fuse_device_mutex);
         return KERN_SUCCESS;
     }
 
@@ -525,7 +489,7 @@ fuse_devices_stop(void)
 
         if (fuse_device_table[i].usecount != 0) {
             fuse_interface_available = true;
-            FUSE_DEVICE_GLOBAL_UNLOCK();
+            fuse_lck_mtx_unlock(fuse_device_mutex);
             proc_name(fuse_device_table[i].pid, p_comm, MAXCOMLEN + 1);
             log("fuse4x: /dev/fuse%d is still active (pid=%d %s)\n",
                   i, fuse_device_table[i].pid, p_comm);
@@ -534,7 +498,7 @@ fuse_devices_stop(void)
 
         if (fuse_device_table[i].data != NULL) {
             fuse_interface_available = true;
-            FUSE_DEVICE_GLOBAL_UNLOCK();
+            fuse_lck_mtx_unlock(fuse_device_mutex);
             proc_name(fuse_device_table[i].pid, p_comm, MAXCOMLEN + 1);
             /* The pid can't possibly be active here. */
             log("fuse4x: /dev/fuse%d has a lingering mount (pid=%d, %s)\n",
@@ -561,7 +525,7 @@ fuse_devices_stop(void)
 
     fuse_cdev_major = -1;
 
-    FUSE_DEVICE_GLOBAL_UNLOCK();
+    fuse_lck_mtx_unlock(fuse_device_mutex);
 
     return KERN_SUCCESS;
 }
@@ -663,7 +627,7 @@ fuse_device_kill(int unit, struct proc *p)
         return ENOENT;
     }
 
-    FUSE_DEVICE_LOCAL_LOCK(fdev);
+    fuse_lck_mtx_lock(fdev->mtx);
 
     struct fuse_data *fdata = fdev->data;
     if (fdata) {
@@ -684,7 +648,7 @@ fuse_device_kill(int unit, struct proc *p)
         }
     }
 
-    FUSE_DEVICE_LOCAL_UNLOCK(fdev);
+    fuse_lck_mtx_unlock(fdev->mtx);
 
     return error;
 }
@@ -706,14 +670,14 @@ fuse_device_print_vnodes(int unit_flags, struct proc *p)
         return ENOENT;
     }
 
-    FUSE_DEVICE_LOCAL_LOCK(fdev);
+    fuse_lck_mtx_lock(fdev->mtx);
 
     if (fdev->data) {
 
         mount_t mp = fdev->data->mp;
 
         if (vfs_busy(mp, LK_NOWAIT)) {
-            FUSE_DEVICE_LOCAL_UNLOCK(fdev);
+            fuse_lck_mtx_unlock(fdev->mtx);
             return EBUSY;
         }
 
@@ -731,7 +695,7 @@ fuse_device_print_vnodes(int unit_flags, struct proc *p)
         vfs_unbusy(mp);
     }
 
-    FUSE_DEVICE_LOCAL_UNLOCK(fdev);
+    fuse_lck_mtx_unlock(fdev->mtx);
 
     return error;
 }
