@@ -20,8 +20,6 @@
 
 // #define FUSE_COUNT_MEMORY  1
 // #define FUSE_DEBUG         1
-// #define FUSE_KDEBUG        1
-// #define FUSE_KTRACE_OP     1
 // #define FUSE_TRACE         1
 // #define FUSE_TRACE_LK      1
 // #define FUSE_TRACE_MSLEEP  1
@@ -116,30 +114,6 @@ extern lck_mtx_t *fuse_log_lock;
 #define fuse_msleep(chan, mtx, pri, wmesg, ts) msleep((chan), (mtx), (pri), (wmesg), (ts))
 #define fuse_wakeup(chan)                      wakeup((chan))
 #define fuse_wakeup_one(chan)                  wakeup_one((chan))
-#endif
-
-#ifdef FUSE_KTRACE_OP
-#undef  fuse_trace_printf_vfsop
-#undef  fuse_trace_printf_vnop
-#define fuse_trace_printf_vfsop() kprintf("%s\n", __FUNCTION__)
-#define fuse_trace_printf_vnop()  kprintf("%s\n", __FUNCTION__)
-#endif
-
-#ifdef FUSE_DEBUG
-#define debug_printf(fmt, ...) \
-  log("%s[%s:%d]: " fmt, __FUNCTION__, __FILE__, __LINE__, ## __VA_ARGS__)
-#else
-#define debug_printf(fmt, ...) {}
-#endif
-
-#ifdef FUSE_KDEBUG
-#undef debug_printf
-#define debug_printf(fmt, ...) \
-  log("%s[%s:%d]: " fmt, __FUNCTION__, __FILE__, __LINE__, ## __VA_ARGS__);\
-  kprintf("%s[%s:%d]: " fmt, __FUNCTION__, __FILE__, __LINE__, ## __VA_ARGS__)
-#define kdebug_printf(fmt, ...) debug_printf(fmt, ## __VA_ARGS__)
-#else
-#define kdebug_printf(fmt, ...) {}
 #endif
 
 #define fuse_round_page_32(x) \
