@@ -162,9 +162,9 @@ static errno_t
 fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
                  vfs_context_t context)
 {
-    int err     = 0;
-    int mntopts = 0;
-    int mounted = 0;
+    int err      = 0;
+    int mntopts  = 0;
+    bool mounted = false;
 
     uint32_t max_read = ~0;
 
@@ -437,7 +437,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
 
     data->dataflags |= FSESS_MOUNTED;
     OSAddAtomic(1, (SInt32 *)&fuse_mount_count);
-    mounted = 1;
+    mounted = true;
 
     if (fdata_dead_get(data)) {
         fuse_device_unlock(fdev);
