@@ -12,19 +12,25 @@
 
 #if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
 
+#if FUSE_TRACE_LK
+#define biglock_log(fmt, ...)   log(fmt, ## __VA_ARGS__)
+#else
+#define biglock_log(fmt, ...)   {}
+#endif
+
 #if M_FUSE4X_ENABLE_HUGE_LOCK
 #define fuse_hugelock_lock() \
 	do { \
-		log("%s: Aquiring huge lock %p...", __FUNCTION__, fuse_huge_lock); \
+		biglock_log("%s: Aquiring huge lock %p...\n", __FUNCTION__, fuse_huge_lock); \
 		fusefs_recursive_lock_lock(fuse_huge_lock); \
-		log("%s:   huge lock %p aquired!", __FUNCTION__, fuse_huge_lock); \
+		biglock_log("%s:   huge lock %p aquired!\n", __FUNCTION__, fuse_huge_lock); \
 	} while(0)
 
 #define fuse_hugelock_unlock() \
 	do { \
-		log("%s: Releasing huge lock %p...", __FUNCTION__, fuse_huge_lock); \
+		biglock_log("%s: Releasing huge lock %p...\n", __FUNCTION__, fuse_huge_lock); \
 		fusefs_recursive_lock_unlock(fuse_huge_lock); \
-		log("%s:   huge lock %p released!", __FUNCTION__, fuse_huge_lock); \
+		biglock_log("%s:   huge lock %p released!\n", __FUNCTION__, fuse_huge_lock); \
 	} while(0)
 #define fuse_biglock_lock(lock) fuse_hugelock_lock()
 #define fuse_biglock_unlock(lock) fuse_hugelock_unlock()
@@ -32,68 +38,68 @@
 #define fuse_biglock lck_mtx_t
 #define fuse_biglock_lock(lock) \
 	do { \
-		log("%s: Aquiring biglock %p...", __FUNCTION__, lock); \
+		biglock_log("%s: Aquiring biglock %p...\n", __FUNCTION__, lock); \
 		lck_mtx_lock(lock); \
-		log("%s:   biglock %p aquired!", __FUNCTION__, lock); \
+		biglock_log("%s:   biglock %p aquired!\n", __FUNCTION__, lock); \
 	} while(0)
 
 #define fuse_biglock_unlock(lock) \
 	do { \
-		log("%s: Releasing biglock %p...", __FUNCTION__, lock); \
+		biglock_log("%s: Releasing biglock %p...\n", __FUNCTION__, lock); \
 		lck_mtx_unlock(lock); \
-		log("%s:   biglock %p released!", __FUNCTION__, lock); \
+		biglock_log("%s:   biglock %p released!\n", __FUNCTION__, lock); \
 	} while(0)
 #endif
 
 #define fuse_nodelock_lock(node, type) \
 	do { \
 		int err; \
-		log("%s: Locking node %p...", __FUNCTION__, node); \
+		biglock_log("%s: Locking node %p...\n", __FUNCTION__, node); \
 		err = fusefs_lock(node, type); \
 		if(err) \
 			return err; \
-		log("%s:   node %p locked!", __FUNCTION__, node); \
+		biglock_log("%s:   node %p locked!\n", __FUNCTION__, node); \
 	} while(0)
 
 #define fuse_nodelock_unlock(node) \
 	do { \
-		log("%s: Unlocking node %p...", __FUNCTION__, node); \
+		biglock_log("%s: Unlocking node %p...\n", __FUNCTION__, node); \
 		fusefs_unlock(node); \
-		log("%s:   node %p unlocked!", __FUNCTION__, node); \
+		biglock_log("%s:   node %p unlocked!\n", __FUNCTION__, node); \
 	} while(0)
 
 #define fuse_nodelock_lock_pair(node1, node2, type) \
 	do { \
 		int err; \
-		log("%s: Locking node pair (%p, %p)...", __FUNCTION__, node1, node2); \
+		biglock_log("%s: Locking node pair (%p, %p)...\n", __FUNCTION__, node1, node2); \
 		err = fusefs_lockpair(node1, node2, type); \
 		if(err) \
 			return err; \
-		log("%s:   node pair (%p, %p) locked!", __FUNCTION__, node1, node2); \
+		biglock_log("%s:   node pair (%p, %p) locked!\n", __FUNCTION__, node1, node2); \
 	} while(0)
 
 #define fuse_nodelock_unlock_pair(node1, node2) \
 	do { \
-		log("%s: Unlocking node pair (%p, %p)...", __FUNCTION__, node1, node2); \
+		biglock_log("%s: Unlocking node pair (%p, %p)...\n", __FUNCTION__, node1, node2); \
 		fusefs_unlockpair(node1, node2); \
-		log("%s:   node pair (%p, %p) unlocked!", __FUNCTION__, node1, node2); \
+		biglock_log("%s:   node pair (%p, %p) unlocked!\n", __FUNCTION__, node1, node2); \
 	} while(0)
 
 #define fuse_nodelock_lock_four(node1, node2, node3, node4, type) \
 	do { \
 		int err; \
-		log("%s: Locking node pair (%p, %p, %p, %p)...", __FUNCTION__, node1, node2, node3, node4); \
+		biglock_log("%s: Locking node pair (%p, %p, %p, %p)...\n", __FUNCTION__, node1, node2, node3, node4); \
 		err = fusefs_lockfour(node1, node2, node3, node4, type); \
 		if(err) \
 			return err; \
-		log("%s:   node pair (%p, %p, %p, %p) locked!", __FUNCTION__, node1, node2, node3, node4); \
+		biglock_log("%s:   node pair (%p, %p, %p, %p) locked!\n", __FUNCTION__, node1, node2, node3, node4); \
 	} while(0)
 
 #define fuse_nodelock_unlock_four(node1, node2, node3, node4) \
 	do { \
-		log("%s: Unlocking nodes (%p, %p, %p, %p)...", __FUNCTION__, node1, node2, node3, node4); \
+		biglock_log("%s: Unlocking nodes (%p, %p, %p, %p)...\n", __FUNCTION__, node1, node2, node3, node4); \
 		fusefs_unlockfour(node1, node2, node3, node4); \
-		log("%s:   node pair (%p, %p, %p, %p) unlocked!", __FUNCTION__, node1, node2, node3, node4); \
+		biglock_log("%s:   node pair (%p, %p, %p, %p) unlocked!\n", __FUNCTION__, node1, node2, node3, node4); \
 	} while(0)
 
 /** Wrapper that surrounds a vfsop call with biglock locking. */
