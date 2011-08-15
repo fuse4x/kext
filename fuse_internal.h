@@ -75,14 +75,16 @@ fuse_match_cred(kauth_cred_t daemoncred, kauth_cred_t requestcred)
 #endif
 
     if ((daemonpcred->cr_uid == requestpcred->cr_uid)             &&
-        (daemonpcred->cr_uid == requestpcred->cr_ruid)            &&
+        (daemonpcred->cr_groups[0] == requestpcred->cr_groups[0])) {
 
-        // THINK_ABOUT_THIS_LATER
-        // (daemonpcred->cr_uid == requestpcred->cr_svuid)        &&
+        // macfuse/fuse4x used to check following conditions as well.
+        // but on Lion appeared a new service used for drag'n'drop (Locum?)
+        // that works on behalf of user but has "real user" equals to root
+        // (ruid==cr_rgid==0), if we reject Locum then drag'n'drop does not work in Finder.
+        // (daemonpcred->cr_uid == requestpcred->cr_ruid)       &&
+        // (daemonpcred->cr_groups[0] == requestpcred->cr_rgid) &&
+        // (daemonpcred->cr_groups[0] == requestpcred->cr_svgid)
 
-        (daemonpcred->cr_groups[0] == requestpcred->cr_groups[0]) &&
-        (daemonpcred->cr_groups[0] == requestpcred->cr_rgid)      &&
-        (daemonpcred->cr_groups[0] == requestpcred->cr_svgid)) {
         return 0;
     }
 
