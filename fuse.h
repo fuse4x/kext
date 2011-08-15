@@ -26,7 +26,7 @@
 // #define FUSE_TRACE_OP      1
 // #define FUSE_TRACE_VNCACHE 1
 
-// #define M_FUSE4X_ENABLE_LOCK_LOGGING 1
+// #define M_FUSE4X_SERIALIZE_LOGGING 1
 
 #define M_FUSE4X_ENABLE_FIFOFS            0
 #define M_FUSE4X_ENABLE_INTERRUPT         1
@@ -52,13 +52,13 @@
 #endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
 
 
-#if M_FUSE4X_ENABLE_LOCK_LOGGING
+#if M_FUSE4X_SERIALIZE_LOGGING
 extern lck_mtx_t *fuse_log_lock;
 
 // In case if tracing (lock,sleep,operations,..) enabled it produces a lot of log output.
 // Because these logs are written from multiple threads they interference with each other.
 // To make log more readable we need to searialize the output. It is done in log() function
-// in case if M_FUSE4X_ENABLE_LOCK_LOGGING defined.
+// in case if M_FUSE4X_SERIALIZE_LOGGING defined.
 #define log(fmt, args...) \
     do { \
         lck_mtx_lock(fuse_log_lock); \
@@ -68,7 +68,7 @@ extern lck_mtx_t *fuse_log_lock;
 
 #else
 #define log(fmt, args...) IOLog(fmt, ##args)
-#endif /* M_FUSE4X_ENABLE_LOCK_LOGGING */
+#endif /* M_FUSE4X_SERIALIZE_LOGGING */
 
 #ifdef FUSE_TRACE
 #define fuse_trace_printf(fmt, ...) log(fmt, ## __VA_ARGS__)

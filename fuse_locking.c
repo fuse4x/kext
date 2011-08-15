@@ -541,6 +541,6 @@ fusefs_recursive_lock *fuse_huge_lock = NULL;
 
 #endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
 
-#if M_FUSE4X_ENABLE_LOCK_LOGGING
+#if M_FUSE4X_SERIALIZE_LOGGING
 lck_mtx_t *fuse_log_lock = NULL;
-#endif /* M_FUSE4X_ENABLE_LOCK_LOGGING */
+#endif /* M_FUSE4X_SERIALIZE_LOGGING */
