@@ -16,7 +16,7 @@
 #include "fuse_sysctl.h"
 #include <stdbool.h>
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
 #include "fuse_biglock_vnops.h"
 #endif
 
@@ -172,12 +172,12 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
             params.vnfs_filesize   = size;
             params.vnfs_markroot   = markroot;
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(mntdata->biglock);
 #endif
             err = vnode_create(VNCREATE_FLAVOR, (uint32_t)sizeof(params),
                                &params, &vn);
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(mntdata->biglock);
 #endif
         }
@@ -205,22 +205,22 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
         if (vnode_vtype(vn) != vtyp) {
             log("fuse4x: vnode changed type behind us (old=%d, new=%d)\n",
                   vnode_vtype(vn), vtyp);
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(mntdata->biglock);
 #endif
             fuse_internal_vnode_disappear(vn, context, REVOKE_SOFT);
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(mntdata->biglock);
 #endif
             vnode_put(vn);
             err = EIO;
         } else if (VTOFUD(vn)->generation != generation) {
             log("fuse4x: vnode changed generation\n");
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(mntdata->biglock);
 #endif
             fuse_internal_vnode_disappear(vn, context, REVOKE_SOFT);
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(mntdata->biglock);
 #endif
             vnode_put(vn);

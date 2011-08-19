@@ -359,7 +359,7 @@ fusefs_lck_rw_done(lck_rw_t *lock)
     IORWLockUnlock((IORWLock *)lock);
 }
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
 
 /* Recursive lock used to lock the vfs functions awaiting more fine-grained
  * locking. Code was taken from IOLocks.cpp to imitate how an IORecursiveLock
@@ -535,11 +535,7 @@ void fusefs_recursive_lock_wakeup(__unused fusefs_recursive_lock *lock,
 }
 #endif
 
-#if M_FUSE4X_ENABLE_HUGE_LOCK
-fusefs_recursive_lock *fuse_huge_lock = NULL;
-#endif /* M_FUSE4X_ENABLE_HUGE_LOCK */
-
-#endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
+#endif /* M_FUSE4X_ENABLE_BIGLOCK */
 
 #if M_FUSE4X_SERIALIZE_LOGGING
 lck_mtx_t *fuse_log_lock = NULL;

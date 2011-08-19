@@ -41,7 +41,7 @@
 #include "fuse_biglock_vnops.h"
 #include "fuse_ipc.h"
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
 
 #include "fuse_vnops.h"
 
@@ -782,4 +782,4 @@ struct vnodeopv_entry_desc fuse_biglock_vnode_operation_entries[] = {
     { NULL, NULL }
 };
 
-#endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
+#endif /* M_FUSE4X_ENABLE_BIGLOCK */

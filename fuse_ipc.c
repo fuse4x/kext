@@ -18,7 +18,7 @@
 #include "fuse_node.h"
 #include "fuse_sysctl.h"
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
 #include "fuse_biglock_vnops.h"
 #endif
 
@@ -250,7 +250,7 @@ fticket_wait_answer(struct fuse_ticket *ftick)
         goto out;
     }
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
     // release biglock before going to sleep:
     // 1) it reduces biglock contention - we really have no reason to keep the lock and prevent other requests from
     //    processing, the biglock protects vnode operations only.
@@ -261,7 +261,7 @@ fticket_wait_answer(struct fuse_ticket *ftick)
 
     err = fuse_msleep(ftick, ftick->tk_aw_mtx, PCATCH, "fu_ans", data->daemon_timeout_p);
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
     fuse_biglock_lock(data->biglock);
 #endif
 
@@ -394,7 +394,7 @@ fdata_alloc(struct proc *p)
     data->rename_lock = lck_rw_alloc_init(fuse_lock_group, fuse_lock_attr);
 #endif
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
     data->biglock        = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
 #endif
 
@@ -420,7 +420,7 @@ fdata_destroy(struct fuse_data *data)
     data->rename_lock = NULL;
 #endif
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
     lck_mtx_free(data->biglock, fuse_lock_group);
     data->biglock = NULL;
 #endif

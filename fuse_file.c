@@ -10,7 +10,7 @@
 #include "fuse_node.h"
 #include "fuse_sysctl.h"
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
 #include "fuse_biglock_vnops.h"
 #endif
 
@@ -94,12 +94,12 @@ fuse_filehandle_get(vnode_t       vp,
         }
 #endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
         if (err == ENOENT) {
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
             struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
             fuse_biglock_unlock(data->biglock);
 #endif
             fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif
         }

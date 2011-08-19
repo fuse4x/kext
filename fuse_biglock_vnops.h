@@ -10,7 +10,7 @@
 #include "fuse.h"
 #include "fuse_locking.h"
 
-#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK
+#if M_FUSE4X_ENABLE_BIGLOCK
 
 #if FUSE_TRACE_LK
 #define biglock_log(fmt, ...)   log(fmt, ## __VA_ARGS__)
@@ -18,27 +18,8 @@
 #define biglock_log(fmt, ...)   {}
 #endif
 
-#if M_FUSE4X_ENABLE_HUGE_LOCK
-#define fuse_hugelock_lock() \
-    do { \
-        biglock_log("0: fuse_hugelock_lock(%p): %s@%d by %d\n", fuse_huge_lock, __FUNCTION__, __LINE__, proc_selfpid());  \
-        fusefs_recursive_lock_lock(fuse_huge_lock); \
-        biglock_log("1: fuse_hugelock_lock(%p): %s@%d by %d\n", fuse_huge_lock, __FUNCTION__, __LINE__, proc_selfpid());  \
-    } while(0)
-
-#define fuse_hugelock_unlock() \
-    do { \
-        biglock_log("0: fuse_hugelock_unlock(%p): %s@%d by %d\n", fuse_huge_lock, __FUNCTION__, __LINE__, proc_selfpid());  \
-        fusefs_recursive_lock_unlock(fuse_huge_lock); \
-        biglock_log("1: fuse_hugelock_unlock(%p): %s@%d by %d\n", fuse_huge_lock, __FUNCTION__, __LINE__, proc_selfpid());  \
-    } while(0)
-#define fuse_biglock_lock(lock) fuse_hugelock_lock()
-#define fuse_biglock_unlock(lock) fuse_hugelock_unlock()
-#else
-#define fuse_biglock lck_mtx_t
 #define fuse_biglock_lock(lock)   fuse_lck_mtx_lock(lock)
 #define fuse_biglock_unlock(lock) fuse_lck_mtx_unlock(lock)
-#endif
 
 #define fuse_nodelock_lock(node, type) \
     do { \
@@ -294,6 +275,6 @@ FUSE_VNOP_EXPORT int fuse_biglock_vnop_symlink(struct vnop_symlink_args *ap);
 
 FUSE_VNOP_EXPORT int fuse_biglock_vnop_write(struct vnop_write_args *ap);
 
-#endif /* M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK */
+#endif /* M_FUSE4X_ENABLE_BIGLOCK */
 
 #endif /* _FUSE_BIGLOCK_VNOPS_H_ */
