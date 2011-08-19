@@ -18,6 +18,10 @@
 #include "fuse_node.h"
 #include "fuse_sysctl.h"
 
+#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+#include "fuse_biglock_vnops.h"
+#endif
+
 static struct fuse_ticket *fticket_alloc(struct fuse_data *data);
 static void                fticket_refresh(struct fuse_ticket *ftick);
 static void                fticket_destroy(struct fuse_ticket *ftick);
@@ -246,7 +250,20 @@ fticket_wait_answer(struct fuse_ticket *ftick)
         goto out;
     }
 
+#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+    // release biglock before going to sleep:
+    // 1) it reduces biglock contention - we really have no reason to keep the lock and prevent other requests from
+    //    processing, the biglock protects vnode operations only.
+    // 2) in case if a fuse daemon performs some non-fuse filesystem operations it may lead to fsync on the *fuse*
+    //    filesystem. And this leads to deadlock. See https://trac.macports.org/ticket/30129 (the second, deadlock issue).
+    fuse_biglock_unlock(data->biglock);
+#endif
+
     err = fuse_msleep(ftick, ftick->tk_aw_mtx, PCATCH, "fu_ans", data->daemon_timeout_p);
+
+#if M_FUSE4X_ENABLE_INTERIM_FSNODE_LOCK && !M_FUSE4X_ENABLE_HUGE_LOCK
+    fuse_biglock_lock(data->biglock);
+#endif
 
     if (err == EAGAIN) { /* same as EWOULDBLOCK */
         if (fdata_set_dead(data)) {
