@@ -94,7 +94,7 @@ extern lck_mtx_t *fuse_log_lock;
 ({                                                                                                    \
     log("0: msleep(%p, %s): %s@%d by %d\n", (chan), (wmesg), __FUNCTION__, __LINE__, proc_selfpid()); \
     int __FUNCTION__ ## ret = msleep((chan), (mtx), (pri), (wmesg), (ts));                            \
-    log("1: msleep(%p, %s): %s@%d by %d\n", (chan), (wmesg), __FUNCTION__, __LINE__, proc_selfpid()); \
+    log("1: msleep(%p, %s)=%d: %s@%d by %d\n", (chan), (wmesg), __FUNCTION__ ## ret, __FUNCTION__, __LINE__, proc_selfpid()); \
                                                                                                       \
     __FUNCTION__ ## ret;                                                                              \
 })
