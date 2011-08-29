@@ -18,7 +18,7 @@ abort("root directory #{root_dir} does not exist") if ARGV.index('--root') and n
 system('git clean -xdf') if clean
 
 configuration = debug ? 'Debug' : 'Release'
-system("xcodebuild -parallelizeTargets -configuration #{configuration} -alltargets") or abort("cannot build kext")
+system("xcodebuild SYMROOT=build SHARED_PRECOMPS_DIR=build -PBXBuildsContinueAfterErrors=0 -parallelizeTargets -configuration #{configuration} -alltargets") or abort("cannot build kext")
 
 unless root_dir
   # we need to reload the kext
