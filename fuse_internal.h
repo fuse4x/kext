@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <sys/ubc.h>
 #include <sys/uio.h>
+#include <sys/ucred.h>
 #include <sys/vnode.h>
 #include <sys/xattr.h>
 #include <stdbool.h>
@@ -66,7 +67,8 @@ static __inline__
 int
 fuse_match_cred(kauth_cred_t daemoncred, kauth_cred_t requestcred)
 {
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
+#ifdef MAC_OS_X_VERSION_10_7
+    // SDK 10.7 uses the new 'posix' credentials
     posix_cred_t daemonpcred = &(daemoncred->cr_posix);
     posix_cred_t requestpcred = &(requestcred->cr_posix);
 #else
