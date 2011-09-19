@@ -1133,11 +1133,7 @@ dostatfs:
     VFSATTR_RETURN(attr, f_access_time, kZeroTime);
     VFSATTR_RETURN(attr, f_backup_time, kZeroTime);
 
-    if (deading) {
-        VFSATTR_RETURN(attr, f_fssubtype, (uint32_t)FUSE_FSSUBTYPE_INVALID);
-    } else {
-        VFSATTR_RETURN(attr, f_fssubtype, data->fssubtype);
-    }
+    VFSATTR_RETURN(attr, f_fssubtype, data->fssubtype);
 
     /* Daemon needs to pass this. */
     if (VFSATTR_IS_ACTIVE(attr, f_vol_name)) {
