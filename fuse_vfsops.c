@@ -429,7 +429,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
     }
 
     data->dataflags |= FSESS_MOUNTED;
-    OSAddAtomic(1, (SInt32 *)&fuse_mount_count);
+    OSIncrementAtomic((SInt32 *)&fuse_mount_count);
     mounted = true;
 
     if (fdata_dead_get(data)) {
@@ -539,7 +539,7 @@ out:
         fuse_lck_mtx_lock(fdev->mtx);
         data = fdev->data; /* again */
         if (mounted) {
-            OSAddAtomic(-1, (SInt32 *)&fuse_mount_count);
+            OSDecrementAtomic((SInt32 *)&fuse_mount_count);
         }
         if (data) {
             data->dataflags &= ~FSESS_MOUNTED;
@@ -714,7 +714,7 @@ alreadydead:
 
     vfs_setfsprivate(mp, NULL);
     data->dataflags &= ~FSESS_MOUNTED;
-    OSAddAtomic(-1, (SInt32 *)&fuse_mount_count);
+    OSDecrementAtomic((SInt32 *)&fuse_mount_count);
 
 #if M_FUSE4X_ENABLE_BIGLOCK
     fuse_biglock_unlock(data->biglock);

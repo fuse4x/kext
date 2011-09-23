@@ -73,7 +73,7 @@ fuse_filehandle_get(vnode_t       vp,
     foi = fdi.indata;
     foi->flags = oflags;
 
-    OSAddAtomic(1, (SInt32 *)&fuse_fh_upcall_count);
+    OSIncrementAtomic((SInt32 *)&fuse_fh_upcall_count);
     if ((err = fdisp_wait_answ(&fdi))) {
 #if M_FUSE4X_ENABLE_UNSUPPORTED
         const char *vname = vnode_getname(vp);
@@ -105,7 +105,7 @@ fuse_filehandle_get(vnode_t       vp,
         }
         return err;
     }
-    OSAddAtomic(1, (SInt32 *)&fuse_fh_current);
+    OSIncrementAtomic((SInt32 *)&fuse_fh_current);
 
     foo = fdi.answ;
 
@@ -172,7 +172,7 @@ fuse_filehandle_put(vnode_t vp, vfs_context_t context, fufh_type_t fufh_type)
     }
 
 out:
-    OSAddAtomic(-1, (SInt32 *)&fuse_fh_current);
+    OSDecrementAtomic((SInt32 *)&fuse_fh_current);
     fuse_invalidate_attr(vp);
 
     return err;
