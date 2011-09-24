@@ -150,7 +150,6 @@ struct fuse_data {
     kauth_cred_t               daemoncred;
     pid_t                      daemonpid;
     uint32_t                   dataflags;     /* effective fuse_data flags */
-    uint64_t                   mountaltflags; /* as-is copy of altflags    */
     uint64_t                   noimplflags;   /* not-implemented flags     */
 
 #if M_FUSE4X_ENABLE_DSELECT

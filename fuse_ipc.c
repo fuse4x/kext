@@ -373,7 +373,6 @@ fdata_alloc(struct proc *p)
     data->daemoncred    = kauth_cred_proc_ref(p);
     data->daemonpid     = proc_pid(p);
     data->dataflags     = 0;
-    data->mountaltflags = 0ULL;
     data->noimplflags   = 0ULL;
 
     data->rwlock        = lck_rw_alloc_init(fuse_lock_group, fuse_lock_attr);

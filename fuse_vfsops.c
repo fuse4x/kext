@@ -468,7 +468,6 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
 
     data->max_read = max_read;
     data->fssubtype = fusefs_args.fssubtype;
-    data->mountaltflags = fusefs_args.altflags;
     data->noimplflags = (uint64_t)0;
 
     data->blocksize = fuse_round_size(fusefs_args.blocksize,
