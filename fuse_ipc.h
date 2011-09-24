@@ -42,11 +42,6 @@ struct fuse_iov {
     ssize_t credit;
 };
 
-#define FUSE_DATA_LOCK_SHARED(d)      fuse_lck_rw_lock_shared((d)->rwlock)
-#define FUSE_DATA_LOCK_EXCLUSIVE(d)   fuse_lck_rw_lock_exclusive((d)->rwlock)
-#define FUSE_DATA_UNLOCK_SHARED(d)    fuse_lck_rw_unlock_shared((d)->rwlock)
-#define FUSE_DATA_UNLOCK_EXCLUSIVE(d) fuse_lck_rw_unlock_exclusive((d)->rwlock)
-
 void fiov_init(struct fuse_iov *fiov, size_t size);
 void fiov_teardown(struct fuse_iov *fiov);
 void fiov_refresh(struct fuse_iov *fiov);
@@ -155,8 +150,6 @@ struct fuse_data {
 #if M_FUSE4X_ENABLE_DSELECT
     struct fuse_selinfo        d_rsel;
 #endif /* M_FUSE4X_ENABLE_DSELECT */
-
-    lck_rw_t                  *rwlock;
 
     lck_mtx_t                 *ms_mtx;
     STAILQ_HEAD(, fuse_ticket) ms_head;

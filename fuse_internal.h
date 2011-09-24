@@ -856,37 +856,14 @@ static __inline__
 int
 fuse_implemented(struct fuse_data *data, uint64_t which)
 {
-    int result;
-
-    /* FUSE_DATA_LOCK_SHARED(data); */
-    result = (int)!(data->noimplflags & which);
-    /* FUSE_DATA_UNLOCK_SHARED(data); */
-
-    return result;
+    return (int)!(data->noimplflags & which);
 }
 
 static __inline__
 void
 fuse_clear_implemented(struct fuse_data *data, uint64_t which)
 {
-    /* FUSE_DATA_LOCK_EXCLUSIVE(data); */
     data->noimplflags |= which;
-    /* FUSE_DATA_UNLOCK_EXCLUSIVE(data); */
-}
-
-static __inline__
-int
-fuse_set_implemented_custom(struct fuse_data *data, uint64_t flags)
-{
-    if (!data) {
-        return EINVAL;
-    }
-
-    FUSE_DATA_LOCK_EXCLUSIVE(data);
-    data->noimplflags = flags;
-    FUSE_DATA_UNLOCK_EXCLUSIVE(data);
-
-    return 0;
 }
 
 void

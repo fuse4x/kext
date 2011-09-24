@@ -375,7 +375,6 @@ fdata_alloc(struct proc *p)
     data->dataflags     = 0;
     data->noimplflags   = 0ULL;
 
-    data->rwlock        = lck_rw_alloc_init(fuse_lock_group, fuse_lock_attr);
     data->ms_mtx        = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
     data->aw_mtx        = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
     data->ticket_mtx    = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
@@ -429,8 +428,6 @@ fdata_destroy(struct fuse_data *data)
     }
 
     kauth_cred_unref(&(data->daemoncred));
-
-    lck_rw_free(data->rwlock, fuse_lock_group);
 
     FUSE_OSFree(data, sizeof(struct fuse_data), fuse_malloc_tag);
 }

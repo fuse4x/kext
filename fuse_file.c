@@ -51,7 +51,6 @@ fuse_filehandle_get(vnode_t       vp,
     /*
      * Note that this means we are effectively FILTERING OUT open() flags.
      */
-    (void)mode;
     oflags = fuse_filehandle_xlate_to_oflags(fufh_type);
 
     if (vnode_isdir(vp)) {
