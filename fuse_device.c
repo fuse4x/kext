@@ -15,11 +15,7 @@
 
 #include <stdbool.h>
 #include <libkern/libkern.h>
-
-#define TAILQ_FOREACH_SAFE(var, head, field, tvar)           \
-        for ((var) = TAILQ_FIRST((head));                    \
-            (var) && ((tvar) = TAILQ_NEXT((var), field), 1); \
-            (var) = (tvar))
+#include <sys/queue.h>
 
 static int  fuse_cdev_major          = -1;
 static bool fuse_interface_available = false;
