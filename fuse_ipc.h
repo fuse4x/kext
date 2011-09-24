@@ -176,9 +176,6 @@ struct fuse_data {
     lck_rw_t                  *rename_lock;
 #endif /* M_FUSE4X_EXPLICIT_RENAME_LOCK */
 
-    uint32_t                   fuse_libabi_major;
-    uint32_t                   fuse_libabi_minor;
-
     uint32_t                   max_write;
     uint32_t                   max_read;
     uint32_t                   blocksize;

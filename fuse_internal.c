@@ -1522,9 +1522,6 @@ fuse_internal_init_handler(struct fuse_ticket *ftick, __unused uio_t uio)
         goto out;
     }
 
-    data->fuse_libabi_major = fiio->major;
-    data->fuse_libabi_minor = fiio->minor;
-
     if (fticket_resp(ftick)->len == sizeof(struct fuse_init_out)) {
         data->max_write = fiio->max_write;
     } else {
