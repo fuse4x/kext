@@ -177,7 +177,6 @@ struct fuse_data {
 
     struct timespec            daemon_timeout;
     struct timespec           *daemon_timeout_p;
-    struct timespec            init_timeout;
 #if M_FUSE4X_ENABLE_BIGLOCK
     lck_mtx_t                 *biglock;
 #endif
