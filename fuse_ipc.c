@@ -30,8 +30,7 @@ static __inline__ int      fticket_aw_pull_uio(struct fuse_ticket *ftick,
                                                uio_t uio);
 static __inline__ void     fuse_push_freeticks(struct fuse_ticket *ftick);
 
-static __inline__ struct fuse_ticket *
-fuse_pop_freeticks(struct fuse_data *data);
+static __inline__ struct fuse_ticket *fuse_pop_freeticks(struct fuse_data *data);
 
 static __inline__ void     fuse_push_allticks(struct fuse_ticket *ftick);
 static __inline__ void     fuse_remove_allticks(struct fuse_ticket *ftick);
