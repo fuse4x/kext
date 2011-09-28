@@ -111,7 +111,7 @@ static __inline__
 bool
 fuse_isdeadfs_mp(mount_t mp)
 {
-    return fdata_dead_get(fuse_get_mpdata(mp));
+    return fuse_get_mpdata(mp)->dead;
 }
 
 static __inline__

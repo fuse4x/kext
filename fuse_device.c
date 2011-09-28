@@ -257,7 +257,7 @@ fuse_device_read(dev_t dev, uio_t uio, int ioflag)
     /* The read loop (outgoing messages to the user daemon). */
 
 again:
-    if (fdata_dead_get(data)) {
+    if (data->dead) {
         fuse_lck_mtx_unlock(data->ms_mtx);
         return ENODEV;
     }
@@ -270,14 +270,14 @@ again:
         err = fuse_msleep(data, data->ms_mtx, PCATCH, "fu_msg", NULL);
         if (err) {
             fuse_lck_mtx_unlock(data->ms_mtx);
-            return (fdata_dead_get(data) ? ENODEV : err);
+            return (data->dead ? ENODEV : err);
         }
         goto again;
     }
 
     fuse_lck_mtx_unlock(data->ms_mtx);
 
-    if (fdata_dead_get(data)) {
+    if (data->dead) {
          if (ftick) {
              fuse_ticket_drop_invalid(ftick);
          }
@@ -588,7 +588,7 @@ fuse_device_select(dev_t dev, int events, void *wql, struct proc *p)
 
     if (events & (POLLIN | POLLRDNORM)) {
         fuse_lck_mtx_lock(data->ms_mtx);
-        if (fdata_dead_get(data) || STAILQ_FIRST(&data->ms_head)) {
+        if (data->dead || !STAILQ_EMPTY(&data->ms_head)) {
             revents |= (events & (POLLIN | POLLRDNORM));
         } else {
             selrecord((proc_t)p, (struct selinfo*)&data->d_rsel, wql);

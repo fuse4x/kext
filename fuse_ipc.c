@@ -242,7 +242,7 @@ fticket_wait_answer(struct fuse_ticket *ftick)
 
     data = ftick->tk_data;
 
-    if (fdata_dead_get(data)) {
+    if (data->dead) {
         err = ENOTCONN;
         fticket_set_answered(ftick);
         goto out;
@@ -435,11 +435,6 @@ fdata_destroy(struct fuse_data *data)
     FUSE_OSFree(data, sizeof(struct fuse_data), fuse_malloc_tag);
 }
 
-bool
-fdata_dead_get(struct fuse_data *data)
-{
-    return (data->dead);
-}
 
 bool
 fdata_set_dead(struct fuse_data *data)
@@ -447,7 +442,7 @@ fdata_set_dead(struct fuse_data *data)
     fuse_trace_printf_func();
 
     fuse_lck_mtx_lock(data->ms_mtx);
-    if (fdata_dead_get(data)) {
+    if (data->dead) {
         fuse_lck_mtx_unlock(data->ms_mtx);
         return false;
     }
@@ -613,7 +608,7 @@ fuse_ticket_drop_invalid(struct fuse_ticket *ftick)
 void
 fuse_insert_callback(struct fuse_ticket *ftick, fuse_handler_t *handler)
 {
-    if (fdata_dead_get(ftick->tk_data)) {
+    if (ftick->tk_data->dead) {
         return;
     }
 
@@ -633,7 +628,7 @@ fuse_insert_message(struct fuse_ticket *ftick)
 
     ftick->tk_flag |= FT_DIRTY;
 
-    if (fdata_dead_get(ftick->tk_data)) {
+    if (ftick->tk_data->dead) {
         return;
     }
 
@@ -655,7 +650,7 @@ fuse_insert_message_head(struct fuse_ticket *ftick)
 
     ftick->tk_flag |= FT_DIRTY;
 
-    if (fdata_dead_get(ftick->tk_data)) {
+    if (ftick->tk_data->dead) {
         return;
     }
 
@@ -674,7 +669,7 @@ fuse_body_audit(struct fuse_ticket *ftick, size_t blen)
     int err = 0;
     enum fuse_opcode opcode;
 
-    if (fdata_dead_get(ftick->tk_data)) {
+    if (ftick->tk_data->dead) {
         return ENOTCONN;
     }
 

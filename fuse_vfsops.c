@@ -427,7 +427,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
     OSIncrementAtomic((SInt32 *)&fuse_mount_count);
     mounted = true;
 
-    if (fdata_dead_get(data)) {
+    if (data->dead) {
         fuse_lck_mtx_unlock(fdev->mtx);
         err = ENOTCONN;
         goto out;
@@ -605,7 +605,7 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
 
     fdev = data->fdev;
 
-    if (fdata_dead_get(data)) {
+    if (data->dead) {
 
         /*
          * If the file system daemon is dead, it's pointless to try to do
@@ -657,7 +657,7 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
         return EBUSY;
     }
 
-    if (fdata_dead_get(data)) {
+    if (data->dead) {
         goto alreadydead;
     }
 
