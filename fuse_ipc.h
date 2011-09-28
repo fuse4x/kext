@@ -146,6 +146,11 @@ struct fuse_data {
     uint32_t                   dataflags;     /* effective fuse_data flags */
     uint64_t                   noimplflags;   /* not-implemented flags     */
 
+    bool                       opened: 1;
+    bool                       mounted: 1;
+    bool                       inited: 1;
+    bool                       dead: 1;
+
 #if M_FUSE4X_ENABLE_DSELECT
     struct fuse_selinfo        d_rsel;
 #endif /* M_FUSE4X_ENABLE_DSELECT */
@@ -186,34 +191,31 @@ struct fuse_data {
 #define FSESS_NOIMPLBIT(MSG)      (1ULL << FUSE_##MSG)
 
 enum {
-    FSESS_OPENED             = 1 << 0, // session device has been opened
-    FSESS_MOUNTED            = 1 << 1, // device has been mounted
-    FSESS_INITED             = 1 << 2, // session has been inited
-    FSESS_DEAD               = 1 << 3, // session is to be closed
-
-    FSESS_ALLOW_OTHER         = 1 << 4,
-    FSESS_ALLOW_ROOT          = 1 << 5,
-    FSESS_AUTO_XATTR          = 1 << 6,
-    FSESS_DEFAULT_PERMISSIONS = 1 << 7,
-    FSESS_DEFER_PERMISSIONS   = 1 << 8,
-    FSESS_DIRECT_IO           = 1 << 9,
-    FSESS_EXTENDED_SECURITY   = 1 << 10,
-    FSESS_JAIL_SYMLINKS       = 1 << 11,
-    FSESS_NEGATIVE_VNCACHE    = 1 << 13,
-    FSESS_NO_APPLEDOUBLE      = 1 << 15,
-    FSESS_NO_APPLEXATTR       = 1 << 16,
-    FSESS_NO_ATTRCACHE        = 1 << 17,
-    FSESS_NO_READAHEAD        = 1 << 18,
-    FSESS_NO_SYNCONCLOSE      = 1 << 19,
-    FSESS_NO_SYNCWRITES       = 1 << 20,
-    FSESS_NO_UBC              = 1 << 21,
-    FSESS_NO_VNCACHE          = 1 << 22,
-    FSESS_CASE_INSENSITIVE    = 1 << 23,
-    FSESS_VOL_RENAME          = 1 << 24,
-    FSESS_XTIMES              = 1 << 25,
-    FSESS_AUTO_CACHE          = 1 << 26,
-    FSESS_NATIVE_XATTR        = 1 << 27,
-    FSESS_SPARSE              = 1 << 28
+    // These values repeat mount flags a lot
+    // consider using mountflags + initflags
+    FSESS_ALLOW_OTHER         = 1 << 0,
+    FSESS_ALLOW_ROOT          = 1 << 1,
+    FSESS_AUTO_XATTR          = 1 << 2,
+    FSESS_DEFAULT_PERMISSIONS = 1 << 3,
+    FSESS_DEFER_PERMISSIONS   = 1 << 4,
+    FSESS_DIRECT_IO           = 1 << 5,
+    FSESS_EXTENDED_SECURITY   = 1 << 6,
+    FSESS_JAIL_SYMLINKS       = 1 << 7,
+    FSESS_NEGATIVE_VNCACHE    = 1 << 8,
+    FSESS_NO_APPLEDOUBLE      = 1 << 9,
+    FSESS_NO_APPLEXATTR       = 1 << 10,
+    FSESS_NO_ATTRCACHE        = 1 << 11,
+    FSESS_NO_READAHEAD        = 1 << 12,
+    FSESS_NO_SYNCONCLOSE      = 1 << 13,
+    FSESS_NO_SYNCWRITES       = 1 << 14,
+    FSESS_NO_UBC              = 1 << 15,
+    FSESS_NO_VNCACHE          = 1 << 16,
+    FSESS_CASE_INSENSITIVE    = 1 << 17,
+    FSESS_VOL_RENAME          = 1 << 18,
+    FSESS_XTIMES              = 1 << 19,
+    FSESS_AUTO_CACHE          = 1 << 20,
+    FSESS_NATIVE_XATTR        = 1 << 21,
+    FSESS_SPARSE              = 1 << 22
 };
 
 static __inline__
@@ -221,7 +223,7 @@ struct fuse_data *
 fuse_get_mpdata(mount_t mp)
 {
     /*
-     * data->dataflags should have FSESS_MOUNTED bit set for it to be valid
+     * data->mounted should be set for it to be valid
      */
     return (struct fuse_data *)vfs_fsprivate(mp);
 }

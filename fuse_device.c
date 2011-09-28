@@ -162,10 +162,10 @@ fuse_device_open(dev_t dev, __unused int flags, __unused int devtype,
 
         return EBUSY;
     } else {
-        fdata->dataflags |= FSESS_OPENED;
-        fdata->fdev  = fdev;
-        fdev->data   = fdata;
-        fdev->pid    = proc_pid(p);
+        fdata->opened = true;
+        fdata->fdev   = fdev;
+        fdev->data    = fdata;
+        fdev->pid     = proc_pid(p);
     }
 
     fuse_lck_mtx_unlock(fdev->mtx);
@@ -202,7 +202,7 @@ fuse_device_close(dev_t dev, __unused int flags, __unused int devtype,
 
     fuse_lck_mtx_lock(fdev->mtx);
 
-    data->dataflags &= ~FSESS_OPENED;
+    data->opened = false;
 
     fuse_reject_answers(data);
 
@@ -210,7 +210,7 @@ fuse_device_close(dev_t dev, __unused int flags, __unused int devtype,
     selwakeup((struct selinfo*)&data->d_rsel);
 #endif /* M_FUSE4X_ENABLE_DSELECT */
 
-    if (!(data->dataflags & FSESS_MOUNTED)) {
+    if (!data->mounted) {
         /* We're not mounted. Can destroy mpdata. */
         fuse_device_close_final(fdev);
     }
@@ -304,7 +304,7 @@ again:
 
     for (i = 0; buf[i]; i++) {
         if (uio_resid(uio) < (user_ssize_t)buflen[i]) {
-            data->dataflags |= FSESS_DEAD;
+            data->dead = true;
             err = ENODEV;
             break;
         }

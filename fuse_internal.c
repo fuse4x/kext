@@ -403,7 +403,7 @@ fuse_internal_loadxtimes(vnode_t vp, struct vnode_attr *out_vap,
         goto fake;
     }
 
-    if (!(data->dataflags & FSESS_INITED) && isvroot) {
+    if (!data->inited && isvroot) {
         goto fake;
     }
 
@@ -1548,7 +1548,7 @@ out:
     }
 
     fuse_lck_mtx_lock(data->ticket_mtx);
-    data->dataflags |= FSESS_INITED;
+    data->inited = true;
     fuse_wakeup(&data->ticketer);
     fuse_lck_mtx_unlock(data->ticket_mtx);
 

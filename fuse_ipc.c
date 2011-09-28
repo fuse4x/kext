@@ -373,6 +373,11 @@ fdata_alloc(struct proc *p)
     data->dataflags     = 0;
     data->noimplflags   = 0ULL;
 
+    data->opened        = false;
+    data->mounted       = false;
+    data->inited        = false;
+    data->dead          = false;
+
     data->ms_mtx        = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
     data->aw_mtx        = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
     data->ticket_mtx    = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
@@ -433,7 +438,7 @@ fdata_destroy(struct fuse_data *data)
 bool
 fdata_dead_get(struct fuse_data *data)
 {
-    return (data->dataflags & FSESS_DEAD);
+    return (data->dead);
 }
 
 bool
@@ -447,7 +452,7 @@ fdata_set_dead(struct fuse_data *data)
         return false;
     }
 
-    data->dataflags |= FSESS_DEAD;
+    data->dead = true;
     fuse_wakeup_one((caddr_t)data);
 #if M_FUSE4X_ENABLE_DSELECT
     selwakeup((struct selinfo*)&data->d_rsel);
@@ -541,7 +546,7 @@ fuse_ticket_fetch(struct fuse_data *data)
         }
     }
 
-    if (!(data->dataflags & FSESS_INITED) && data->ticketer > 1) {
+    if (!data->inited && data->ticketer > 1) {
         err = fuse_msleep(&data->ticketer, data->ticket_mtx, PCATCH | PDROP,
                           "fu_ini", 0);
     } else {

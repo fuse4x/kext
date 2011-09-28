@@ -419,7 +419,7 @@ fuse_blanket_deny(vnode_t vp, vfs_context_t context)
         return 0;
     }
 
-    if (!(data->dataflags & FSESS_INITED) && isvroot && issuser) {
+    if (!data->inited && isvroot && issuser) {
         return 0;
     }
 

@@ -83,7 +83,7 @@ fuse_vnop_access(struct vnop_access_args *ap)
         }
     }
 
-    if (!(data->dataflags & FSESS_INITED)) {
+    if (!data->inited) {
         if (vnode_isvroot(vp)) {
             if (fuse_vfs_context_issuser(context) ||
                (fuse_match_cred(data->daemoncred,
@@ -703,7 +703,6 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
     vfs_context_t      context = ap->a_context;
 
     int err = 0;
-    int dataflags;
     struct timespec uptsp;
     struct fuse_dispatcher fdi;
     struct fuse_data *data;
@@ -724,8 +723,6 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
         CHECK_BLANKET_DENIAL(vp, context, ENOENT);
     }
 
-    dataflags = data->dataflags;
-
     /* Note that we are not bailing out on a dead file system just yet. */
 
     /* look for cached attributes */
@@ -737,7 +734,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
         return 0;
     }
 
-    if (!(dataflags & FSESS_INITED)) {
+    if (!data->inited) {
         if (!vnode_isvroot(vp)) {
             fdata_set_dead(data);
             err = ENOTCONN;

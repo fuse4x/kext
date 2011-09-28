@@ -409,7 +409,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
     fuse_biglock_lock(biglock);
 #endif
 
-    if (data->dataflags & FSESS_MOUNTED) {
+    if (data->mounted) {
 #if M_FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_unlock(biglock);
 #endif
@@ -417,13 +417,13 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         return EALREADY;
     }
 
-    if (!(data->dataflags & FSESS_OPENED)) {
+    if (!data->opened) {
         fuse_lck_mtx_unlock(fdev->mtx);
         err = ENXIO;
         goto out;
     }
 
-    data->dataflags |= FSESS_MOUNTED;
+    data->mounted = true;
     OSIncrementAtomic((SInt32 *)&fuse_mount_count);
     mounted = true;
 
@@ -533,8 +533,8 @@ out:
             OSDecrementAtomic((SInt32 *)&fuse_mount_count);
         }
         if (data) {
-            data->dataflags &= ~FSESS_MOUNTED;
-            if (!(data->dataflags & FSESS_OPENED)) {
+            data->mounted = false;
+            if (!data->opened) {
 #if M_FUSE4X_ENABLE_BIGLOCK
                 assert(biglock == data->biglock);
                 fuse_biglock_unlock(biglock);
@@ -626,7 +626,7 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
          *    log("fuse4x: forcing unmount on a dead file system\n");
          */
 
-    } else if (!(data->dataflags & FSESS_INITED)) {
+    } else if (!data->inited) {
         flags |= FORCECLOSE;
         log("fuse4x: forcing unmount on not-yet-alive file system\n");
         fdata_set_dead(data);
@@ -704,14 +704,14 @@ alreadydead:
     fuse_lck_mtx_lock(fdev->mtx);
 
     vfs_setfsprivate(mp, NULL);
-    data->dataflags &= ~FSESS_MOUNTED;
+    data->mounted = false;
     OSDecrementAtomic((SInt32 *)&fuse_mount_count);
 
 #if M_FUSE4X_ENABLE_BIGLOCK
     fuse_biglock_unlock(data->biglock);
 #endif
 
-    if (!(data->dataflags & FSESS_OPENED)) {
+    if (!data->opened) {
 
         /* fdev->data was left for us to clean up */
 
@@ -999,7 +999,7 @@ fuse_vfsop_getattr(mount_t mp, struct vfs_attr *attr, vfs_context_t context)
         panic("fuse4x: no private data for mount point?");
     }
 
-    if (!(data->dataflags & FSESS_INITED)) {
+    if (!data->inited) {
         // coreservices process requests ATTR_VOL_CAPABILITIES on the mountpoint right before
         // returning from mount() syscall. We need to fake the output because daemon might
         // not be ready to response yet (and deadlock will happen).
