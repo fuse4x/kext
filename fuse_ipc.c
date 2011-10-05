@@ -305,16 +305,16 @@ fuse_ticket_aw_pull_uio(struct fuse_ticket *ticket, uio_t uio)
     if (len) {
         switch (ticket->aw_type) {
         case FT_A_FIOV:
-            err = fiov_adjust_canfail(fuse_ticket_resp(ticket), len);
+            err = fiov_adjust_canfail(&ticket->aw_fiov, len);
             if (err) {
                 ticket->killed = true;
                 log("fuse4x: failed to pull uio (error=%d)\n", err);
                 break;
             }
-            err = uiomove(fuse_ticket_resp(ticket)->base, (int)len, uio);
+            err = uiomove(ticket->aw_fiov.base, (int)len, uio);
             if (err) {
                 log("fuse4x: FT_A_FIOV error is %d (%p, %ld, %p)\n",
-                      err, fuse_ticket_resp(ticket)->base, len, uio);
+                      err, ticket->aw_fiov.base, len, uio);
             }
             break;
 
@@ -1028,8 +1028,8 @@ fuse_dispatcher_wait_answer(struct fuse_dispatcher *dispatcher)
         goto out;
     }
 
-    dispatcher->answer = fuse_ticket_resp(dispatcher->ticket)->base;
-    dispatcher->iosize = fuse_ticket_resp(dispatcher->ticket)->len;
+    dispatcher->answer = dispatcher->ticket->aw_fiov.base;
+    dispatcher->iosize = dispatcher->ticket->aw_fiov.len;
 
     return 0;
 

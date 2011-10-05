@@ -1507,7 +1507,7 @@ fuse_internal_init_callback(struct fuse_ticket *ticket, __unused uio_t uio)
         goto out;
     }
 
-    fiio = fuse_ticket_resp(ticket)->base;
+    fiio = ticket->aw_fiov.base;
 
     if ((fiio->major < FUSE_KERNEL_VERSION) ||
         (fiio->minor < FUSE_KERNEL_MINOR_VERSION)) {
@@ -1518,7 +1518,7 @@ fuse_internal_init_callback(struct fuse_ticket *ticket, __unused uio_t uio)
         goto out;
     }
 
-    if (fuse_ticket_resp(ticket)->len == sizeof(struct fuse_init_out)) {
+    if (ticket->aw_fiov.len == sizeof(struct fuse_init_out)) {
         data->max_write = fiio->max_write;
     } else {
         err = EINVAL;

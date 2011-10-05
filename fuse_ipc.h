@@ -89,13 +89,6 @@ struct fuse_ticket {
 };
 
 static __inline__
-struct fuse_iov *
-fuse_ticket_resp(struct fuse_ticket *ticket)
-{
-    return &ticket->aw_fiov;
-}
-
-static __inline__
 enum fuse_opcode
 fuse_ticket_opcode(struct fuse_ticket *ticket)
 {
