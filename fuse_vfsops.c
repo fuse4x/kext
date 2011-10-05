@@ -625,7 +625,7 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
     } else if (!data->inited) {
         flags |= FORCECLOSE;
         log("fuse4x: forcing unmount on not-yet-alive file system\n");
-        fdata_set_dead(data);
+        fuse_data_kill(data);
     }
 
     fuse_rootvp = data->rootvp;
@@ -671,7 +671,7 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
      * Note that dounmount() signals a VQ_UNMOUNT VFS event.
      */
 
-    fdata_set_dead(data);
+    fuse_data_kill(data);
 
 alreadydead:
 

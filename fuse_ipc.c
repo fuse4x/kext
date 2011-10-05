@@ -263,7 +263,7 @@ fticket_wait_answer(struct fuse_ticket *ftick)
 #endif
 
     if (err == EAGAIN) { /* same as EWOULDBLOCK */
-        if (fdata_set_dead(data)) {
+        if (fuse_data_kill(data)) {
             struct vfsstatfs *statfs = vfs_statfs(data->mp);
             log("fuse4x: daemon (pid=%d, mountpoint=%s) did not respond in %ld seconds. Mark the filesystem as dead.\n",
                     data->daemonpid, statfs->f_mntonname, data->daemon_timeout.tv_sec);
@@ -353,14 +353,14 @@ fticket_pull(struct fuse_ticket *ftick, uio_t uio)
 }
 
 struct fuse_data *
-fdata_alloc(struct proc *p)
+fuse_data_alloc(struct proc *p)
 {
     struct fuse_data *data;
 
     data = (struct fuse_data *)FUSE_OSMalloc(sizeof(struct fuse_data),
                                              fuse_malloc_tag);
     if (!data) {
-        panic("fuse4x: OSMalloc failed in fdata_alloc");
+        panic("fuse4x: OSMalloc failed in " __FUNCTION__);
     }
 
     bzero(data, sizeof(struct fuse_data));
@@ -402,7 +402,7 @@ fdata_alloc(struct proc *p)
 }
 
 void
-fdata_destroy(struct fuse_data *data)
+fuse_data_destroy(struct fuse_data *data)
 {
     struct fuse_ticket *ftick;
 
@@ -436,7 +436,7 @@ fdata_destroy(struct fuse_data *data)
 
 
 bool
-fdata_set_dead(struct fuse_data *data)
+fuse_data_kill(struct fuse_data *data)
 {
     fuse_trace_printf_func();
 
@@ -552,7 +552,7 @@ fuse_ticket_fetch(struct fuse_data *data)
     }
 
     if (err) {
-        fdata_set_dead(data);
+        fuse_data_kill(data);
     }
 
     return ftick;

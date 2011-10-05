@@ -45,7 +45,7 @@ __inline__
 void
 fuse_device_close_final(fuse_device_t fdev)
 {
-    fdata_destroy(fdev->data);
+    fuse_data_destroy(fdev->data);
     fdev->data   = NULL;
     fdev->pid    = -1;
 }
@@ -110,7 +110,7 @@ fuse_device_open(dev_t dev, __unused int flags, __unused int devtype,
 {
     int unit;
     struct fuse_device *fdev;
-    struct fuse_data   *fdata;
+    struct fuse_data   *data;
 
     fuse_trace_printf_func();
 
@@ -145,7 +145,7 @@ fuse_device_open(dev_t dev, __unused int flags, __unused int devtype,
     fuse_lck_mtx_unlock(fuse_device_mutex);
 
     /* Could block. */
-    fdata = fdata_alloc(p);
+    data = fuse_data_alloc(p);
 
     if (fdev->data) {
         /*
@@ -162,14 +162,14 @@ fuse_device_open(dev_t dev, __unused int flags, __unused int devtype,
 
         fuse_lck_mtx_unlock(fuse_device_mutex);
 
-        fdata_destroy(fdata);
+        fuse_data_destroy(data);
 
         return EBUSY;
     } else {
-        fdata->opened = true;
-        fdata->fdev   = fdev;
-        fdev->data    = fdata;
-        fdev->pid     = proc_pid(p);
+        data->opened = true;
+        data->fdev   = fdev;
+        fdev->data   = data;
+        fdev->pid    = proc_pid(p);
     }
 
     fuse_lck_mtx_unlock(fdev->mtx);
@@ -202,7 +202,7 @@ fuse_device_close(dev_t dev, __unused int flags, __unused int devtype,
         panic("fuse4x: no device private data in device_close");
     }
 
-    fdata_set_dead(data);
+    fuse_data_kill(data);
 
     fuse_lck_mtx_lock(fdev->mtx);
 
@@ -556,7 +556,7 @@ fuse_device_ioctl(dev_t dev, u_long cmd, caddr_t udata,
 
     switch (cmd) {
     case FUSEDEVIOCSETDAEMONDEAD:
-        fdata_set_dead(data);
+        fuse_data_kill(data);
         ret = 0;
         break;
     default:
@@ -630,18 +630,18 @@ fuse_device_kill(int unit, struct proc *p)
 
     fuse_lck_mtx_lock(fdev->mtx);
 
-    struct fuse_data *fdata = fdev->data;
-    if (fdata) {
+    struct fuse_data *data = fdev->data;
+    if (data) {
         error = EPERM;
         if (p) {
             kauth_cred_t request_cred = kauth_cred_proc_ref(p);
             if ((kauth_cred_getuid(request_cred) == 0) ||
-                (fuse_match_cred(fdata->daemoncred, request_cred) == 0)) {
+                (fuse_match_cred(data->daemoncred, request_cred) == 0)) {
 
                 /* The following can block. */
-                fdata_set_dead(fdata);
+                fuse_data_kill(data);
 
-                fuse_reject_answers(fdata);
+                fuse_reject_answers(data);
 
                 error = 0;
             }

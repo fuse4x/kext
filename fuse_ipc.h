@@ -204,9 +204,9 @@ void fuse_insert_callback(struct fuse_ticket *ftick, fuse_callback_t *callback);
 void fuse_insert_message(struct fuse_ticket *ftick);
 void fuse_insert_message_head(struct fuse_ticket *ftick);
 
-struct fuse_data *fdata_alloc(struct proc *p);
-void fdata_destroy(struct fuse_data *data);
-bool fdata_set_dead(struct fuse_data *data);
+struct fuse_data *fuse_data_alloc(struct proc *p);
+void fuse_data_destroy(struct fuse_data *data);
+bool fuse_data_kill(struct fuse_data *data);
 
 struct fuse_dispatcher {
 
