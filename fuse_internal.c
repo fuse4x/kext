@@ -298,11 +298,11 @@ fuse_internal_fsync_callback(struct fuse_ticket *ftick, __unused uio_t uio)
 {
     fuse_trace_printf_func();
 
-    if (ftick->tk_aw_ohead.error == ENOSYS) {
+    if (ftick->aw_ohead.error == ENOSYS) {
         if (fticket_opcode(ftick) == FUSE_FSYNC) {
-            fuse_clear_implemented(ftick->tk_data, FSESS_NOIMPLBIT(FSYNC));
+            fuse_clear_implemented(ftick->data, FSESS_NOIMPLBIT(FSYNC));
         } else if (fticket_opcode(ftick) == FUSE_FSYNCDIR) {
-            fuse_clear_implemented(ftick->tk_data, FSESS_NOIMPLBIT(FSYNCDIR));
+            fuse_clear_implemented(ftick->data, FSESS_NOIMPLBIT(FSYNCDIR));
         } else {
             log("fuse4x: unexpected opcode in sync handling\n");
         }
@@ -345,10 +345,10 @@ fuse_internal_fsync(vnode_t                 vp,
         if ((err = fdisp_wait_answ(fdip))) {
             if (err == ENOSYS) {
                 if (op == FUSE_FSYNC) {
-                    fuse_clear_implemented(fdip->tick->tk_data,
+                    fuse_clear_implemented(fdip->tick->data,
                                            FSESS_NOIMPLBIT(FSYNC));
                 } else if (op == FUSE_FSYNCDIR) {
-                    fuse_clear_implemented(fdip->tick->tk_data,
+                    fuse_clear_implemented(fdip->tick->data,
                                            FSESS_NOIMPLBIT(FSYNCDIR));
                 }
             }
@@ -1106,15 +1106,15 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
 
             fri->offset = offset;
             fri->size = (typeof(fri->size))chunksize;
-            fdi.tick->tk_aw_type = FT_A_BUF;
-            fdi.tick->tk_aw_bufdata = bufdat;
+            fdi.tick->aw_type = FT_A_BUF;
+            fdi.tick->aw_bufdata = bufdat;
 
             if ((err = fdisp_wait_answ(&fdi))) {
                 /* There was a problem with reading. */
                 goto out;
             }
 
-            respsize = fdi.tick->tk_aw_bufsize;
+            respsize = fdi.tick->aw_bufsize;
 
             if (respsize < 0) { /* Cannot really happen... */
                 err = EIO;
@@ -1175,9 +1175,9 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
             fwi->offset = offset;
             fwi->size = (typeof(fwi->size))chunksize;
 
-            fdi.tick->tk_ms_type = FT_M_BUF;
-            fdi.tick->tk_ms_bufdata = bufdat;
-            fdi.tick->tk_ms_bufsize = chunksize;
+            fdi.tick->ms_type = FT_M_BUF;
+            fdi.tick->ms_bufdata = bufdat;
+            fdi.tick->ms_bufsize = chunksize;
 
             /* About to write <chunksize> at <offset> */
 
@@ -1399,8 +1399,8 @@ fuse_internal_forget_callback(struct fuse_ticket *ftick, __unused uio_t uio)
 
     fdi.tick = ftick;
 
-    fuse_internal_forget_send(ftick->tk_data->mp, NULL,
-        ((struct fuse_in_header *)ftick->tk_ms_fiov.base)->nodeid, 1, &fdi);
+    fuse_internal_forget_send(ftick->data->mp, NULL,
+        ((struct fuse_in_header *)ftick->ms_fiov.base)->nodeid, 1, &fdi);
 
     return 0;
 }
@@ -1439,9 +1439,9 @@ fuse_internal_interrupt_send(struct fuse_ticket *ftick)
 
     fdi.tick = ftick;
     fdisp_init(&fdi, sizeof(*fii));
-    fdisp_make(&fdi, FUSE_INTERRUPT, ftick->tk_data->mp, (uint64_t)0, NULL);
+    fdisp_make(&fdi, FUSE_INTERRUPT, ftick->data->mp, (uint64_t)0, NULL);
     fii = fdi.indata;
-    fii->unique = ftick->tk_unique;
+    fii->unique = ftick->unique;
     fticket_invalidate(fdi.tick);
     fuse_insert_message(fdi.tick);
 }
@@ -1492,11 +1492,11 @@ fuse_internal_init_handler(struct fuse_ticket *ftick, __unused uio_t uio)
 {
     int err = 0;
     struct fuse_init_out *fiio;
-    struct fuse_data *data = ftick->tk_data;
+    struct fuse_data *data = ftick->data;
 
     fuse_trace_printf_func();
 
-    if ((err = ftick->tk_aw_ohead.error)) {
+    if ((err = ftick->aw_ohead.error)) {
         log("fuse4x: user-space initialization failed (%d)\n", err);
         goto out;
     }

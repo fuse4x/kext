@@ -177,15 +177,15 @@ fticket_alloc(struct fuse_data *data)
 
     bzero(ftick, sizeof(struct fuse_ticket));
 
-    ftick->tk_unique = data->ticketer++;
-    ftick->tk_data = data;
+    ftick->unique = data->ticketer++;
+    ftick->data = data;
 
-    fiov_init(&ftick->tk_ms_fiov, sizeof(struct fuse_in_header));
-    ftick->tk_ms_type = FT_M_FIOV;
+    fiov_init(&ftick->ms_fiov, sizeof(struct fuse_in_header));
+    ftick->ms_type = FT_M_FIOV;
 
-    ftick->tk_aw_mtx = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
-    fiov_init(&ftick->tk_aw_fiov, 0);
-    ftick->tk_aw_type = FT_A_FIOV;
+    ftick->aw_mtx = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
+    fiov_init(&ftick->aw_fiov, 0);
+    ftick->aw_type = FT_A_FIOV;
 
     return ftick;
 }
@@ -194,30 +194,30 @@ static __inline__
 void
 fticket_refresh(struct fuse_ticket *ftick)
 {
-    fiov_refresh(&ftick->tk_ms_fiov);
-    ftick->tk_ms_bufdata = NULL;
-    ftick->tk_ms_bufsize = 0;
-    ftick->tk_ms_type = FT_M_FIOV;
+    fiov_refresh(&ftick->ms_fiov);
+    ftick->ms_bufdata = NULL;
+    ftick->ms_bufsize = 0;
+    ftick->ms_type = FT_M_FIOV;
 
-    bzero(&ftick->tk_aw_ohead, sizeof(struct fuse_out_header));
+    bzero(&ftick->aw_ohead, sizeof(struct fuse_out_header));
 
-    fiov_refresh(&ftick->tk_aw_fiov);
-    ftick->tk_aw_errno = 0;
-    ftick->tk_aw_bufdata = NULL;
-    ftick->tk_aw_bufsize = 0;
-    ftick->tk_aw_type = FT_A_FIOV;
+    fiov_refresh(&ftick->aw_fiov);
+    ftick->aw_errno = 0;
+    ftick->aw_bufdata = NULL;
+    ftick->aw_bufsize = 0;
+    ftick->aw_type = FT_A_FIOV;
 
-    ftick->tk_flag = 0;
+    ftick->flag = 0;
 }
 
 static void
 fticket_destroy(struct fuse_ticket *ftick)
 {
-    fiov_teardown(&ftick->tk_ms_fiov);
+    fiov_teardown(&ftick->ms_fiov);
 
-    lck_mtx_free(ftick->tk_aw_mtx, fuse_lock_group);
-    ftick->tk_aw_mtx = NULL;
-    fiov_teardown(&ftick->tk_aw_fiov);
+    lck_mtx_free(ftick->aw_mtx, fuse_lock_group);
+    ftick->aw_mtx = NULL;
+    fiov_teardown(&ftick->aw_fiov);
 
     FUSE_OSFree(ftick, sizeof(struct fuse_ticket), fuse_malloc_tag);
 
@@ -230,13 +230,13 @@ fticket_wait_answer(struct fuse_ticket *ftick)
     int err = 0;
     struct fuse_data *data;
 
-    fuse_lck_mtx_lock(ftick->tk_aw_mtx);
+    fuse_lck_mtx_lock(ftick->aw_mtx);
 
     if (fticket_answered(ftick)) {
         goto out;
     }
 
-    data = ftick->tk_data;
+    data = ftick->data;
 
     if (data->dead) {
         err = ENOTCONN;
@@ -253,7 +253,7 @@ fticket_wait_answer(struct fuse_ticket *ftick)
     fuse_biglock_unlock(data->biglock);
 #endif
 
-    err = fuse_msleep(ftick, ftick->tk_aw_mtx, PCATCH, "fu_ans", data->daemon_timeout_p);
+    err = fuse_msleep(ftick, ftick->aw_mtx, PCATCH, "fu_ans", data->daemon_timeout_p);
 
 #if M_FUSE4X_ENABLE_BIGLOCK
     fuse_biglock_lock(data->biglock);
@@ -282,7 +282,7 @@ fticket_wait_answer(struct fuse_ticket *ftick)
 #endif
 
 out:
-    fuse_lck_mtx_unlock(ftick->tk_aw_mtx);
+    fuse_lck_mtx_unlock(ftick->aw_mtx);
 
     if (!(err || fticket_answered(ftick))) {
         log("fuse4x: requester was woken up but still no answer");
@@ -300,7 +300,7 @@ fticket_aw_pull_uio(struct fuse_ticket *ftick, uio_t uio)
     size_t len = (size_t)uio_resid(uio);
 
     if (len) {
-        switch (ftick->tk_aw_type) {
+        switch (ftick->aw_type) {
         case FT_A_FIOV:
             err = fiov_adjust_canfail(fticket_resp(ftick), len);
             if (err) {
@@ -316,11 +316,11 @@ fticket_aw_pull_uio(struct fuse_ticket *ftick, uio_t uio)
             break;
 
         case FT_A_BUF:
-            ftick->tk_aw_bufsize = len;
-            err = uiomove(ftick->tk_aw_bufdata, (int)len, uio);
+            ftick->aw_bufsize = len;
+            err = uiomove(ftick->aw_bufdata, (int)len, uio);
             if (err) {
                 log("fuse4x: FT_A_BUF error is %d (%p, %ld, %p)\n",
-                      err, ftick->tk_aw_bufdata, len, uio);
+                      err, ftick->aw_bufdata, len, uio);
             }
             break;
 
@@ -337,7 +337,7 @@ fticket_pull(struct fuse_ticket *ftick, uio_t uio)
 {
     int err = 0;
 
-    if (ftick->tk_aw_ohead.error) {
+    if (ftick->aw_ohead.error) {
         return 0;
     }
 
@@ -461,9 +461,9 @@ static __inline__
 void
 fuse_push_freeticks(struct fuse_ticket *ftick)
 {
-    STAILQ_INSERT_TAIL(&ftick->tk_data->freetickets_head, ftick,
-                       tk_freetickets_link);
-    ftick->tk_data->freeticket_counter++;
+    STAILQ_INSERT_TAIL(&ftick->data->freetickets_head, ftick,
+                       freetickets_link);
+    ftick->data->freeticket_counter++;
 }
 
 static __inline__
@@ -473,7 +473,7 @@ fuse_pop_freeticks(struct fuse_data *data)
     struct fuse_ticket *ftick;
 
     if ((ftick = STAILQ_FIRST(&data->freetickets_head))) {
-        STAILQ_REMOVE_HEAD(&data->freetickets_head, tk_freetickets_link);
+        STAILQ_REMOVE_HEAD(&data->freetickets_head, freetickets_link);
         data->freeticket_counter--;
     }
 
@@ -489,16 +489,16 @@ static __inline__
 void
 fuse_push_allticks(struct fuse_ticket *ftick)
 {
-    TAILQ_INSERT_TAIL(&ftick->tk_data->alltickets_head, ftick,
-                      tk_alltickets_link);
+    TAILQ_INSERT_TAIL(&ftick->data->alltickets_head, ftick,
+                      alltickets_link);
 }
 
 static __inline__
 void
 fuse_remove_allticks(struct fuse_ticket *ftick)
 {
-    ftick->tk_data->deadticket_counter++;
-    TAILQ_REMOVE(&ftick->tk_data->alltickets_head, ftick, tk_alltickets_link);
+    ftick->data->deadticket_counter++;
+    TAILQ_REMOVE(&ftick->data->alltickets_head, ftick, alltickets_link);
 }
 
 static struct fuse_ticket *
@@ -560,43 +560,43 @@ fuse_ticket_drop(struct fuse_ticket *ftick)
 {
     bool die = false;
 
-    fuse_lck_mtx_lock(ftick->tk_data->ticket_mtx);
+    fuse_lck_mtx_lock(ftick->data->ticket_mtx);
 
     if ((fuse_max_freetickets >= 0 &&
-        fuse_max_freetickets <= ftick->tk_data->freeticket_counter) ||
-        (ftick->tk_flag & FT_KILLL)) {
+        fuse_max_freetickets <= ftick->data->freeticket_counter) ||
+        (ftick->flag & FT_KILLL)) {
         die = true;
     } else {
-        fuse_lck_mtx_unlock(ftick->tk_data->ticket_mtx);
+        fuse_lck_mtx_unlock(ftick->data->ticket_mtx);
         fticket_refresh(ftick);
-        fuse_lck_mtx_lock(ftick->tk_data->ticket_mtx);
+        fuse_lck_mtx_lock(ftick->data->ticket_mtx);
     }
 
     /* locked here */
 
     if (die) {
         fuse_remove_allticks(ftick);
-        fuse_lck_mtx_unlock(ftick->tk_data->ticket_mtx);
+        fuse_lck_mtx_unlock(ftick->data->ticket_mtx);
         fticket_destroy(ftick);
     } else {
         fuse_push_freeticks(ftick);
-        fuse_lck_mtx_unlock(ftick->tk_data->ticket_mtx);
+        fuse_lck_mtx_unlock(ftick->data->ticket_mtx);
     }
 }
 
 void
 fuse_ticket_kill(struct fuse_ticket *ftick)
 {
-    fuse_lck_mtx_lock(ftick->tk_data->ticket_mtx);
+    fuse_lck_mtx_lock(ftick->data->ticket_mtx);
     fuse_remove_allticks(ftick);
-    fuse_lck_mtx_unlock(ftick->tk_data->ticket_mtx);
+    fuse_lck_mtx_unlock(ftick->data->ticket_mtx);
     fticket_destroy(ftick);
 }
 
 void
 fuse_ticket_drop_invalid(struct fuse_ticket *ftick)
 {
-    if (ftick->tk_flag & FT_INVAL) {
+    if (ftick->flag & FT_INVAL) {
         fuse_ticket_drop(ftick);
     }
 }
@@ -604,59 +604,59 @@ fuse_ticket_drop_invalid(struct fuse_ticket *ftick)
 void
 fuse_insert_callback(struct fuse_ticket *ftick, fuse_handler_t *handler)
 {
-    if (ftick->tk_data->dead) {
+    if (ftick->data->dead) {
         return;
     }
 
-    ftick->tk_aw_handler = handler;
+    ftick->aw_handler = handler;
 
-    fuse_lck_mtx_lock(ftick->tk_data->aw_mtx);
+    fuse_lck_mtx_lock(ftick->data->aw_mtx);
     fuse_aw_push(ftick);
-    fuse_lck_mtx_unlock(ftick->tk_data->aw_mtx);
+    fuse_lck_mtx_unlock(ftick->data->aw_mtx);
 }
 
 void
 fuse_insert_message(struct fuse_ticket *ftick)
 {
-    if (ftick->tk_flag & FT_DIRTY) {
+    if (ftick->flag & FT_DIRTY) {
         panic("fuse4x: ticket reused without being refreshed");
     }
 
-    ftick->tk_flag |= FT_DIRTY;
+    ftick->flag |= FT_DIRTY;
 
-    if (ftick->tk_data->dead) {
+    if (ftick->data->dead) {
         return;
     }
 
-    fuse_lck_mtx_lock(ftick->tk_data->ms_mtx);
+    fuse_lck_mtx_lock(ftick->data->ms_mtx);
     fuse_ms_push(ftick);
-    fuse_wakeup_one((caddr_t)ftick->tk_data);
+    fuse_wakeup_one((caddr_t)ftick->data);
 #if M_FUSE4X_ENABLE_DSELECT
-    selwakeup((struct selinfo*)&ftick->tk_data->d_rsel);
+    selwakeup((struct selinfo*)&ftick->data->d_rsel);
 #endif /* M_FUSE4X_ENABLE_DSELECT */
-    fuse_lck_mtx_unlock(ftick->tk_data->ms_mtx);
+    fuse_lck_mtx_unlock(ftick->data->ms_mtx);
 }
 
 void
 fuse_insert_message_head(struct fuse_ticket *ftick)
 {
-    if (ftick->tk_flag & FT_DIRTY) {
+    if (ftick->flag & FT_DIRTY) {
         panic("fuse4x: ticket reused without being refreshed");
     }
 
-    ftick->tk_flag |= FT_DIRTY;
+    ftick->flag |= FT_DIRTY;
 
-    if (ftick->tk_data->dead) {
+    if (ftick->data->dead) {
         return;
     }
 
-    fuse_lck_mtx_lock(ftick->tk_data->ms_mtx);
+    fuse_lck_mtx_lock(ftick->data->ms_mtx);
     fuse_ms_push_head(ftick);
-    fuse_wakeup_one((caddr_t)ftick->tk_data);
+    fuse_wakeup_one((caddr_t)ftick->data);
 #if M_FUSE4X_ENABLE_DSELECT
-    selwakeup((struct selinfo*)&ftick->tk_data->d_rsel);
+    selwakeup((struct selinfo*)&ftick->data->d_rsel);
 #endif /* M_FUSE4X_ENABLE_DSELECT */
-    fuse_lck_mtx_unlock(ftick->tk_data->ms_mtx);
+    fuse_lck_mtx_unlock(ftick->data->ms_mtx);
 }
 
 static int
@@ -665,7 +665,7 @@ fuse_body_audit(struct fuse_ticket *ftick, size_t blen)
     int err = 0;
     enum fuse_opcode opcode;
 
-    if (ftick->tk_data->dead) {
+    if (ftick->data->dead) {
         return ENOTCONN;
     }
 
@@ -730,7 +730,7 @@ fuse_body_audit(struct fuse_ticket *ftick, size_t blen)
 
     case FUSE_READ:
         err = (((struct fuse_read_in *)(
-                (char *)ftick->tk_ms_fiov.base +
+                (char *)ftick->ms_fiov.base +
                         sizeof(struct fuse_in_header)
                   ))->size >= blen) ? 0 : EINVAL;
         break;
@@ -785,7 +785,7 @@ fuse_body_audit(struct fuse_ticket *ftick, size_t blen)
 
     case FUSE_READDIR:
         err = (((struct fuse_read_in *)(
-                (char *)ftick->tk_ms_fiov.base +
+                (char *)ftick->ms_fiov.base +
                         sizeof(struct fuse_in_header)
                   ))->size >= blen) ? 0 : EINVAL;
         break;
@@ -856,7 +856,7 @@ fuse_setup_ihead(struct fuse_in_header *ihead,
                  vfs_context_t          context)
 {
     ihead->len = (uint32_t)(sizeof(*ihead) + blen);
-    ihead->unique = ftick->tk_unique;
+    ihead->unique = ftick->unique;
     ihead->nodeid = nid;
     ihead->opcode = op;
 
@@ -880,17 +880,17 @@ fuse_standard_handler(struct fuse_ticket *ftick, uio_t uio)
 
     err = fticket_pull(ftick, uio);
 
-    fuse_lck_mtx_lock(ftick->tk_aw_mtx);
+    fuse_lck_mtx_lock(ftick->aw_mtx);
 
     if (fticket_answered(ftick)) {
         dropflag = true;
     } else {
         fticket_set_answered(ftick);
-        ftick->tk_aw_errno = err;
+        ftick->aw_errno = err;
         fuse_wakeup(ftick);
     }
 
-    fuse_lck_mtx_unlock(ftick->tk_aw_mtx);
+    fuse_lck_mtx_unlock(ftick->aw_mtx);
 
     if (dropflag) {
         fuse_ticket_drop(ftick);
@@ -918,7 +918,7 @@ fdisp_make(struct fuse_dispatcher *fdip,
         panic("fuse4x: fuse_ticket_fetch() failed");
     }
 
-    FUSE_DIMALLOC(&fdip->tick->tk_ms_fiov, fdip->finh,
+    FUSE_DIMALLOC(&fdip->tick->ms_fiov, fdip->finh,
                   fdip->indata, fdip->iosize);
 
     fuse_setup_ihead(fdip->finh, fdip->tick, nid, op, fdip->iosize, context);
@@ -946,7 +946,7 @@ fdisp_make_canfail(struct fuse_dispatcher *fdip,
         panic("fuse4x: fuse_ticket_fetch() failed");
     }
 
-    fiov = &fdip->tick->tk_ms_fiov;
+    fiov = &fdip->tick->ms_fiov;
 
     failed = fiov_adjust_canfail(fiov,
                                  sizeof(struct fuse_in_header) + fdip->iosize);
@@ -993,23 +993,23 @@ fdisp_wait_answ(struct fuse_dispatcher *fdip)
     fuse_insert_message(fdip->tick);
 
     if ((err = fticket_wait_answer(fdip->tick))) { /* interrupted */
-        fuse_lck_mtx_lock(fdip->tick->tk_aw_mtx);
+        fuse_lck_mtx_lock(fdip->tick->aw_mtx);
 
         if (fticket_answered(fdip->tick)) {
             /* IPC: already answered */
-            fuse_lck_mtx_unlock(fdip->tick->tk_aw_mtx);
+            fuse_lck_mtx_unlock(fdip->tick->aw_mtx);
             goto out;
         } else {
             /* IPC: explicitly setting to answered */
             fticket_set_answered(fdip->tick);
-            fuse_lck_mtx_unlock(fdip->tick->tk_aw_mtx);
+            fuse_lck_mtx_unlock(fdip->tick->aw_mtx);
             return err;
         }
     }
 
     /* IPC was NOT interrupt */
 
-    if (fdip->tick->tk_aw_errno) {
+    if (fdip->tick->aw_errno) {
 
         /* Explicitly EIO-ing */
 
@@ -1017,7 +1017,7 @@ fdisp_wait_answ(struct fuse_dispatcher *fdip)
         goto out;
     }
 
-    if ((err = fdip->tick->tk_aw_ohead.error)) {
+    if ((err = fdip->tick->aw_ohead.error)) {
 
         /* Explicitly setting status */
 

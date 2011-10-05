@@ -59,11 +59,11 @@ fuse_reject_answers(struct fuse_data *data)
 
     fuse_lck_mtx_lock(data->aw_mtx);
     while ((ftick = fuse_aw_pop(data))) {
-        fuse_lck_mtx_lock(ftick->tk_aw_mtx);
+        fuse_lck_mtx_lock(ftick->aw_mtx);
         fticket_set_answered(ftick);
-        ftick->tk_aw_errno = ENOTCONN;
+        ftick->aw_errno = ENOTCONN;
         fuse_wakeup(ftick);
-        fuse_lck_mtx_unlock(ftick->tk_aw_mtx);
+        fuse_lck_mtx_unlock(ftick->aw_mtx);
     }
     fuse_lck_mtx_unlock(data->aw_mtx);
 }
@@ -285,18 +285,18 @@ again:
          return ENODEV;
     }
 
-    switch (ftick->tk_ms_type) {
+    switch (ftick->ms_type) {
 
     case FT_M_FIOV:
-        buf[0]    = ftick->tk_ms_fiov.base;
-        buflen[0] = ftick->tk_ms_fiov.len;
+        buf[0]    = ftick->ms_fiov.base;
+        buflen[0] = ftick->ms_fiov.len;
         break;
 
     case FT_M_BUF:
-        buf[0]    = ftick->tk_ms_fiov.base;
-        buflen[0] = ftick->tk_ms_fiov.len;
-        buf[1]    = ftick->tk_ms_bufdata;
-        buflen[1] = ftick->tk_ms_bufsize;
+        buf[0]    = ftick->ms_fiov.base;
+        buflen[0] = ftick->ms_fiov.len;
+        buf[1]    = ftick->ms_bufdata;
+        buflen[1] = ftick->ms_bufsize;
         break;
 
     default:
@@ -384,8 +384,8 @@ fuse_device_write(dev_t dev, uio_t uio, __unused int ioflag)
 
     fuse_lck_mtx_lock(data->aw_mtx);
 
-    TAILQ_FOREACH_SAFE(ftick, &data->aw_head, tk_aw_link, x_ftick) {
-        if (ftick->tk_unique == ohead.unique) {
+    TAILQ_FOREACH_SAFE(ftick, &data->aw_head, aw_link, x_ftick) {
+        if (ftick->unique == ohead.unique) {
             found = true;
             fuse_aw_remove(ftick);
             break;
@@ -395,9 +395,9 @@ fuse_device_write(dev_t dev, uio_t uio, __unused int ioflag)
     fuse_lck_mtx_unlock(data->aw_mtx);
 
     if (found) {
-        if (ftick->tk_aw_handler) {
-            memcpy(&ftick->tk_aw_ohead, &ohead, sizeof(ohead));
-            err = ftick->tk_aw_handler(ftick, uio);
+        if (ftick->aw_handler) {
+            memcpy(&ftick->aw_ohead, &ohead, sizeof(ohead));
+            err = ftick->aw_handler(ftick, uio);
         } else {
             fuse_ticket_drop(ftick);
             return err;

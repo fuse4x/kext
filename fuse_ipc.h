@@ -59,29 +59,29 @@ struct fuse_data;
 typedef int fuse_handler_t(struct fuse_ticket *ftick, uio_t uio);
 
 struct fuse_ticket {
-    uint64_t                     tk_unique;
-    struct fuse_data            *tk_data;
-    int                          tk_flag;
+    uint64_t                     unique;
+    struct fuse_data            *data;
+    int                          flag;
 
-    STAILQ_ENTRY(fuse_ticket)    tk_freetickets_link;
-    TAILQ_ENTRY(fuse_ticket)     tk_alltickets_link;
+    STAILQ_ENTRY(fuse_ticket)    freetickets_link;
+    TAILQ_ENTRY(fuse_ticket)     alltickets_link;
 
-    struct fuse_iov              tk_ms_fiov;
-    void                        *tk_ms_bufdata;
-    size_t                       tk_ms_bufsize;
-    enum { FT_M_FIOV, FT_M_BUF } tk_ms_type;
-    STAILQ_ENTRY(fuse_ticket)    tk_ms_link;
+    struct fuse_iov              ms_fiov;
+    void                        *ms_bufdata;
+    size_t                       ms_bufsize;
+    enum { FT_M_FIOV, FT_M_BUF } ms_type;
+    STAILQ_ENTRY(fuse_ticket)    ms_link;
 
-    struct fuse_iov              tk_aw_fiov;
-    void                        *tk_aw_bufdata;
-    size_t                       tk_aw_bufsize;
-    enum { FT_A_FIOV, FT_A_BUF } tk_aw_type;
+    struct fuse_iov              aw_fiov;
+    void                        *aw_bufdata;
+    size_t                       aw_bufsize;
+    enum { FT_A_FIOV, FT_A_BUF } aw_type;
 
-    struct fuse_out_header       tk_aw_ohead;
-    int                          tk_aw_errno;
-    lck_mtx_t                   *tk_aw_mtx;
-    fuse_handler_t              *tk_aw_handler;
-    TAILQ_ENTRY(fuse_ticket)     tk_aw_link;
+    struct fuse_out_header       aw_ohead;
+    int                          aw_errno;
+    lck_mtx_t                   *aw_mtx;
+    fuse_handler_t              *aw_handler;
+    TAILQ_ENTRY(fuse_ticket)     aw_link;
 };
 
 #define FT_ANSW  0x01  // request of ticket has already been answered
@@ -93,42 +93,42 @@ static __inline__
 struct fuse_iov *
 fticket_resp(struct fuse_ticket *ftick)
 {
-    return &ftick->tk_aw_fiov;
+    return &ftick->aw_fiov;
 }
 
 static __inline__
 int
 fticket_answered(struct fuse_ticket *ftick)
 {
-    return (ftick->tk_flag & FT_ANSW);
+    return (ftick->flag & FT_ANSW);
 }
 
 static __inline__
 void
 fticket_set_answered(struct fuse_ticket *ftick)
 {
-    ftick->tk_flag |= FT_ANSW;
+    ftick->flag |= FT_ANSW;
 }
 
 static __inline__
 void
 fticket_set_killl(struct fuse_ticket *ftick)
 {
-    ftick->tk_flag |= FT_KILLL;
+    ftick->flag |= FT_KILLL;
 }
 
 static __inline__
 enum fuse_opcode
 fticket_opcode(struct fuse_ticket *ftick)
 {
-    return (((struct fuse_in_header *)(ftick->tk_ms_fiov.base))->opcode);
+    return (((struct fuse_in_header *)(ftick->ms_fiov.base))->opcode);
 }
 
 static __inline__
 void
 fticket_invalidate(struct fuse_ticket *ftick)
 {
-    ftick->tk_flag |= FT_INVAL;
+    ftick->flag |= FT_INVAL;
 }
 
 int fticket_pull(struct fuse_ticket *ftick, uio_t uio);
@@ -228,14 +228,14 @@ static __inline__
 void
 fuse_ms_push(struct fuse_ticket *ftick)
 {
-    STAILQ_INSERT_TAIL(&ftick->tk_data->ms_head, ftick, tk_ms_link);
+    STAILQ_INSERT_TAIL(&ftick->data->ms_head, ftick, ms_link);
 }
 
 static __inline__
 void
 fuse_ms_push_head(struct fuse_ticket *ftick)
 {
-    STAILQ_INSERT_HEAD(&ftick->tk_data->ms_head, ftick, tk_ms_link);
+    STAILQ_INSERT_HEAD(&ftick->data->ms_head, ftick, ms_link);
 }
 
 static __inline__
@@ -245,7 +245,7 @@ fuse_ms_pop(struct fuse_data *data)
     struct fuse_ticket *ftick = NULL;
 
     if ((ftick = STAILQ_FIRST(&data->ms_head))) {
-        STAILQ_REMOVE_HEAD(&data->ms_head, tk_ms_link);
+        STAILQ_REMOVE_HEAD(&data->ms_head, ms_link);
     }
 
     return ftick;
@@ -255,14 +255,14 @@ static __inline__
 void
 fuse_aw_push(struct fuse_ticket *ftick)
 {
-    TAILQ_INSERT_TAIL(&ftick->tk_data->aw_head, ftick, tk_aw_link);
+    TAILQ_INSERT_TAIL(&ftick->data->aw_head, ftick, aw_link);
 }
 
 static __inline__
 void
 fuse_aw_remove(struct fuse_ticket *ftick)
 {
-    TAILQ_REMOVE(&ftick->tk_data->aw_head, ftick, tk_aw_link);
+    TAILQ_REMOVE(&ftick->data->aw_head, ftick, aw_link);
 }
 
 static __inline__
