@@ -810,7 +810,7 @@ fuse_internal_newentry_makerequest(mount_t                 mp,
                                    enum fuse_opcode        op,
                                    void                   *buf,
                                    size_t                  bufsize,
-                                   struct fuse_dispatcher *fdip,
+                                   struct fuse_dispatcher *dispatcher,
                                    vfs_context_t           context);
 
 int
@@ -818,7 +818,7 @@ fuse_internal_newentry_core(vnode_t                 dvp,
                             vnode_t                *vpp,
                             struct componentname   *cnp,
                             enum vtype              vtyp,
-                            struct fuse_dispatcher *fdip,
+                            struct fuse_dispatcher *dispatcher,
                             vfs_context_t           context);
 
 /* entity destruction */
@@ -831,7 +831,7 @@ fuse_internal_forget_send(mount_t                 mp,
                           vfs_context_t           context,
                           uint64_t                nodeid,
                           uint64_t                nlookup,
-                          struct fuse_dispatcher *fdip);
+                          struct fuse_dispatcher *dispatcher);
 
 void
 fuse_internal_interrupt_send(struct fuse_ticket *ftick);

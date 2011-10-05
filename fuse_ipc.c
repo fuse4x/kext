@@ -903,7 +903,7 @@ fuse_standard_callback(struct fuse_ticket *ftick, uio_t uio)
 }
 
 void
-fdisp_make(struct fuse_dispatcher *fdip,
+fuse_dispatcher_make(struct fuse_dispatcher *dispatcher,
            enum fuse_opcode        op,
            mount_t                 mp,
            uint64_t                nid,
@@ -911,24 +911,24 @@ fdisp_make(struct fuse_dispatcher *fdip,
 {
     struct fuse_data *data = fuse_get_mpdata(mp);
 
-    if (fdip->ticket) {
-        fticket_refresh(fdip->ticket);
+    if (dispatcher->ticket) {
+        fticket_refresh(dispatcher->ticket);
     } else {
-        fdip->ticket = fuse_ticket_fetch(data);
+        dispatcher->ticket = fuse_ticket_fetch(data);
     }
 
-    if (fdip->ticket == 0) {
+    if (dispatcher->ticket == 0) {
         panic("fuse4x: fuse_ticket_fetch() failed");
     }
 
-    FUSE_DIMALLOC(&fdip->ticket->ms_fiov, fdip->finh,
-                  fdip->indata, fdip->iosize);
+    FUSE_DIMALLOC(&dispatcher->ticket->ms_fiov, dispatcher->finh,
+                  dispatcher->indata, dispatcher->iosize);
 
-    fuse_setup_ihead(fdip->finh, fdip->ticket, nid, op, fdip->iosize, context);
+    fuse_setup_ihead(dispatcher->finh, dispatcher->ticket, nid, op, dispatcher->iosize, context);
 }
 
 int
-fdisp_make_canfail(struct fuse_dispatcher *fdip,
+fuse_dispatcher_make_canfail(struct fuse_dispatcher *dispatcher,
                    enum fuse_opcode        op,
                    mount_t                 mp,
                    uint64_t                nid,
@@ -939,80 +939,80 @@ fdisp_make_canfail(struct fuse_dispatcher *fdip,
 
     struct fuse_data *data = fuse_get_mpdata(mp);
 
-    if (fdip->ticket) {
-        fticket_refresh(fdip->ticket);
+    if (dispatcher->ticket) {
+        fticket_refresh(dispatcher->ticket);
     } else {
-        fdip->ticket = fuse_ticket_fetch(data);
+        dispatcher->ticket = fuse_ticket_fetch(data);
     }
 
-    if (fdip->ticket == 0) {
+    if (dispatcher->ticket == 0) {
         panic("fuse4x: fuse_ticket_fetch() failed");
     }
 
-    fiov = &fdip->ticket->ms_fiov;
+    fiov = &dispatcher->ticket->ms_fiov;
 
     failed = fiov_adjust_canfail(fiov,
-                                 sizeof(struct fuse_in_header) + fdip->iosize);
+                                 sizeof(struct fuse_in_header) + dispatcher->iosize);
 
     if (failed) {
-        fuse_ticket_kill(fdip->ticket);
+        fuse_ticket_kill(dispatcher->ticket);
         return failed;
     }
 
-    fdip->finh = fiov->base;
-    fdip->indata = (char *)(fiov->base) + sizeof(struct fuse_in_header);
+    dispatcher->finh = fiov->base;
+    dispatcher->indata = (char *)(fiov->base) + sizeof(struct fuse_in_header);
 
-    fuse_setup_ihead(fdip->finh, fdip->ticket, nid, op, fdip->iosize, context);
+    fuse_setup_ihead(dispatcher->finh, dispatcher->ticket, nid, op, dispatcher->iosize, context);
 
     return 0;
 }
 
 void
-fdisp_make_vp(struct fuse_dispatcher *fdip,
+fuse_dispatcher_make_vp(struct fuse_dispatcher *dispatcher,
               enum fuse_opcode        op,
               vnode_t                 vp,
               vfs_context_t           context)
 {
-    return fdisp_make(fdip, op, vnode_mount(vp), VTOI(vp), context);
+    return fuse_dispatcher_make(dispatcher, op, vnode_mount(vp), VTOI(vp), context);
 }
 
 int
-fdisp_make_vp_canfail(struct fuse_dispatcher *fdip,
+fuse_dispatcher_make_vp_canfail(struct fuse_dispatcher *dispatcher,
                       enum fuse_opcode        op,
                       vnode_t                 vp,
                       vfs_context_t           context)
 {
-    return fdisp_make_canfail(fdip, op, vnode_mount(vp), VTOI(vp), context);
+    return fuse_dispatcher_make_canfail(dispatcher, op, vnode_mount(vp), VTOI(vp), context);
 }
 
 /* The function returns 0 in case of success and errorcode in case of error */
 int
-fdisp_wait_answ(struct fuse_dispatcher *fdip)
+fuse_dispatcher_wait_answer(struct fuse_dispatcher *dispatcher)
 {
     int err = 0;
 
-    fdip->answer_errno = 0;
-    fuse_insert_callback(fdip->ticket, fuse_standard_callback);
-    fuse_insert_message(fdip->ticket);
+    dispatcher->answer_errno = 0;
+    fuse_insert_callback(dispatcher->ticket, fuse_standard_callback);
+    fuse_insert_message(dispatcher->ticket);
 
-    if ((err = fticket_wait_answer(fdip->ticket))) { /* interrupted */
-        fuse_lck_mtx_lock(fdip->ticket->aw_mtx);
+    if ((err = fticket_wait_answer(dispatcher->ticket))) { /* interrupted */
+        fuse_lck_mtx_lock(dispatcher->ticket->aw_mtx);
 
-        if (fdip->ticket->answered) {
+        if (dispatcher->ticket->answered) {
             /* IPC: already answered */
-            fuse_lck_mtx_unlock(fdip->ticket->aw_mtx);
+            fuse_lck_mtx_unlock(dispatcher->ticket->aw_mtx);
             goto out;
         } else {
             /* IPC: explicitly setting to answered */
-            fdip->ticket->answered = true;
-            fuse_lck_mtx_unlock(fdip->ticket->aw_mtx);
+            dispatcher->ticket->answered = true;
+            fuse_lck_mtx_unlock(dispatcher->ticket->aw_mtx);
             return err;
         }
     }
 
     /* IPC was NOT interrupt */
 
-    if (fdip->ticket->aw_errno) {
+    if (dispatcher->ticket->aw_errno) {
 
         /* Explicitly EIO-ing */
 
@@ -1020,21 +1020,21 @@ fdisp_wait_answ(struct fuse_dispatcher *fdip)
         goto out;
     }
 
-    if ((err = fdip->ticket->aw_ohead.error)) {
+    if ((err = dispatcher->ticket->aw_ohead.error)) {
 
         /* Explicitly setting status */
 
-        fdip->answer_errno = err;
+        dispatcher->answer_errno = err;
         goto out;
     }
 
-    fdip->answer = fticket_resp(fdip->ticket)->base;
-    fdip->iosize = fticket_resp(fdip->ticket)->len;
+    dispatcher->answer = fticket_resp(dispatcher->ticket)->base;
+    dispatcher->iosize = fticket_resp(dispatcher->ticket)->len;
 
     return 0;
 
 out:
-    fuse_ticket_drop(fdip->ticket);
+    fuse_ticket_drop(dispatcher->ticket);
 
     return err;
 }

@@ -135,14 +135,14 @@ fuse_internal_access(vnode_t                   vp,
 
     bzero(&fdi, sizeof(fdi));
 
-    fdisp_init(&fdi, sizeof(*fai));
-    fdisp_make_vp(&fdi, FUSE_ACCESS, vp, context);
+    fuse_dispatcher_init(&fdi, sizeof(*fai));
+    fuse_dispatcher_make_vp(&fdi, FUSE_ACCESS, vp, context);
 
     fai = fdi.indata;
     fai->mask = F_OK;
     fai->mask |= mask;
 
-    if (!(err = fdisp_wait_answ(&fdi))) {
+    if (!(err = fuse_dispatcher_wait_answer(&fdi))) {
         fuse_ticket_drop(fdi.ticket);
     }
 
@@ -212,8 +212,8 @@ fuse_internal_exchange(vnode_t       fvp,
     vnode_t tdvp = tfud->parentvp;
     int err = 0;
 
-    fdisp_init(&fdi, sizeof(*fei) + flen + tlen + 2);
-    fdisp_make_vp(&fdi, FUSE_EXCHANGE, fvp, context);
+    fuse_dispatcher_init(&fdi, sizeof(*fei) + flen + tlen + 2);
+    fuse_dispatcher_make_vp(&fdi, FUSE_EXCHANGE, fvp, context);
 
     fei = fdi.indata;
     fei->olddir = VTOI(fdvp);
@@ -231,7 +231,7 @@ fuse_internal_exchange(vnode_t       fvp,
     ubc_msync(tvp, (off_t)0, (off_t)tfud->filesize, (off_t*)0,
               UBC_PUSHALL | UBC_INVALIDATE | UBC_SYNC);
 
-    if (!(err = fdisp_wait_answ(&fdi))) {
+    if (!(err = fuse_dispatcher_wait_answer(&fdi))) {
         fuse_ticket_drop(fdi.ticket);
     }
 
@@ -323,42 +323,42 @@ fuse_internal_fsync(vnode_t                 vp,
     int err = 0;
     int op = FUSE_FSYNC;
     struct fuse_fsync_in *ffsi;
-    struct fuse_dispatcher *fdip = param;
+    struct fuse_dispatcher *dispatcher = param;
 
     const bool wait_for_completion = true;
 
     fuse_trace_printf_func();
 
-    fdip->iosize = sizeof(*ffsi);
-    fdip->ticket = NULL;
+    dispatcher->iosize = sizeof(*ffsi);
+    dispatcher->ticket = NULL;
     if (vnode_isdir(vp)) {
         op = FUSE_FSYNCDIR;
     }
 
-    fdisp_make_vp(fdip, op, vp, context);
-    ffsi = fdip->indata;
+    fuse_dispatcher_make_vp(dispatcher, op, vp, context);
+    ffsi = dispatcher->indata;
     ffsi->fh = fufh->fh_id;
 
     ffsi->fsync_flags = 1; /* datasync */
 
     if (wait_for_completion) {
-        if ((err = fdisp_wait_answ(fdip))) {
+        if ((err = fuse_dispatcher_wait_answer(dispatcher))) {
             if (err == ENOSYS) {
                 if (op == FUSE_FSYNC) {
-                    fuse_clear_implemented(fdip->ticket->data,
+                    fuse_clear_implemented(dispatcher->ticket->data,
                                            FSESS_NOIMPLBIT(FSYNC));
                 } else if (op == FUSE_FSYNCDIR) {
-                    fuse_clear_implemented(fdip->ticket->data,
+                    fuse_clear_implemented(dispatcher->ticket->data,
                                            FSESS_NOIMPLBIT(FSYNCDIR));
                 }
             }
             goto out;
         } else {
-            fuse_ticket_drop(fdip->ticket);
+            fuse_ticket_drop(dispatcher->ticket);
         }
     } else {
-        fuse_insert_callback(fdip->ticket, fuse_internal_fsync_callback);
-        fuse_insert_message(fdip->ticket);
+        fuse_insert_callback(dispatcher->ticket, fuse_internal_fsync_callback);
+        fuse_insert_message(dispatcher->ticket);
     }
 
 out:
@@ -403,7 +403,7 @@ fuse_internal_loadxtimes(vnode_t vp, struct vnode_attr *out_vap,
         goto fake;
     }
 
-    err = fdisp_simple_putget_vp(&fdi, FUSE_GETXTIMES, vp, context);
+    err = fuse_dispatcher_simple_putget_vp(&fdi, FUSE_GETXTIMES, vp, context);
     if (err) {
         /* We don't ever treat this as a hard error. */
         err = 0;
@@ -615,14 +615,14 @@ fuse_internal_readdir(vnode_t                 vp,
         return 0;
     }
 
-    fdisp_init(&fdi, 0);
+    fuse_dispatcher_init(&fdi, 0);
 
     /* Note that we DO NOT have a UIO_SYSSPACE here (so no need for p2p I/O). */
 
     while (uio_resid(uio) > 0) {
 
         fdi.iosize = sizeof(*fri);
-        fdisp_make_vp(&fdi, FUSE_READDIR, vp, context);
+        fuse_dispatcher_make_vp(&fdi, FUSE_READDIR, vp, context);
 
         fri = fdi.indata;
         fri->fh = fufh->fh_id;
@@ -630,7 +630,7 @@ fuse_internal_readdir(vnode_t                 vp,
         data = fuse_get_mpdata(vnode_mount(vp));
         fri->size = (typeof(fri->size))min((size_t)uio_resid(uio), data->iosize);
 
-        if ((err = fdisp_wait_answ(&fdi))) {
+        if ((err = fuse_dispatcher_wait_answer(&fdi))) {
             goto out;
         }
 
@@ -804,8 +804,8 @@ fuse_internal_remove(vnode_t               dvp,
 
     int err = 0;
 
-    fdisp_init(&fdi, cnp->cn_namelen + 1);
-    fdisp_make_vp(&fdi, op, dvp, context);
+    fuse_dispatcher_init(&fdi, cnp->cn_namelen + 1);
+    fuse_dispatcher_make_vp(&fdi, op, dvp, context);
 
     memcpy(fdi.indata, cnp->cn_nameptr, cnp->cn_namelen);
     ((char *)fdi.indata)[cnp->cn_namelen] = '\0';
@@ -815,7 +815,7 @@ fuse_internal_remove(vnode_t               dvp,
         target_nlink = vap->va_nlink;
     }
 
-    if (!(err = fdisp_wait_answ(&fdi))) {
+    if (!(err = fuse_dispatcher_wait_answer(&fdi))) {
         fuse_ticket_drop(fdi.ticket);
     }
 
@@ -868,8 +868,8 @@ fuse_internal_rename(vnode_t               fdvp,
     struct fuse_rename_in *fri;
     int err = 0;
 
-    fdisp_init(&fdi, sizeof(*fri) + fcnp->cn_namelen + tcnp->cn_namelen + 2);
-    fdisp_make_vp(&fdi, FUSE_RENAME, fdvp, context);
+    fuse_dispatcher_init(&fdi, sizeof(*fri) + fcnp->cn_namelen + tcnp->cn_namelen + 2);
+    fuse_dispatcher_make_vp(&fdi, FUSE_RENAME, fdvp, context);
 
     fri = fdi.indata;
     fri->newdir = VTOI(tdvp);
@@ -881,7 +881,7 @@ fuse_internal_rename(vnode_t               fdvp,
     ((char *)fdi.indata)[sizeof(*fri) + fcnp->cn_namelen +
                          tcnp->cn_namelen + 1] = '\0';
 
-    if (!(err = fdisp_wait_answ(&fdi))) {
+    if (!(err = fuse_dispatcher_wait_answer(&fdi))) {
         fuse_ticket_drop(fdi.ticket);
     }
 
@@ -1049,7 +1049,7 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
         return 0;
     }
 
-    fdisp_init(&fdi, 0);
+    fuse_dispatcher_init(&fdi, 0);
 
     if (mode == FREAD) {
 
@@ -1091,7 +1091,7 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
             if (vtype == VDIR) {
                 op = FUSE_READDIR;
             }
-            fdisp_make_vp(&fdi, op, vp, NULL);
+            fuse_dispatcher_make_vp(&fdi, op, vp, NULL);
 
             fri = fdi.indata;
             fri->fh = fufh->fh_id;
@@ -1109,7 +1109,7 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
             fdi.ticket->aw_type = FT_A_BUF;
             fdi.ticket->aw_bufdata = bufdat;
 
-            if ((err = fdisp_wait_answ(&fdi))) {
+            if ((err = fuse_dispatcher_wait_answer(&fdi))) {
                 /* There was a problem with reading. */
                 goto out;
             }
@@ -1167,7 +1167,7 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
             fdi.iosize = sizeof(*fwi);
             op = FUSE_WRITE;
 
-            fdisp_make_vp(&fdi, op, vp, NULL);
+            fuse_dispatcher_make_vp(&fdi, op, vp, NULL);
             chunksize = min((size_t)left, data->iosize);
 
             fwi = fdi.indata;
@@ -1181,7 +1181,7 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
 
             /* About to write <chunksize> at <offset> */
 
-            if ((err = fdisp_wait_answ(&fdi))) {
+            if ((err = fuse_dispatcher_wait_answer(&fdi))) {
                 merr = 1;
                 break;
             }
@@ -1313,15 +1313,15 @@ fuse_internal_newentry_makerequest(mount_t                 mp,
                                    enum fuse_opcode        op,
                                    void                   *buf,
                                    size_t                  bufsize,
-                                   struct fuse_dispatcher *fdip,
+                                   struct fuse_dispatcher *dispatcher,
                                    vfs_context_t           context)
 {
-    fdisp_init(fdip, bufsize + cnp->cn_namelen + 1);
+    fuse_dispatcher_init(dispatcher, bufsize + cnp->cn_namelen + 1);
 
-    fdisp_make(fdip, op, mp, dnid, context);
-    memcpy(fdip->indata, buf, bufsize);
-    memcpy((char *)fdip->indata + bufsize, cnp->cn_nameptr, cnp->cn_namelen);
-    ((char *)fdip->indata)[bufsize + cnp->cn_namelen] = '\0';
+    fuse_dispatcher_make(dispatcher, op, mp, dnid, context);
+    memcpy(dispatcher->indata, buf, bufsize);
+    memcpy((char *)dispatcher->indata + bufsize, cnp->cn_nameptr, cnp->cn_namelen);
+    ((char *)dispatcher->indata)[bufsize + cnp->cn_namelen] = '\0';
 }
 
 __private_extern__
@@ -1330,18 +1330,18 @@ fuse_internal_newentry_core(vnode_t                 dvp,
                             vnode_t                *vpp,
                             struct componentname   *cnp,
                             enum vtype              vtyp,
-                            struct fuse_dispatcher *fdip,
+                            struct fuse_dispatcher *dispatcher,
                             vfs_context_t           context)
 {
     int err = 0;
     struct fuse_entry_out *feo;
     mount_t mp = vnode_mount(dvp);
 
-    if ((err = fdisp_wait_answ(fdip))) {
+    if ((err = fuse_dispatcher_wait_answer(dispatcher))) {
         return err;
     }
 
-    feo = fdip->answer;
+    feo = dispatcher->answer;
 
     if ((err = fuse_internal_checkentry(feo, vtyp))) {
         goto out;
@@ -1349,14 +1349,14 @@ fuse_internal_newentry_core(vnode_t                 dvp,
 
     err = fuse_vget_i(vpp, 0 /* flags */, feo, cnp, dvp, mp, context);
     if (err) {
-        fuse_internal_forget_send(mp, context, feo->nodeid, 1, fdip);
+        fuse_internal_forget_send(mp, context, feo->nodeid, 1, dispatcher);
         return err;
     }
 
     cache_attrs(*vpp, feo);
 
 out:
-    fuse_ticket_drop(fdip->ticket);
+    fuse_ticket_drop(dispatcher->ticket);
 
     return err;
 }
@@ -1380,7 +1380,7 @@ fuse_internal_newentry(vnode_t               dvp,
         return EACCES;
     }
 
-    fdisp_init(&fdi, 0);
+    fuse_dispatcher_init(&fdi, 0);
     fuse_internal_newentry_makerequest(mp, VTOI(dvp), cnp, op, buf,
                                        bufsize, &fdi, context);
     err = fuse_internal_newentry_core(dvp, vpp, cnp, vtype, &fdi, context);
@@ -1411,7 +1411,7 @@ fuse_internal_forget_send(mount_t                 mp,
                           vfs_context_t           context,
                           uint64_t                nodeid,
                           uint64_t                nlookup,
-                          struct fuse_dispatcher *fdip)
+                          struct fuse_dispatcher *dispatcher)
 {
     struct fuse_forget_in *ffi;
 
@@ -1420,14 +1420,14 @@ fuse_internal_forget_send(mount_t                 mp,
      *         (long long unsigned) nodeid));
      */
 
-    fdisp_init(fdip, sizeof(*ffi));
-    fdisp_make(fdip, FUSE_FORGET, mp, nodeid, context);
+    fuse_dispatcher_init(dispatcher, sizeof(*ffi));
+    fuse_dispatcher_make(dispatcher, FUSE_FORGET, mp, nodeid, context);
 
-    ffi = fdip->indata;
+    ffi = dispatcher->indata;
     ffi->nlookup = nlookup;
 
-    fdip->ticket->invalid = true;
-    fuse_insert_message(fdip->ticket);
+    dispatcher->ticket->invalid = true;
+    fuse_insert_message(dispatcher->ticket);
 }
 
 __private_extern__
@@ -1438,8 +1438,8 @@ fuse_internal_interrupt_send(struct fuse_ticket *ftick)
     struct fuse_interrupt_in *fii;
 
     fdi.ticket = ftick;
-    fdisp_init(&fdi, sizeof(*fii));
-    fdisp_make(&fdi, FUSE_INTERRUPT, ftick->data->mp, (uint64_t)0, NULL);
+    fuse_dispatcher_init(&fdi, sizeof(*fii));
+    fuse_dispatcher_make(&fdi, FUSE_INTERRUPT, ftick->data->mp, (uint64_t)0, NULL);
     fii = fdi.indata;
     fii->unique = ftick->unique;
     fdi.ticket->invalid = true;
@@ -1558,8 +1558,8 @@ fuse_send_init(struct fuse_data *data, vfs_context_t context)
     struct fuse_init_in   *fiii;
     struct fuse_dispatcher fdi;
 
-    fdisp_init(&fdi, sizeof(*fiii));
-    fdisp_make(&fdi, FUSE_INIT, data->mp, 0, context);
+    fuse_dispatcher_init(&fdi, sizeof(*fiii));
+    fuse_dispatcher_make(&fdi, FUSE_INIT, data->mp, 0, context);
     fiii = fdi.indata;
     fiii->major = FUSE_KERNEL_VERSION;
     fiii->minor = FUSE_KERNEL_MINOR_VERSION;

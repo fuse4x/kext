@@ -286,8 +286,8 @@ fuse_vnop_close(struct vnop_close_args *ap)
         struct fuse_dispatcher  fdi;
         struct fuse_flush_in   *ffi;
 
-        fdisp_init(&fdi, sizeof(*ffi));
-        fdisp_make_vp(&fdi, FUSE_FLUSH, vp, context);
+        fuse_dispatcher_init(&fdi, sizeof(*ffi));
+        fuse_dispatcher_make_vp(&fdi, FUSE_FLUSH, vp, context);
 
         ffi = fdi.indata;
         ffi->fh = fufh->fh_id;
@@ -295,7 +295,7 @@ fuse_vnop_close(struct vnop_close_args *ap)
         ffi->padding = 0;
         ffi->lock_owner = 0;
 
-        err = fdisp_wait_answ(&fdi);
+        err = fuse_dispatcher_wait_answer(&fdi);
 
         if (!err) {
             fuse_ticket_drop(fdi.ticket);
@@ -343,7 +343,7 @@ fuse_vnop_create(struct vnop_create_args *ap)
     struct fuse_mknod_in    fmni;
     struct fuse_entry_out  *feo;
     struct fuse_dispatcher  fdi;
-    struct fuse_dispatcher *fdip = &fdi;
+    struct fuse_dispatcher *dispatcher = &fdi;
 
     int err;
     bool gone_good_old = false;
@@ -378,24 +378,24 @@ fuse_vnop_create(struct vnop_create_args *ap)
         goto good_old;
     }
 
-    fdisp_init(fdip, sizeof(*fci) + cnp->cn_namelen + 1);
-    fdisp_make(fdip, FUSE_CREATE, vnode_mount(dvp), parent_nodeid, context);
+    fuse_dispatcher_init(dispatcher, sizeof(*fci) + cnp->cn_namelen + 1);
+    fuse_dispatcher_make(dispatcher, FUSE_CREATE, vnode_mount(dvp), parent_nodeid, context);
 
-    fci = fdip->indata;
+    fci = dispatcher->indata;
     fci->mode = mode;
 
     /* XXX: We /always/ creat() like this. Wish we were on Linux. */
     fci->flags = O_CREAT | O_RDWR;
 
-    memcpy((char *)fdip->indata + sizeof(*fci), cnp->cn_nameptr,
+    memcpy((char *)dispatcher->indata + sizeof(*fci), cnp->cn_nameptr,
            cnp->cn_namelen);
-    ((char *)fdip->indata)[sizeof(*fci) + cnp->cn_namelen] = '\0';
+    ((char *)dispatcher->indata)[sizeof(*fci) + cnp->cn_namelen] = '\0';
 
-    err = fdisp_wait_answ(fdip);
+    err = fuse_dispatcher_wait_answer(dispatcher);
 
     if (err == ENOSYS) {
         fuse_clear_implemented(data, FSESS_NOIMPLBIT(CREATE));
-        fdip->ticket = NULL;
+        dispatcher->ticket = NULL;
         goto good_old;
     } else if (err) {
         goto undo;
@@ -409,17 +409,17 @@ good_old:
     fmni.rdev = 0;
     fuse_internal_newentry_makerequest(vnode_mount(dvp), parent_nodeid, cnp,
                                        FUSE_MKNOD, &fmni, sizeof(fmni),
-                                       fdip, context);
-    err = fdisp_wait_answ(fdip);
+                                       dispatcher, context);
+    err = fuse_dispatcher_wait_answer(dispatcher);
     if (err) {
         goto undo;
     }
 
 bringup:
-    feo = fdip->answer;
+    feo = dispatcher->answer;
 
     if ((err = fuse_internal_checkentry(feo, VREG))) { // VBLK/VCHR not allowed
-        fuse_ticket_drop(fdip->ticket);
+        fuse_ticket_drop(dispatcher->ticket);
         goto undo;
     }
 
@@ -428,24 +428,24 @@ bringup:
               feo, mp, dvp, context, NULL /* oflags */);
     if (err) {
        if (gone_good_old) {
-           fuse_internal_forget_send(mp, context, feo->nodeid, 1, fdip);
+           fuse_internal_forget_send(mp, context, feo->nodeid, 1, dispatcher);
        } else {
            struct fuse_release_in *fri;
            uint64_t nodeid = feo->nodeid;
            uint64_t fh_id = ((struct fuse_open_out *)(feo + 1))->fh;
 
-           fdisp_init(fdip, sizeof(*fri));
-           fdisp_make(fdip, FUSE_RELEASE, mp, nodeid, context);
-           fri = fdip->indata;
+           fuse_dispatcher_init(dispatcher, sizeof(*fri));
+           fuse_dispatcher_make(dispatcher, FUSE_RELEASE, mp, nodeid, context);
+           fri = dispatcher->indata;
            fri->fh = fh_id;
            fri->flags = OFLAGS(mode);
-           fuse_insert_callback(fdip->ticket, fuse_internal_forget_callback);
-           fuse_insert_message(fdip->ticket);
+           fuse_insert_callback(dispatcher->ticket, fuse_internal_forget_callback);
+           fuse_insert_message(dispatcher->ticket);
        }
        return err;
     }
 
-    fdip->answer = gone_good_old ? NULL : feo + 1;
+    dispatcher->answer = gone_good_old ? NULL : feo + 1;
 
     if (!gone_good_old) {
 
@@ -469,7 +469,7 @@ bringup:
 
     cache_purge_negatives(dvp);
 
-    fuse_ticket_drop(fdip->ticket);
+    fuse_ticket_drop(dispatcher->ticket);
 
     FUSE_KNOTE(dvp, NOTE_WRITE);
 
@@ -659,7 +659,7 @@ fuse_vnop_fsync(struct vnop_fsync_args *ap)
         goto out;
     }
 
-    fdisp_init(&fdi, 0);
+    fuse_dispatcher_init(&fdi, 0);
     for (type = 0; type < FUFH_MAXTYPE; type++) {
         fufh = &(fvdat->fufh[type]);
         if (FUFH_IS_VALID(fufh)) {
@@ -736,11 +736,11 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
         }
     }
 
-    fdisp_init(&fdi, sizeof(struct fuse_getattr_in));
-    fdisp_make_vp(&fdi, FUSE_GETATTR, vp, context);
+    fuse_dispatcher_init(&fdi, sizeof(struct fuse_getattr_in));
+    fuse_dispatcher_make_vp(&fdi, FUSE_GETATTR, vp, context);
     bzero(fdi.indata, sizeof(struct fuse_getattr_in));
 
-    if ((err = fdisp_wait_answ(&fdi))) {
+    if ((err = fuse_dispatcher_wait_answer(&fdi))) {
         if ((err == ENOTCONN) && vnode_isvroot(vp)) {
             /* see comment at similar place in fuse_statfs() */
             goto fake;
@@ -894,8 +894,8 @@ fuse_vnop_getxattr(struct vnop_getxattr_args *ap)
 
     namelen = strlen(name);
 
-    fdisp_init(&fdi, sizeof(*fgxi) + namelen + 1);
-    fdisp_make_vp(&fdi, FUSE_GETXATTR, vp, context);
+    fuse_dispatcher_init(&fdi, sizeof(*fgxi) + namelen + 1);
+    fuse_dispatcher_make_vp(&fdi, FUSE_GETXATTR, vp, context);
     fgxi = fdi.indata;
 
     if (uio) {
@@ -913,7 +913,7 @@ fuse_vnop_getxattr(struct vnop_getxattr_args *ap)
         fdi.ticket->killed = true;
     }
 
-    err = fdisp_wait_answ(&fdi);
+    err = fuse_dispatcher_wait_answer(&fdi);
     if (err) {
         if (err == ENOSYS) {
             fuse_clear_implemented(data, FSESS_NOIMPLBIT(GETXATTR));
@@ -1105,11 +1105,11 @@ fuse_vnop_link(struct vnop_link_args *ap)
 
     fli.oldnodeid = VTOI(vp);
 
-    fdisp_init(&fdi, 0);
+    fuse_dispatcher_init(&fdi, 0);
     fuse_internal_newentry_makerequest(vnode_mount(tdvp), VTOI(tdvp), cnp,
                                        FUSE_LINK, &fli, sizeof(fli), &fdi,
                                        context);
-    if ((err = fdisp_wait_answ(&fdi))) {
+    if ((err = fuse_dispatcher_wait_answer(&fdi))) {
         return err;
     }
 
@@ -1173,8 +1173,8 @@ fuse_vnop_listxattr(struct vnop_listxattr_args *ap)
         return ENOTSUP;
     }
 
-    fdisp_init(&fdi, sizeof(*fgxi));
-    fdisp_make_vp(&fdi, FUSE_LISTXATTR, vp, context);
+    fuse_dispatcher_init(&fdi, sizeof(*fgxi));
+    fuse_dispatcher_make_vp(&fdi, FUSE_LISTXATTR, vp, context);
     fgxi = fdi.indata;
     if (uio) {
         fgxi->size = (uint32_t)uio_resid(uio);
@@ -1182,7 +1182,7 @@ fuse_vnop_listxattr(struct vnop_listxattr_args *ap)
         fgxi->size = 0;
     }
 
-    err = fdisp_wait_answ(&fdi);
+    err = fuse_dispatcher_wait_answer(&fdi);
     if (err) {
         if (err == ENOSYS) {
             fuse_clear_implemented(data, FSESS_NOIMPLBIT(LISTXATTR));
@@ -1282,13 +1282,13 @@ fuse_vnop_lookup(struct vnop_lookup_args *ap)
         pdp = VTOFUD(dvp)->parentvp;
         nodeid = VTOI(pdp);
         parent_nodeid = VTOFUD(dvp)->parent_nodeid;
-        fdisp_init(&fdi, sizeof(struct fuse_getattr_in));
+        fuse_dispatcher_init(&fdi, sizeof(struct fuse_getattr_in));
         op = FUSE_GETATTR;
         goto calldaemon;
     } else if (isdot) {
         nodeid = VTOI(dvp);
         parent_nodeid = VTOFUD(dvp)->parent_nodeid;
-        fdisp_init(&fdi, sizeof(struct fuse_getattr_in));
+        fuse_dispatcher_init(&fdi, sizeof(struct fuse_getattr_in));
         op = FUSE_GETATTR;
         goto calldaemon;
     } else {
@@ -1320,11 +1320,11 @@ fuse_vnop_lookup(struct vnop_lookup_args *ap)
 
     nodeid = VTOI(dvp);
     parent_nodeid = VTOI(dvp);
-    fdisp_init(&fdi, cnp->cn_namelen + 1);
+    fuse_dispatcher_init(&fdi, cnp->cn_namelen + 1);
     op = FUSE_LOOKUP;
 
 calldaemon:
-    fdisp_make(&fdi, op, mp, nodeid, context);
+    fuse_dispatcher_make(&fdi, op, mp, nodeid, context);
 
     if (op == FUSE_LOOKUP) {
         memcpy(fdi.indata, cnp->cn_nameptr, cnp->cn_namelen);
@@ -1333,7 +1333,7 @@ calldaemon:
         bzero(fdi.indata, sizeof(struct fuse_getattr_in));
     }
 
-    lookup_err = fdisp_wait_answ(&fdi);
+    lookup_err = fuse_dispatcher_wait_answer(&fdi);
 
     if ((op == FUSE_LOOKUP) && !lookup_err) { /* lookup call succeeded */
         nodeid = ((struct fuse_entry_out *)fdi.answer)->nodeid;
@@ -1978,11 +1978,11 @@ ok:
             fuse_invalidate_attr(vp);
             hint |= NOTE_ATTRIB;
 
-            fdisp_init(&fdi, sizeof(struct fuse_getattr_in));
-            fdisp_make_vp(&fdi, FUSE_GETATTR, vp, context);
+            fuse_dispatcher_init(&fdi, sizeof(struct fuse_getattr_in));
+            fuse_dispatcher_make_vp(&fdi, FUSE_GETATTR, vp, context);
             bzero(fdi.indata, sizeof(struct fuse_getattr_in));
 
-            serr = fdisp_wait_answ(&fdi);
+            serr = fuse_dispatcher_wait_answer(&fdi);
             if (!serr) {
                 /* XXX: Could check the sanity/volatility of va_mode here. */
                 if ((((struct fuse_attr_out*)fdi.answer)->attr.mode & S_IFMT)) {
@@ -2333,17 +2333,17 @@ fuse_vnop_read(struct vnop_read_args *ap)
 
         rounded_iolength = (off_t)round_page_64(uio_offset(uio) +
                                                 uio_resid(uio));
-        fdisp_init(&fdi, 0);
+        fuse_dispatcher_init(&fdi, 0);
 
         while (uio_resid(uio) > 0) {
             fdi.iosize = sizeof(*fri);
-            fdisp_make_vp(&fdi, FUSE_READ, vp, context);
+            fuse_dispatcher_make_vp(&fdi, FUSE_READ, vp, context);
             fri = fdi.indata;
             fri->fh = fufh->fh_id;
             fri->offset = uio_offset(uio);
             fri->size = (uint32_t)min((size_t)uio_resid(uio), data->iosize);
 
-            if ((err = fdisp_wait_answ(&fdi))) {
+            if ((err = fuse_dispatcher_wait_answer(&fdi))) {
                 return err;
             }
 
@@ -2493,7 +2493,7 @@ fuse_vnop_readlink(struct vnop_readlink_args *ap)
         return EINVAL;
     }
 
-    if ((err = fdisp_simple_putget_vp(&fdi, FUSE_READLINK, vp, context))) {
+    if ((err = fuse_dispatcher_simple_putget_vp(&fdi, FUSE_READLINK, vp, context))) {
         return err;
     }
 
@@ -2751,13 +2751,13 @@ fuse_vnop_removexattr(struct vnop_removexattr_args *ap)
 
     namelen = strlen(name);
 
-    fdisp_init(&fdi, namelen + 1);
-    fdisp_make_vp(&fdi, FUSE_REMOVEXATTR, vp, context);
+    fuse_dispatcher_init(&fdi, namelen + 1);
+    fuse_dispatcher_make_vp(&fdi, FUSE_REMOVEXATTR, vp, context);
 
     memcpy((char *)fdi.indata, name, namelen);
     ((char *)fdi.indata)[namelen] = '\0';
 
-    err = fdisp_wait_answ(&fdi);
+    err = fuse_dispatcher_wait_answer(&fdi);
     if (!err) {
         fuse_ticket_drop(fdi.ticket);
         VTOFUD(vp)->c_flag |= C_TOUCH_CHGTIME;
@@ -2997,8 +2997,8 @@ fuse_vnop_setattr(struct vnop_setattr_args *ap)
 
     CHECK_BLANKET_DENIAL(vp, context, ENOENT);
 
-    fdisp_init(&fdi, sizeof(*fsai));
-    fdisp_make_vp(&fdi, FUSE_SETATTR, vp, context);
+    fuse_dispatcher_init(&fdi, sizeof(*fsai));
+    fuse_dispatcher_make_vp(&fdi, FUSE_SETATTR, vp, context);
     fsai = fdi.indata;
 
     sizechanged = fuse_internal_attr_vat2fsai(vnode_mount(vp), vp, vap,
@@ -3020,7 +3020,7 @@ fuse_vnop_setattr(struct vnop_setattr_args *ap)
         goto out;
     }
 
-    if ((err = fdisp_wait_answ(&fdi))) {
+    if ((err = fuse_dispatcher_wait_answer(&fdi))) {
         fuse_invalidate_attr(vp);
         return err;
     }
@@ -3155,7 +3155,7 @@ fuse_vnop_setxattr(struct vnop_setxattr_args *ap)
 
     /*
      * Check attrsize for some sane maximum: otherwise, we can fail malloc()
-     * in fdisp_make_vp().
+     * in fuse_dispatcher_make_vp().
      */
     if (attrsize > data->userkernel_bufsize) {
         return E2BIG;
@@ -3163,8 +3163,8 @@ fuse_vnop_setxattr(struct vnop_setxattr_args *ap)
 
     namelen = strlen(name);
 
-    fdisp_init(&fdi, sizeof(*fsxi) + namelen + 1 + attrsize);
-    err = fdisp_make_vp_canfail(&fdi, FUSE_SETXATTR, vp, ap->a_context);
+    fuse_dispatcher_init(&fdi, sizeof(*fsxi) + namelen + 1 + attrsize);
+    err = fuse_dispatcher_make_vp_canfail(&fdi, FUSE_SETXATTR, vp, ap->a_context);
     if (err) {
         log("fuse4x: setxattr failed for too large attribute (%lu)\n",
               attrsize);
@@ -3192,7 +3192,7 @@ fuse_vnop_setxattr(struct vnop_setxattr_args *ap)
     fuse_biglock_lock(data->biglock);
 #endif
     if (!err) {
-        err = fdisp_wait_answ(&fdi);
+        err = fuse_dispatcher_wait_answer(&fdi);
     }
 
     if (!err) {
@@ -3289,8 +3289,8 @@ fuse_vnop_symlink(struct vnop_symlink_args *ap)
     CHECK_BLANKET_DENIAL(dvp, context, EPERM);
 
     len = strlen(target) + 1;
-    fdisp_init(&fdi, len + cnp->cn_namelen + 1);
-    fdisp_make_vp(&fdi, FUSE_SYMLINK, dvp, context);
+    fuse_dispatcher_init(&fdi, len + cnp->cn_namelen + 1);
+    fuse_dispatcher_make_vp(&fdi, FUSE_SYMLINK, dvp, context);
 
     memcpy(fdi.indata, cnp->cn_nameptr, cnp->cn_namelen);
     ((char *)fdi.indata)[cnp->cn_namelen] = '\0';
@@ -3423,12 +3423,12 @@ fuse_vnop_write(struct vnop_write_args *ap)
             /* Using existing fufh of type fufh_type. */
         }
 
-        fdisp_init(&fdi, 0);
+        fuse_dispatcher_init(&fdi, 0);
 
         while (uio_resid(uio) > 0) {
             chunksize = min((size_t)uio_resid(uio), data->iosize);
             fdi.iosize = sizeof(*fwi) + chunksize;
-            fdisp_make_vp(&fdi, FUSE_WRITE, vp, context);
+            fuse_dispatcher_make_vp(&fdi, FUSE_WRITE, vp, context);
             fwi = fdi.indata;
             fwi->fh = fufh->fh_id;
             fwi->offset = uio_offset(uio);
@@ -3440,7 +3440,7 @@ fuse_vnop_write(struct vnop_write_args *ap)
                 break;
             }
 
-            error = fdisp_wait_answ(&fdi);
+            error = fuse_dispatcher_wait_answer(&fdi);
             if (error) {
                 return error;
             }

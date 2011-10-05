@@ -62,8 +62,8 @@ fuse_filehandle_get(vnode_t       vp,
         }
     }
 
-    fdisp_init(&fdi, sizeof(*foi));
-    fdisp_make_vp(&fdi, op, vp, context);
+    fuse_dispatcher_init(&fdi, sizeof(*foi));
+    fuse_dispatcher_make_vp(&fdi, op, vp, context);
 
     if (vnode_islnk(vp) && (mode & O_SYMLINK)) {
         oflags |= O_SYMLINK;
@@ -73,7 +73,7 @@ fuse_filehandle_get(vnode_t       vp,
     foi->flags = oflags;
 
     OSIncrementAtomic((SInt32 *)&fuse_fh_upcall_count);
-    if ((err = fdisp_wait_answ(&fdi))) {
+    if ((err = fuse_dispatcher_wait_answer(&fdi))) {
 #if M_FUSE4X_ENABLE_UNSUPPORTED
         const char *vname = vnode_getname(vp);
 #endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
@@ -153,14 +153,14 @@ fuse_filehandle_put(vnode_t vp, vfs_context_t context, fufh_type_t fufh_type)
         isdir = 1;
     }
 
-    fdisp_init(&fdi, sizeof(*fri));
-    fdisp_make_vp(&fdi, op, vp, context);
+    fuse_dispatcher_init(&fdi, sizeof(*fri));
+    fuse_dispatcher_make_vp(&fdi, op, vp, context);
     fri = fdi.indata;
     fri->fh = fufh->fh_id;
     fri->flags = fufh->open_flags;
 
     if (wait_for_completion) {
-        if ((err = fdisp_wait_answ(&fdi))) {
+        if ((err = fuse_dispatcher_wait_answer(&fdi))) {
             goto out;
         } else {
             fuse_ticket_drop(fdi.ticket);

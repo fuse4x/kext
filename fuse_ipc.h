@@ -222,34 +222,34 @@ struct fuse_dispatcher {
 
 static __inline__
 void
-fdisp_init(struct fuse_dispatcher *fdisp, size_t iosize)
+fuse_dispatcher_init(struct fuse_dispatcher *dispatcher, size_t iosize)
 {
-    fdisp->iosize = iosize;
-    fdisp->ticket = NULL;
+    dispatcher->iosize = iosize;
+    dispatcher->ticket = NULL;
 }
 
-void fdisp_make(struct fuse_dispatcher *fdip, enum fuse_opcode op,
+void fuse_dispatcher_make(struct fuse_dispatcher *dispatcher, enum fuse_opcode op,
                 mount_t mp, uint64_t nid, vfs_context_t context);
 
-int  fdisp_make_canfail(struct fuse_dispatcher *fdip, enum fuse_opcode op,
+int  fuse_dispatcher_make_canfail(struct fuse_dispatcher *dispatcher, enum fuse_opcode op,
                         mount_t mp, uint64_t nid, vfs_context_t context);
 
-void fdisp_make_vp(struct fuse_dispatcher *fdip, enum fuse_opcode op,
+void fuse_dispatcher_make_vp(struct fuse_dispatcher *dispatcher, enum fuse_opcode op,
                    vnode_t vp, vfs_context_t context);
 
-int  fdisp_make_vp_canfail(struct fuse_dispatcher *fdip, enum fuse_opcode op,
+int  fuse_dispatcher_make_vp_canfail(struct fuse_dispatcher *dispatcher, enum fuse_opcode op,
                            vnode_t vp, vfs_context_t context);
 
-int  fdisp_wait_answ(struct fuse_dispatcher *fdip);
+int  fuse_dispatcher_wait_answer(struct fuse_dispatcher *dispatcher);
 
 static __inline__
 int
-fdisp_simple_putget_vp(struct fuse_dispatcher *fdip, enum fuse_opcode op,
+fuse_dispatcher_simple_putget_vp(struct fuse_dispatcher *dispatcher, enum fuse_opcode op,
                        vnode_t vp, vfs_context_t context)
 {
-    fdisp_init(fdip, 0);
-    fdisp_make_vp(fdip, op, vp, context);
-    return fdisp_wait_answ(fdip);
+    fuse_dispatcher_init(dispatcher, 0);
+    fuse_dispatcher_make_vp(dispatcher, op, vp, context);
+    return fuse_dispatcher_wait_answer(dispatcher);
 }
 
 #endif /* _FUSE_IPC_H_ */

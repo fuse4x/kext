@@ -657,11 +657,11 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
         goto alreadydead;
     }
 
-    fdisp_init(&fdi, 0 /* no data to send along */);
-    fdisp_make(&fdi, FUSE_DESTROY, mp, FUSE_ROOT_ID, context);
+    fuse_dispatcher_init(&fdi, 0 /* no data to send along */);
+    fuse_dispatcher_make(&fdi, FUSE_DESTROY, mp, FUSE_ROOT_ID, context);
 
     fuse_trace_printf("%s: Waiting for reply from FUSE_DESTROY.\n", __FUNCTION__);
-    err = fdisp_wait_answ(&fdi);
+    err = fuse_dispatcher_wait_answer(&fdi);
     fuse_trace_printf("%s:   Reply received.\n", __FUNCTION__);
     if (!err) {
         fuse_ticket_drop(fdi.ticket);
@@ -1003,9 +1003,9 @@ fuse_vfsop_getattr(mount_t mp, struct vfs_attr *attr, vfs_context_t context)
         goto dostatfs;
     }
 
-    fdisp_init(&fdi, 0);
-    fdisp_make(&fdi, FUSE_STATFS, mp, FUSE_ROOT_ID, context);
-    if ((err = fdisp_wait_answ(&fdi))) {
+    fuse_dispatcher_init(&fdi, 0);
+    fuse_dispatcher_make(&fdi, FUSE_STATFS, mp, FUSE_ROOT_ID, context);
+    if ((err = fuse_dispatcher_wait_answer(&fdi))) {
         // If we cannot communicate with the daemon (most likely because
         // it's dead), we still want to portray that we are a bonafide
         // file system so that we can be gracefully unmounted.
@@ -1179,7 +1179,7 @@ fuse_sync_callback(vnode_t vp, void *cargs)
 
     cluster_push(vp, 0);
 
-    fdisp_init(&fdi, 0);
+    fuse_dispatcher_init(&fdi, 0);
     for (type = 0; type < FUFH_MAXTYPE; type++) {
         fufh = &(fvdat->fufh[type]);
         if (FUFH_IS_VALID(fufh)) {
@@ -1294,12 +1294,12 @@ fuse_vfsop_setattr(mount_t mp, struct vfs_attr *fsap, vfs_context_t context)
         }
 
         struct fuse_dispatcher fdi;
-        fdisp_init(&fdi, namelen + 1);
-        fdisp_make_vp(&fdi, FUSE_SETVOLNAME, root_vp, context);
+        fuse_dispatcher_init(&fdi, namelen + 1);
+        fuse_dispatcher_make_vp(&fdi, FUSE_SETVOLNAME, root_vp, context);
         memcpy((char *)fdi.indata, fsap->f_vol_name, namelen);
         ((char *)fdi.indata)[namelen] = '\0';
 
-        if (!(error = fdisp_wait_answ(&fdi))) {
+        if (!(error = fuse_dispatcher_wait_answer(&fdi))) {
             fuse_ticket_drop(fdi.ticket);
         }
 
