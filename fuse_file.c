@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2006-2008 Google. All Rights Reserved.
- * Amit Singh <singh@>
  */
+
 
 #include "fuse.h"
 #include "fuse_file.h"

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2006-2008 Google. All Rights Reserved.
- * Amit Singh <singh@>
  */
+
 
 #ifndef _FUSE_KLUDGES_H_
 #define _FUSE_KLUDGES_H_

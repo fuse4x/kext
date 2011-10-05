@@ -1,11 +1,7 @@
 /*
- * 'rebel' branch modifications:
- *     Copyright (C) 2010 Tuxera. All Rights Reserved.
- */
-
-/*
  * Copyright (C) 2006-2008 Google. All Rights Reserved.
- * Amit Singh <singh@>
+ * Copyright (C) 2010 Tuxera. All Rights Reserved.
+ * Copyright (C) 2011 Anatol Pomozov. All Rights Reserved.
  */
 
 #ifndef _FUSE_VFSOPS_H_

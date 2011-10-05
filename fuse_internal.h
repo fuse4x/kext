@@ -1,12 +1,9 @@
 /*
- * 'rebel' branch modifications:
- *     Copyright (C) 2010 Tuxera. All Rights Reserved.
+ * Copyright (C) 2006-2008 Google. All Rights Reserved.
+ * Copyright (C) 2010 Tuxera. All Rights Reserved.
+ * Copyright (C) 2011 Anatol Pomozov. All Rights Reserved.
  */
 
-/*
- * Copyright (C) 2006-2008 Google. All Rights Reserved.
- * Amit Singh <singh@>
- */
 
 #ifndef _FUSE_INTERNAL_H_
 #define _FUSE_INTERNAL_H_

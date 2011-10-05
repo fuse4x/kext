@@ -1,6 +1,7 @@
 /*
- * Copyright (C) fuse4x.org 2011 All Rights Reserved.
+ * Copyright (C) 2011 Anatol Pomozov. All Rights Reserved.
  */
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>

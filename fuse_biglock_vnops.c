@@ -1,11 +1,7 @@
 /*
  * Copyright (C) 2006-2008 Google. All Rights Reserved.
- * Amit Singh <singh@>
- */
-
-/*
- * 'rebel' branch modifications:
- *     Copyright (C) Tuxera 2010. All Rights Reserved.
+ * Copyright (C) 2010 Tuxera. All Rights Reserved.
+ * Copyright (C) 2011 Anatol Pomozov. All Rights Reserved.
  */
 
 #include <sys/param.h>

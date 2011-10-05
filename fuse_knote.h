@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2007 Google. All Rights Reserved.
- * Amit Singh <singh@>
+ * Copyright (C) 2006-2008 Google. All Rights Reserved.
  */
+
 
 #ifndef _FUSE_KNOTE_H_
 #define _FUSE_KNOTE_H_

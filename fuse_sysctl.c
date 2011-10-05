@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006-2008 Google. All Rights Reserved.
- * Amit Singh <singh@>
+ * Copyright (C) 2011 Anatol Pomozov. All Rights Reserved.
  */
 
 #include <sys/systm.h>
