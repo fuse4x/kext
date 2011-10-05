@@ -196,60 +196,6 @@ fuse_get_mpdata(mount_t mp)
     return (struct fuse_data *)vfs_fsprivate(mp);
 }
 
-static __inline__
-void
-fuse_ms_push(struct fuse_ticket *ftick)
-{
-    STAILQ_INSERT_TAIL(&ftick->data->ms_head, ftick, ms_link);
-}
-
-static __inline__
-void
-fuse_ms_push_head(struct fuse_ticket *ftick)
-{
-    STAILQ_INSERT_HEAD(&ftick->data->ms_head, ftick, ms_link);
-}
-
-static __inline__
-struct fuse_ticket *
-fuse_ms_pop(struct fuse_data *data)
-{
-    struct fuse_ticket *ftick = NULL;
-
-    if ((ftick = STAILQ_FIRST(&data->ms_head))) {
-        STAILQ_REMOVE_HEAD(&data->ms_head, ms_link);
-    }
-
-    return ftick;
-}
-
-static __inline__
-void
-fuse_aw_push(struct fuse_ticket *ftick)
-{
-    TAILQ_INSERT_TAIL(&ftick->data->aw_head, ftick, aw_link);
-}
-
-static __inline__
-void
-fuse_aw_remove(struct fuse_ticket *ftick)
-{
-    TAILQ_REMOVE(&ftick->data->aw_head, ftick, aw_link);
-}
-
-static __inline__
-struct fuse_ticket *
-fuse_aw_pop(struct fuse_data *data)
-{
-    struct fuse_ticket *ftick = NULL;
-
-    if ((ftick = TAILQ_FIRST(&data->aw_head))) {
-        fuse_aw_remove(ftick);
-    }
-
-    return ftick;
-}
-
 struct fuse_ticket *fuse_ticket_fetch(struct fuse_data *data);
 void fuse_ticket_drop(struct fuse_ticket *ftick);
 void fuse_ticket_drop_invalid(struct fuse_ticket *ftick);

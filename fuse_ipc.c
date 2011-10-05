@@ -614,7 +614,7 @@ fuse_insert_callback(struct fuse_ticket *ftick, fuse_callback_t *callback)
     ftick->aw_callback = callback;
 
     fuse_lck_mtx_lock(ftick->data->aw_mtx);
-    fuse_aw_push(ftick);
+    TAILQ_INSERT_TAIL(&ftick->data->aw_head, ftick, aw_link);
     fuse_lck_mtx_unlock(ftick->data->aw_mtx);
 }
 
@@ -632,7 +632,7 @@ fuse_insert_message(struct fuse_ticket *ftick)
     }
 
     fuse_lck_mtx_lock(ftick->data->ms_mtx);
-    fuse_ms_push(ftick);
+    STAILQ_INSERT_TAIL(&ftick->data->ms_head, ftick, ms_link);
     fuse_wakeup_one((caddr_t)ftick->data);
 #if M_FUSE4X_ENABLE_DSELECT
     selwakeup((struct selinfo*)&ftick->data->d_rsel);
@@ -654,7 +654,7 @@ fuse_insert_message_head(struct fuse_ticket *ftick)
     }
 
     fuse_lck_mtx_lock(ftick->data->ms_mtx);
-    fuse_ms_push_head(ftick);
+    STAILQ_INSERT_HEAD(&ftick->data->ms_head, ftick, ms_link);
     fuse_wakeup_one((caddr_t)ftick->data);
 #if M_FUSE4X_ENABLE_DSELECT
     selwakeup((struct selinfo*)&ftick->data->d_rsel);

@@ -58,13 +58,16 @@ fuse_reject_answers(struct fuse_data *data)
     struct fuse_ticket *ftick;
 
     fuse_lck_mtx_lock(data->aw_mtx);
-    while ((ftick = fuse_aw_pop(data))) {
+
+    TAILQ_FOREACH(ftick, &data->aw_head, aw_link) {
         fuse_lck_mtx_lock(ftick->aw_mtx);
         ftick->answered = true;
         ftick->aw_errno = ENOTCONN;
         fuse_wakeup(ftick);
         fuse_lck_mtx_unlock(ftick->aw_mtx);
     }
+    TAILQ_INIT(&data->aw_head); // Remove all tickets from the queue
+
     fuse_lck_mtx_unlock(data->aw_mtx);
 }
 
@@ -263,7 +266,9 @@ again:
         return ENODEV;
     }
 
-    if (!(ftick = fuse_ms_pop(data))) {
+    if ((ftick = STAILQ_FIRST(&data->ms_head))) {
+        STAILQ_REMOVE_HEAD(&data->ms_head, ms_link);
+    } else {
         if (ioflag & FNONBLOCK) {
             fuse_lck_mtx_unlock(data->ms_mtx);
             return EAGAIN;
@@ -387,7 +392,7 @@ fuse_device_write(dev_t dev, uio_t uio, __unused int ioflag)
     TAILQ_FOREACH_SAFE(ftick, &data->aw_head, aw_link, x_ftick) {
         if (ftick->unique == ohead.unique) {
             found = true;
-            fuse_aw_remove(ftick);
+            TAILQ_REMOVE(&ftick->data->aw_head, ftick, aw_link);
             break;
         }
     }
