@@ -177,7 +177,10 @@ fuse_ticket_alloc(struct fuse_data *data)
 
     bzero(ticket, sizeof(struct fuse_ticket));
 
+    fuse_lck_mtx_lock(data->ticket_mtx);
     ticket->unique = data->ticketer++;
+    fuse_lck_mtx_unlock(data->ticket_mtx);
+
     ticket->data = data;
 
     fiov_init(&ticket->ms_fiov, sizeof(struct fuse_in_header));

@@ -123,11 +123,11 @@ struct fuse_data {
     TAILQ_HEAD(, fuse_ticket)  aw_head;
 
     lck_mtx_t                 *ticket_mtx;
-    STAILQ_HEAD(, fuse_ticket) freetickets_head;
-    TAILQ_HEAD(, fuse_ticket)  alltickets_head;
-    uint32_t                   freeticket_counter;
-    uint32_t                   deadticket_counter;
-    uint64_t                   ticketer;
+    STAILQ_HEAD(, fuse_ticket) freetickets_head; // protected by ticket_mtx
+    TAILQ_HEAD(, fuse_ticket)  alltickets_head; // protected by ticket_mtx
+    uint32_t                   freeticket_counter; // protected by ticket_mtx
+    uint32_t                   deadticket_counter; // protected by ticket_mtx
+    uint64_t                   ticketer; // protected by ticket_mtx
 
 #if M_FUSE4X_EXPLICIT_RENAME_LOCK
     lck_rw_t                  *rename_lock;
