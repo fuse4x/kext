@@ -298,7 +298,7 @@ fuse_vnop_close(struct vnop_close_args *ap)
         err = fdisp_wait_answ(&fdi);
 
         if (!err) {
-            fuse_ticket_drop(fdi.tick);
+            fuse_ticket_drop(fdi.ticket);
         } else {
             if (err == ENOSYS) {
                 fuse_clear_implemented(data, FSESS_NOIMPLBIT(FLUSH));
@@ -395,7 +395,7 @@ fuse_vnop_create(struct vnop_create_args *ap)
 
     if (err == ENOSYS) {
         fuse_clear_implemented(data, FSESS_NOIMPLBIT(CREATE));
-        fdip->tick = NULL;
+        fdip->ticket = NULL;
         goto good_old;
     } else if (err) {
         goto undo;
@@ -416,10 +416,10 @@ good_old:
     }
 
 bringup:
-    feo = fdip->answ;
+    feo = fdip->answer;
 
     if ((err = fuse_internal_checkentry(feo, VREG))) { // VBLK/VCHR not allowed
-        fuse_ticket_drop(fdip->tick);
+        fuse_ticket_drop(fdip->ticket);
         goto undo;
     }
 
@@ -439,13 +439,13 @@ bringup:
            fri = fdip->indata;
            fri->fh = fh_id;
            fri->flags = OFLAGS(mode);
-           fuse_insert_callback(fdip->tick, fuse_internal_forget_callback);
-           fuse_insert_message(fdip->tick);
+           fuse_insert_callback(fdip->ticket, fuse_internal_forget_callback);
+           fuse_insert_message(fdip->ticket);
        }
        return err;
     }
 
-    fdip->answ = gone_good_old ? NULL : feo + 1;
+    fdip->answer = gone_good_old ? NULL : feo + 1;
 
     if (!gone_good_old) {
 
@@ -469,7 +469,7 @@ bringup:
 
     cache_purge_negatives(dvp);
 
-    fuse_ticket_drop(fdip->tick);
+    fuse_ticket_drop(fdip->ticket);
 
     FUSE_KNOTE(dvp, NOTE_WRITE);
 
@@ -759,11 +759,11 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
 
     /* XXX: Could check the sanity/volatility of va_mode here. */
 
-    if ((((struct fuse_attr_out *)fdi.answ)->attr.mode & S_IFMT) == 0) {
+    if ((((struct fuse_attr_out *)fdi.answer)->attr.mode & S_IFMT) == 0) {
         return EIO;
     }
 
-    cache_attrs(vp, (struct fuse_attr_out *)fdi.answ);
+    cache_attrs(vp, (struct fuse_attr_out *)fdi.answer);
 
     VTOFUD(vp)->c_flag &= ~C_XTIMES_VALID;
 
@@ -789,11 +789,11 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
          */
 
         struct fuse_vnode_data *fvdat = VTOFUD(vp);
-        off_t new_filesize = ((struct fuse_attr_out *)fdi.answ)->attr.size;
+        off_t new_filesize = ((struct fuse_attr_out *)fdi.answer)->attr.size;
         fvdat->filesize = new_filesize;
     }
 
-    fuse_ticket_drop(fdi.tick);
+    fuse_ticket_drop(fdi.ticket);
 
     if (vnode_vtype(vp) != vap->va_type) {
         if ((vnode_vtype(vp) == VNON) && (vap->va_type != VNON)) {
@@ -910,7 +910,7 @@ fuse_vnop_getxattr(struct vnop_getxattr_args *ap)
     ((char *)fdi.indata)[sizeof(*fgxi) + namelen] = '\0';
 
     if (fgxi->size > FUSE_REASONABLE_XATTRSIZE) {
-        fdi.tick->killed = true;
+        fdi.ticket->killed = true;
     }
 
     err = fdisp_wait_answ(&fdi);
@@ -927,14 +927,14 @@ fuse_vnop_getxattr(struct vnop_getxattr_args *ap)
         if ((user_ssize_t)fdi.iosize > uio_resid(uio)) {
             err = ERANGE;
         } else {
-            err = uiomove((char *)fdi.answ, (int)fdi.iosize, uio);
+            err = uiomove((char *)fdi.answer, (int)fdi.iosize, uio);
         }
     } else {
-        fgxo = (struct fuse_getxattr_out *)fdi.answ;
+        fgxo = (struct fuse_getxattr_out *)fdi.answer;
         *ap->a_size = fgxo->size;
     }
 
-    fuse_ticket_drop(fdi.tick);
+    fuse_ticket_drop(fdi.ticket);
 
     return err;
 }
@@ -1113,10 +1113,10 @@ fuse_vnop_link(struct vnop_link_args *ap)
         return err;
     }
 
-    feo = fdi.answ;
+    feo = fdi.answer;
 
     err = fuse_internal_checkentry(feo, vnode_vtype(vp));
-    fuse_ticket_drop(fdi.tick);
+    fuse_ticket_drop(fdi.ticket);
     fuse_invalidate_attr(tdvp);
     fuse_invalidate_attr(vp);
 
@@ -1196,14 +1196,14 @@ fuse_vnop_listxattr(struct vnop_listxattr_args *ap)
         if ((user_ssize_t)fdi.iosize > uio_resid(uio)) {
             err = ERANGE;
         } else {
-            err = uiomove((char *)fdi.answ, (int)fdi.iosize, uio);
+            err = uiomove((char *)fdi.answer, (int)fdi.iosize, uio);
         }
     } else {
-        fgxo = (struct fuse_getxattr_out *)fdi.answ;
+        fgxo = (struct fuse_getxattr_out *)fdi.answer;
         *ap->a_size = fgxo->size;
     }
 
-    fuse_ticket_drop(fdi.tick);
+    fuse_ticket_drop(fdi.ticket);
 
     return err;
 }
@@ -1336,10 +1336,10 @@ calldaemon:
     lookup_err = fdisp_wait_answ(&fdi);
 
     if ((op == FUSE_LOOKUP) && !lookup_err) { /* lookup call succeeded */
-        nodeid = ((struct fuse_entry_out *)fdi.answ)->nodeid;
-        size = ((struct fuse_entry_out *)fdi.answ)->attr.size;
+        nodeid = ((struct fuse_entry_out *)fdi.answer)->nodeid;
+        size = ((struct fuse_entry_out *)fdi.answer)->attr.size;
         if (!nodeid) {
-            fdi.answ_stat = ENOENT; /* XXX: negative_timeout case */
+            fdi.answer_errno = ENOENT; /* XXX: negative_timeout case */
             lookup_err = ENOENT;
         } else if (nodeid == FUSE_ROOT_ID) {
             lookup_err = EINVAL;
@@ -1353,7 +1353,7 @@ calldaemon:
      */
 
     if (lookup_err &&
-        (!fdi.answ_stat || lookup_err != ENOENT || op != FUSE_LOOKUP)) {
+        (!fdi.answer_errno || lookup_err != ENOENT || op != FUSE_LOOKUP)) {
         return lookup_err;
     }
 
@@ -1394,9 +1394,9 @@ calldaemon:
         struct fuse_attr      *fattr = NULL;
 
         if (op == FUSE_GETATTR) {
-            fattr = &((struct fuse_attr_out *)fdi.answ)->attr;
+            fattr = &((struct fuse_attr_out *)fdi.answer)->attr;
         } else {
-            feo = (struct fuse_entry_out *)fdi.answ;
+            feo = (struct fuse_entry_out *)fdi.answer;
             fattr = &(feo->attr);
         }
 
@@ -1468,19 +1468,19 @@ calldaemon:
             /* ATTR_FUDGE_CASE */
             if (vnode_isreg(*vpp) && fuse_isnoubc(vp)) {
                 VTOFUD(*vpp)->filesize =
-                    ((struct fuse_attr_out *)fdi.answ)->attr.size;
+                    ((struct fuse_attr_out *)fdi.answer)->attr.size;
             }
 
-            cache_attrs(*vpp, (struct fuse_attr_out *)fdi.answ);
+            cache_attrs(*vpp, (struct fuse_attr_out *)fdi.answer);
         } else {
 
             /* ATTR_FUDGE_CASE */
             if (vnode_isreg(*vpp) && fuse_isnoubc(vp)) {
                 VTOFUD(*vpp)->filesize =
-                    ((struct fuse_entry_out *)fdi.answ)->attr.size;
+                    ((struct fuse_entry_out *)fdi.answer)->attr.size;
             }
 
-            cache_attrs(*vpp, (struct fuse_entry_out *)fdi.answ);
+            cache_attrs(*vpp, (struct fuse_entry_out *)fdi.answer);
         }
 
         /*
@@ -1522,7 +1522,7 @@ out:
             }
         }
 
-        fuse_ticket_drop(fdi.tick);
+        fuse_ticket_drop(fdi.ticket);
     }
 
     return err;
@@ -1985,17 +1985,17 @@ ok:
             serr = fdisp_wait_answ(&fdi);
             if (!serr) {
                 /* XXX: Could check the sanity/volatility of va_mode here. */
-                if ((((struct fuse_attr_out*)fdi.answ)->attr.mode & S_IFMT)) {
-                    cache_attrs(vp, (struct fuse_attr_out *)fdi.answ);
+                if ((((struct fuse_attr_out*)fdi.answer)->attr.mode & S_IFMT)) {
+                    cache_attrs(vp, (struct fuse_attr_out *)fdi.answer);
                     off_t new_filesize =
-                        ((struct fuse_attr_out *)fdi.answ)->attr.size;
+                        ((struct fuse_attr_out *)fdi.answer)->attr.size;
                     if (new_filesize > VTOFUD(vp)->filesize) {
                         hint |= NOTE_EXTEND;
                     }
                     VTOFUD(vp)->filesize = new_filesize;
                     ubc_setsize(vp, (off_t)new_filesize);
                 }
-                fuse_ticket_drop(fdi.tick);
+                fuse_ticket_drop(fdi.ticket);
             }
             fufh->fuse_open_flags &= ~FOPEN_PURGE_ATTR;
         }
@@ -2350,7 +2350,7 @@ fuse_vnop_read(struct vnop_read_args *ap)
 #if M_FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(data->biglock);
 #endif
-            err = uiomove(fdi.answ, (int)min(fri->size, fdi.iosize), uio);
+            err = uiomove(fdi.answer, (int)min(fri->size, fdi.iosize), uio);
 #if M_FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif
@@ -2364,7 +2364,7 @@ fuse_vnop_read(struct vnop_read_args *ap)
             }
         }
 
-        fuse_ticket_drop(fdi.tick);
+        fuse_ticket_drop(fdi.ticket);
 
     } /* direct_io */
 
@@ -2497,7 +2497,7 @@ fuse_vnop_readlink(struct vnop_readlink_args *ap)
         return err;
     }
 
-    if (((char *)fdi.answ)[0] == '/' &&
+    if (((char *)fdi.answer)[0] == '/' &&
         fuse_get_mpdata(vnode_mount(vp))->dataflags & FSESS_JAIL_SYMLINKS) {
             char *mpth = vfs_statfs(vnode_mount(vp))->f_mntonname;
             err = uiomove(mpth, (int)strlen(mpth), uio);
@@ -2507,13 +2507,13 @@ fuse_vnop_readlink(struct vnop_readlink_args *ap)
 #if M_FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_unlock(data->biglock);
 #endif
-        err = uiomove(fdi.answ, (int)fdi.iosize, uio);
+        err = uiomove(fdi.answer, (int)fdi.iosize, uio);
 #if M_FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_lock(data->biglock);
 #endif
     }
 
-    fuse_ticket_drop(fdi.tick);
+    fuse_ticket_drop(fdi.ticket);
     fuse_invalidate_attr(vp);
 
     return err;
@@ -2620,7 +2620,7 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
 
     if ((!fuse_isdeadfs(vp)) && (fvdat->nlookup)) {
         struct fuse_dispatcher fdi;
-        fdi.tick = NULL;
+        fdi.ticket = NULL;
         fuse_internal_forget_send(vnode_mount(vp), context, VTOI(vp),
                                   fvdat->nlookup, &fdi);
     }
@@ -2759,7 +2759,7 @@ fuse_vnop_removexattr(struct vnop_removexattr_args *ap)
 
     err = fdisp_wait_answ(&fdi);
     if (!err) {
-        fuse_ticket_drop(fdi.tick);
+        fuse_ticket_drop(fdi.ticket);
         VTOFUD(vp)->c_flag |= C_TOUCH_CHGTIME;
         fuse_invalidate_attr(vp);
         FUSE_KNOTE(vp, NOTE_ATTRIB);
@@ -3025,7 +3025,7 @@ fuse_vnop_setattr(struct vnop_setattr_args *ap)
         return err;
     }
 
-    vtyp = IFTOVT(((struct fuse_attr_out *)fdi.answ)->attr.mode);
+    vtyp = IFTOVT(((struct fuse_attr_out *)fdi.answer)->attr.mode);
 
     if (vnode_vtype(vp) != vtyp) {
         if ((vnode_vtype(vp) == VNON) && (vtyp != VNON)) {
@@ -3056,7 +3056,7 @@ fuse_vnop_setattr(struct vnop_setattr_args *ap)
         if (sizechanged) {
             fuse_invalidate_attr(vp);
         } else {
-            cache_attrs(vp, (struct fuse_attr_out *)fdi.answ);
+            cache_attrs(vp, (struct fuse_attr_out *)fdi.answer);
             if (fsai->valid & FATTR_BKUPTIME || fsai->valid & FATTR_CRTIME) {
                 VTOFUD(vp)->c_flag &= ~C_XTIMES_VALID;
             }
@@ -3064,7 +3064,7 @@ fuse_vnop_setattr(struct vnop_setattr_args *ap)
     }
 
 out:
-    fuse_ticket_drop(fdi.tick);
+    fuse_ticket_drop(fdi.ticket);
     if (!err && sizechanged) {
         VTOFUD(vp)->filesize = newsize;
         ubc_setsize(vp, (off_t)newsize);
@@ -3177,7 +3177,7 @@ fuse_vnop_setxattr(struct vnop_setxattr_args *ap)
     fsxi->position = (uint32_t)saved_offset;
 
     if (attrsize > FUSE_REASONABLE_XATTRSIZE) {
-        fdi.tick->killed = true;
+        fdi.ticket->killed = true;
     }
 
     memcpy((char *)fdi.indata + sizeof(*fsxi), name, namelen);
@@ -3196,7 +3196,7 @@ fuse_vnop_setxattr(struct vnop_setxattr_args *ap)
     }
 
     if (!err) {
-        fuse_ticket_drop(fdi.tick);
+        fuse_ticket_drop(fdi.ticket);
         fuse_invalidate_attr(vp);
         FUSE_KNOTE(vp, NOTE_ATTRIB);
         VTOFUD(vp)->c_flag |= C_TOUCH_CHGTIME;
@@ -3445,7 +3445,7 @@ fuse_vnop_write(struct vnop_write_args *ap)
                 return error;
             }
 
-            fwo = (struct fuse_write_out *)fdi.answ;
+            fwo = (struct fuse_write_out *)fdi.answer;
 
             diff = chunksize - fwo->size;
             if (diff < 0) {
@@ -3462,7 +3462,7 @@ fuse_vnop_write(struct vnop_write_args *ap)
             fuse_invalidate_attr(vp);
         }
 
-        fuse_ticket_drop(fdi.tick);
+        fuse_ticket_drop(fdi.ticket);
 
         return error;
 

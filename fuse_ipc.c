@@ -911,20 +911,20 @@ fdisp_make(struct fuse_dispatcher *fdip,
 {
     struct fuse_data *data = fuse_get_mpdata(mp);
 
-    if (fdip->tick) {
-        fticket_refresh(fdip->tick);
+    if (fdip->ticket) {
+        fticket_refresh(fdip->ticket);
     } else {
-        fdip->tick = fuse_ticket_fetch(data);
+        fdip->ticket = fuse_ticket_fetch(data);
     }
 
-    if (fdip->tick == 0) {
+    if (fdip->ticket == 0) {
         panic("fuse4x: fuse_ticket_fetch() failed");
     }
 
-    FUSE_DIMALLOC(&fdip->tick->ms_fiov, fdip->finh,
+    FUSE_DIMALLOC(&fdip->ticket->ms_fiov, fdip->finh,
                   fdip->indata, fdip->iosize);
 
-    fuse_setup_ihead(fdip->finh, fdip->tick, nid, op, fdip->iosize, context);
+    fuse_setup_ihead(fdip->finh, fdip->ticket, nid, op, fdip->iosize, context);
 }
 
 int
@@ -939,30 +939,30 @@ fdisp_make_canfail(struct fuse_dispatcher *fdip,
 
     struct fuse_data *data = fuse_get_mpdata(mp);
 
-    if (fdip->tick) {
-        fticket_refresh(fdip->tick);
+    if (fdip->ticket) {
+        fticket_refresh(fdip->ticket);
     } else {
-        fdip->tick = fuse_ticket_fetch(data);
+        fdip->ticket = fuse_ticket_fetch(data);
     }
 
-    if (fdip->tick == 0) {
+    if (fdip->ticket == 0) {
         panic("fuse4x: fuse_ticket_fetch() failed");
     }
 
-    fiov = &fdip->tick->ms_fiov;
+    fiov = &fdip->ticket->ms_fiov;
 
     failed = fiov_adjust_canfail(fiov,
                                  sizeof(struct fuse_in_header) + fdip->iosize);
 
     if (failed) {
-        fuse_ticket_kill(fdip->tick);
+        fuse_ticket_kill(fdip->ticket);
         return failed;
     }
 
     fdip->finh = fiov->base;
     fdip->indata = (char *)(fiov->base) + sizeof(struct fuse_in_header);
 
-    fuse_setup_ihead(fdip->finh, fdip->tick, nid, op, fdip->iosize, context);
+    fuse_setup_ihead(fdip->finh, fdip->ticket, nid, op, fdip->iosize, context);
 
     return 0;
 }
@@ -991,28 +991,28 @@ fdisp_wait_answ(struct fuse_dispatcher *fdip)
 {
     int err = 0;
 
-    fdip->answ_stat = 0;
-    fuse_insert_callback(fdip->tick, fuse_standard_callback);
-    fuse_insert_message(fdip->tick);
+    fdip->answer_errno = 0;
+    fuse_insert_callback(fdip->ticket, fuse_standard_callback);
+    fuse_insert_message(fdip->ticket);
 
-    if ((err = fticket_wait_answer(fdip->tick))) { /* interrupted */
-        fuse_lck_mtx_lock(fdip->tick->aw_mtx);
+    if ((err = fticket_wait_answer(fdip->ticket))) { /* interrupted */
+        fuse_lck_mtx_lock(fdip->ticket->aw_mtx);
 
-        if (fdip->tick->answered) {
+        if (fdip->ticket->answered) {
             /* IPC: already answered */
-            fuse_lck_mtx_unlock(fdip->tick->aw_mtx);
+            fuse_lck_mtx_unlock(fdip->ticket->aw_mtx);
             goto out;
         } else {
             /* IPC: explicitly setting to answered */
-            fdip->tick->answered = true;
-            fuse_lck_mtx_unlock(fdip->tick->aw_mtx);
+            fdip->ticket->answered = true;
+            fuse_lck_mtx_unlock(fdip->ticket->aw_mtx);
             return err;
         }
     }
 
     /* IPC was NOT interrupt */
 
-    if (fdip->tick->aw_errno) {
+    if (fdip->ticket->aw_errno) {
 
         /* Explicitly EIO-ing */
 
@@ -1020,21 +1020,21 @@ fdisp_wait_answ(struct fuse_dispatcher *fdip)
         goto out;
     }
 
-    if ((err = fdip->tick->aw_ohead.error)) {
+    if ((err = fdip->ticket->aw_ohead.error)) {
 
         /* Explicitly setting status */
 
-        fdip->answ_stat = err;
+        fdip->answer_errno = err;
         goto out;
     }
 
-    fdip->answ = fticket_resp(fdip->tick)->base;
-    fdip->iosize = fticket_resp(fdip->tick)->len;
+    fdip->answer = fticket_resp(fdip->ticket)->base;
+    fdip->iosize = fticket_resp(fdip->ticket)->len;
 
     return 0;
 
 out:
-    fuse_ticket_drop(fdip->tick);
+    fuse_ticket_drop(fdip->ticket);
 
     return err;
 }

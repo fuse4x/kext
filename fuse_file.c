@@ -106,7 +106,7 @@ fuse_filehandle_get(vnode_t       vp,
     }
     OSIncrementAtomic((SInt32 *)&fuse_fh_current);
 
-    foo = fdi.answ;
+    foo = fdi.answer;
 
     fufh->fh_id = foo->fh;
     fufh->open_count = 1;
@@ -114,7 +114,7 @@ fuse_filehandle_get(vnode_t       vp,
     fufh->fuse_open_flags = foo->open_flags;
     fufh->aux_count = 0;
 
-    fuse_ticket_drop(fdi.tick);
+    fuse_ticket_drop(fdi.ticket);
 
     return 0;
 }
@@ -163,11 +163,11 @@ fuse_filehandle_put(vnode_t vp, vfs_context_t context, fufh_type_t fufh_type)
         if ((err = fdisp_wait_answ(&fdi))) {
             goto out;
         } else {
-            fuse_ticket_drop(fdi.tick);
+            fuse_ticket_drop(fdi.ticket);
         }
     } else {
-        fuse_insert_callback(fdi.tick, NULL);
-        fuse_insert_message(fdi.tick);
+        fuse_insert_callback(fdi.ticket, NULL);
+        fuse_insert_message(fdi.ticket);
     }
 
 out:

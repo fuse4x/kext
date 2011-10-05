@@ -664,7 +664,7 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
     err = fdisp_wait_answ(&fdi);
     fuse_trace_printf("%s:   Reply received.\n", __FUNCTION__);
     if (!err) {
-        fuse_ticket_drop(fdi.tick);
+        fuse_ticket_drop(fdi.ticket);
     }
 
     /*
@@ -1023,7 +1023,7 @@ dostatfs:
         bzero(&faked, sizeof(faked));
         fsfo = &faked;
     } else {
-        fsfo = fdi.answ;
+        fsfo = fdi.answer;
     }
 
     if (fsfo->st.bsize == 0) {
@@ -1135,7 +1135,7 @@ dostatfs:
     VFSATTR_RETURN(attr, f_carbon_fsid, 0);
 
     if (!faking)
-        fuse_ticket_drop(fdi.tick);
+        fuse_ticket_drop(fdi.ticket);
 
     return 0;
 }
@@ -1300,7 +1300,7 @@ fuse_vfsop_setattr(mount_t mp, struct vfs_attr *fsap, vfs_context_t context)
         ((char *)fdi.indata)[namelen] = '\0';
 
         if (!(error = fdisp_wait_answ(&fdi))) {
-            fuse_ticket_drop(fdi.tick);
+            fuse_ticket_drop(fdi.ticket);
         }
 
         (void)vnode_put(root_vp);

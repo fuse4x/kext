@@ -210,14 +210,14 @@ bool fuse_data_kill(struct fuse_data *data);
 
 struct fuse_dispatcher {
 
-    struct fuse_ticket    *tick;
+    struct fuse_ticket    *ticket;
     struct fuse_in_header *finh;
 
     void    *indata;
     size_t   iosize;
     uint64_t nodeid;
-    int      answ_stat;
-    void    *answ;
+    int      answer_errno;
+    void    *answer;
 };
 
 static __inline__
@@ -225,7 +225,7 @@ void
 fdisp_init(struct fuse_dispatcher *fdisp, size_t iosize)
 {
     fdisp->iosize = iosize;
-    fdisp->tick = NULL;
+    fdisp->ticket = NULL;
 }
 
 void fdisp_make(struct fuse_dispatcher *fdip, enum fuse_opcode op,

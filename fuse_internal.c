@@ -143,7 +143,7 @@ fuse_internal_access(vnode_t                   vp,
     fai->mask |= mask;
 
     if (!(err = fdisp_wait_answ(&fdi))) {
-        fuse_ticket_drop(fdi.tick);
+        fuse_ticket_drop(fdi.ticket);
     }
 
     if (err == ENOSYS) {
@@ -232,7 +232,7 @@ fuse_internal_exchange(vnode_t       fvp,
               UBC_PUSHALL | UBC_INVALIDATE | UBC_SYNC);
 
     if (!(err = fdisp_wait_answ(&fdi))) {
-        fuse_ticket_drop(fdi.tick);
+        fuse_ticket_drop(fdi.ticket);
     }
 
     if (err == 0) {
@@ -330,7 +330,7 @@ fuse_internal_fsync(vnode_t                 vp,
     fuse_trace_printf_func();
 
     fdip->iosize = sizeof(*ffsi);
-    fdip->tick = NULL;
+    fdip->ticket = NULL;
     if (vnode_isdir(vp)) {
         op = FUSE_FSYNCDIR;
     }
@@ -345,20 +345,20 @@ fuse_internal_fsync(vnode_t                 vp,
         if ((err = fdisp_wait_answ(fdip))) {
             if (err == ENOSYS) {
                 if (op == FUSE_FSYNC) {
-                    fuse_clear_implemented(fdip->tick->data,
+                    fuse_clear_implemented(fdip->ticket->data,
                                            FSESS_NOIMPLBIT(FSYNC));
                 } else if (op == FUSE_FSYNCDIR) {
-                    fuse_clear_implemented(fdip->tick->data,
+                    fuse_clear_implemented(fdip->ticket->data,
                                            FSESS_NOIMPLBIT(FSYNCDIR));
                 }
             }
             goto out;
         } else {
-            fuse_ticket_drop(fdip->tick);
+            fuse_ticket_drop(fdip->ticket);
         }
     } else {
-        fuse_insert_callback(fdip->tick, fuse_internal_fsync_callback);
-        fuse_insert_message(fdip->tick);
+        fuse_insert_callback(fdip->ticket, fuse_internal_fsync_callback);
+        fuse_insert_message(fdip->ticket);
     }
 
 out:
@@ -410,7 +410,7 @@ fuse_internal_loadxtimes(vnode_t vp, struct vnode_attr *out_vap,
         goto fake;
     }
 
-    fgxo = (struct fuse_getxtimes_out *)fdi.answ;
+    fgxo = (struct fuse_getxtimes_out *)fdi.answer;
 
     t.tv_sec = (time_t)fgxo->bkuptime; /* XXX: truncation */
     t.tv_nsec = fgxo->bkuptimensec;
@@ -422,7 +422,7 @@ fuse_internal_loadxtimes(vnode_t vp, struct vnode_attr *out_vap,
     VATTR_RETURN(in_vap, va_create_time, t);
     VATTR_RETURN(out_vap, va_create_time, t);
 
-    fuse_ticket_drop(fdi.tick);
+    fuse_ticket_drop(fdi.ticket);
 
     VTOFUD(vp)->c_flag |= C_XTIMES_VALID;
 
@@ -637,7 +637,7 @@ fuse_internal_readdir(vnode_t                 vp,
         if ((err = fuse_internal_readdir_processdata(vp,
                                                      uio,
                                                      fri->size,
-                                                     fdi.answ,
+                                                     fdi.answer,
                                                      fdi.iosize,
                                                      cookediov,
                                                      numdirent))) {
@@ -647,7 +647,7 @@ fuse_internal_readdir(vnode_t                 vp,
 
 /* done: */
 
-    fuse_ticket_drop(fdi.tick);
+    fuse_ticket_drop(fdi.ticket);
 
 out:
     return ((err == -1) ? 0 : err);
@@ -816,7 +816,7 @@ fuse_internal_remove(vnode_t               dvp,
     }
 
     if (!(err = fdisp_wait_answ(&fdi))) {
-        fuse_ticket_drop(fdi.tick);
+        fuse_ticket_drop(fdi.ticket);
     }
 
     fuse_invalidate_attr(dvp);
@@ -882,7 +882,7 @@ fuse_internal_rename(vnode_t               fdvp,
                          tcnp->cn_namelen + 1] = '\0';
 
     if (!(err = fdisp_wait_answ(&fdi))) {
-        fuse_ticket_drop(fdi.tick);
+        fuse_ticket_drop(fdi.ticket);
     }
 
     if (err == 0) {
@@ -1106,15 +1106,15 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
 
             fri->offset = offset;
             fri->size = (typeof(fri->size))chunksize;
-            fdi.tick->aw_type = FT_A_BUF;
-            fdi.tick->aw_bufdata = bufdat;
+            fdi.ticket->aw_type = FT_A_BUF;
+            fdi.ticket->aw_bufdata = bufdat;
 
             if ((err = fdisp_wait_answ(&fdi))) {
                 /* There was a problem with reading. */
                 goto out;
             }
 
-            respsize = fdi.tick->aw_bufsize;
+            respsize = fdi.ticket->aw_bufsize;
 
             if (respsize < 0) { /* Cannot really happen... */
                 err = EIO;
@@ -1175,9 +1175,9 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
             fwi->offset = offset;
             fwi->size = (typeof(fwi->size))chunksize;
 
-            fdi.tick->ms_type = FT_M_BUF;
-            fdi.tick->ms_bufdata = bufdat;
-            fdi.tick->ms_bufsize = chunksize;
+            fdi.ticket->ms_type = FT_M_BUF;
+            fdi.ticket->ms_bufdata = bufdat;
+            fdi.ticket->ms_bufsize = chunksize;
 
             /* About to write <chunksize> at <offset> */
 
@@ -1186,7 +1186,7 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
                 break;
             }
 
-            fwo = fdi.answ;
+            fwo = fdi.answer;
             diff = chunksize - fwo->size;
             if (diff < 0) {
                 err = EINVAL;
@@ -1204,8 +1204,8 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
         }
     }
 
-    if (fdi.tick) {
-        fuse_ticket_drop(fdi.tick);
+    if (fdi.ticket) {
+        fuse_ticket_drop(fdi.ticket);
     } else {
         /* No ticket upon leaving */
     }
@@ -1341,7 +1341,7 @@ fuse_internal_newentry_core(vnode_t                 dvp,
         return err;
     }
 
-    feo = fdip->answ;
+    feo = fdip->answer;
 
     if ((err = fuse_internal_checkentry(feo, vtyp))) {
         goto out;
@@ -1356,7 +1356,7 @@ fuse_internal_newentry_core(vnode_t                 dvp,
     cache_attrs(*vpp, feo);
 
 out:
-    fuse_ticket_drop(fdip->tick);
+    fuse_ticket_drop(fdip->ticket);
 
     return err;
 }
@@ -1397,7 +1397,7 @@ fuse_internal_forget_callback(struct fuse_ticket *ftick, __unused uio_t uio)
 {
     struct fuse_dispatcher fdi;
 
-    fdi.tick = ftick;
+    fdi.ticket = ftick;
 
     fuse_internal_forget_send(ftick->data->mp, NULL,
         ((struct fuse_in_header *)ftick->ms_fiov.base)->nodeid, 1, &fdi);
@@ -1426,8 +1426,8 @@ fuse_internal_forget_send(mount_t                 mp,
     ffi = fdip->indata;
     ffi->nlookup = nlookup;
 
-    fdip->tick->invalid = true;
-    fuse_insert_message(fdip->tick);
+    fdip->ticket->invalid = true;
+    fuse_insert_message(fdip->ticket);
 }
 
 __private_extern__
@@ -1437,13 +1437,13 @@ fuse_internal_interrupt_send(struct fuse_ticket *ftick)
     struct fuse_dispatcher fdi;
     struct fuse_interrupt_in *fii;
 
-    fdi.tick = ftick;
+    fdi.ticket = ftick;
     fdisp_init(&fdi, sizeof(*fii));
     fdisp_make(&fdi, FUSE_INTERRUPT, ftick->data->mp, (uint64_t)0, NULL);
     fii = fdi.indata;
     fii->unique = ftick->unique;
-    fdi.tick->invalid = true;
-    fuse_insert_message(fdi.tick);
+    fdi.ticket->invalid = true;
+    fuse_insert_message(fdi.ticket);
 }
 
 __private_extern__
@@ -1566,8 +1566,8 @@ fuse_send_init(struct fuse_data *data, vfs_context_t context)
     fiii->max_readahead = data->iosize * 16;
     fiii->flags = 0;
 
-    fuse_insert_callback(fdi.tick, fuse_internal_init_callback);
-    fuse_insert_message(fdi.tick);
+    fuse_insert_callback(fdi.ticket, fuse_internal_init_callback);
+    fuse_insert_message(fdi.ticket);
 
     return 0;
 }
