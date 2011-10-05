@@ -1488,7 +1488,7 @@ fuse_internal_vnode_disappear(vnode_t vp, vfs_context_t context, int how)
 
 __private_extern__
 int
-fuse_internal_init_handler(struct fuse_ticket *ftick, __unused uio_t uio)
+fuse_internal_init_callback(struct fuse_ticket *ftick, __unused uio_t uio)
 {
     int err = 0;
     struct fuse_init_out *fiio;
@@ -1566,7 +1566,7 @@ fuse_send_init(struct fuse_data *data, vfs_context_t context)
     fiii->max_readahead = data->iosize * 16;
     fiii->flags = 0;
 
-    fuse_insert_callback(fdi.tick, fuse_internal_init_handler);
+    fuse_insert_callback(fdi.tick, fuse_internal_init_callback);
     fuse_insert_message(fdi.tick);
 
     return 0;

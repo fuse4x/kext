@@ -56,7 +56,7 @@ do {                                                   \
 struct fuse_ticket;
 struct fuse_data;
 
-typedef int fuse_handler_t(struct fuse_ticket *ftick, uio_t uio);
+typedef int fuse_callback_t(struct fuse_ticket *ftick, uio_t uio);
 
 struct fuse_ticket {
     uint64_t                     unique;
@@ -84,7 +84,7 @@ struct fuse_ticket {
     struct fuse_out_header       aw_ohead;
     int                          aw_errno;
     lck_mtx_t                   *aw_mtx;
-    fuse_handler_t              *aw_handler;
+    fuse_callback_t             *aw_callback;
     TAILQ_ENTRY(fuse_ticket)     aw_link;
 };
 
@@ -254,7 +254,7 @@ struct fuse_ticket *fuse_ticket_fetch(struct fuse_data *data);
 void fuse_ticket_drop(struct fuse_ticket *ftick);
 void fuse_ticket_drop_invalid(struct fuse_ticket *ftick);
 void fuse_ticket_kill(struct fuse_ticket *ftick);
-void fuse_insert_callback(struct fuse_ticket *ftick, fuse_handler_t *handler);
+void fuse_insert_callback(struct fuse_ticket *ftick, fuse_callback_t *callback);
 void fuse_insert_message(struct fuse_ticket *ftick);
 void fuse_insert_message_head(struct fuse_ticket *ftick);
 

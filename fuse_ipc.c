@@ -40,7 +40,7 @@ static __inline__ void fuse_setup_ihead(struct fuse_in_header *ihead,
                                         size_t                 blen,
                                         vfs_context_t          context);
 
-static fuse_handler_t  fuse_standard_handler;
+static fuse_callback_t  fuse_standard_callback;
 
 
 static __inline__
@@ -605,13 +605,13 @@ fuse_ticket_drop_invalid(struct fuse_ticket *ftick)
 }
 
 void
-fuse_insert_callback(struct fuse_ticket *ftick, fuse_handler_t *handler)
+fuse_insert_callback(struct fuse_ticket *ftick, fuse_callback_t *callback)
 {
     if (ftick->data->dead) {
         return;
     }
 
-    ftick->aw_handler = handler;
+    ftick->aw_callback = callback;
 
     fuse_lck_mtx_lock(ftick->data->aw_mtx);
     fuse_aw_push(ftick);
@@ -680,7 +680,7 @@ fuse_body_audit(struct fuse_ticket *ftick, size_t blen)
         break;
 
     case FUSE_FORGET:
-        panic("fuse4x: a handler has been intalled for FUSE_FORGET");
+        panic("fuse4x: a callback has been intalled for FUSE_FORGET");
         break;
 
     case FUSE_GETATTR:
@@ -876,7 +876,7 @@ fuse_setup_ihead(struct fuse_in_header *ihead,
 }
 
 static int
-fuse_standard_handler(struct fuse_ticket *ftick, uio_t uio)
+fuse_standard_callback(struct fuse_ticket *ftick, uio_t uio)
 {
     int err = 0;
     bool dropflag = false;
@@ -992,7 +992,7 @@ fdisp_wait_answ(struct fuse_dispatcher *fdip)
     int err = 0;
 
     fdip->answ_stat = 0;
-    fuse_insert_callback(fdip->tick, fuse_standard_handler);
+    fuse_insert_callback(fdip->tick, fuse_standard_callback);
     fuse_insert_message(fdip->tick);
 
     if ((err = fticket_wait_answer(fdip->tick))) { /* interrupted */

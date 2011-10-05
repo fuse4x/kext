@@ -395,15 +395,15 @@ fuse_device_write(dev_t dev, uio_t uio, __unused int ioflag)
     fuse_lck_mtx_unlock(data->aw_mtx);
 
     if (found) {
-        if (ftick->aw_handler) {
+        if (ftick->aw_callback) {
             memcpy(&ftick->aw_ohead, &ohead, sizeof(ohead));
-            err = ftick->aw_handler(ftick, uio);
+            err = ftick->aw_callback(ftick, uio);
         } else {
             fuse_ticket_drop(ftick);
             return err;
         }
     } else {
-        /* ticket has no response handler */
+        /* ticket has no response callback */
     }
 
     return err;
