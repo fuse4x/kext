@@ -294,21 +294,21 @@ fuse_internal_exchange(vnode_t       fvp,
 
 __private_extern__
 int
-fuse_internal_fsync_callback(struct fuse_ticket *ftick, __unused uio_t uio)
+fuse_internal_fsync_callback(struct fuse_ticket *ticket, __unused uio_t uio)
 {
     fuse_trace_printf_func();
 
-    if (ftick->aw_ohead.error == ENOSYS) {
-        if (fticket_opcode(ftick) == FUSE_FSYNC) {
-            fuse_clear_implemented(ftick->data, FSESS_NOIMPLBIT(FSYNC));
-        } else if (fticket_opcode(ftick) == FUSE_FSYNCDIR) {
-            fuse_clear_implemented(ftick->data, FSESS_NOIMPLBIT(FSYNCDIR));
+    if (ticket->aw_ohead.error == ENOSYS) {
+        if (fuse_ticket_opcode(ticket) == FUSE_FSYNC) {
+            fuse_clear_implemented(ticket->data, FSESS_NOIMPLBIT(FSYNC));
+        } else if (fuse_ticket_opcode(ticket) == FUSE_FSYNCDIR) {
+            fuse_clear_implemented(ticket->data, FSESS_NOIMPLBIT(FSYNCDIR));
         } else {
             log("fuse4x: unexpected opcode in sync handling\n");
         }
     }
 
-    fuse_ticket_drop(ftick);
+    fuse_ticket_drop(ticket);
 
     return 0;
 }
@@ -1393,14 +1393,14 @@ fuse_internal_newentry(vnode_t               dvp,
 
 __private_extern__
 int
-fuse_internal_forget_callback(struct fuse_ticket *ftick, __unused uio_t uio)
+fuse_internal_forget_callback(struct fuse_ticket *ticket, __unused uio_t uio)
 {
     struct fuse_dispatcher fdi;
 
-    fdi.ticket = ftick;
+    fdi.ticket = ticket;
 
-    fuse_internal_forget_send(ftick->data->mp, NULL,
-        ((struct fuse_in_header *)ftick->ms_fiov.base)->nodeid, 1, &fdi);
+    fuse_internal_forget_send(ticket->data->mp, NULL,
+        ((struct fuse_in_header *)ticket->ms_fiov.base)->nodeid, 1, &fdi);
 
     return 0;
 }
@@ -1432,16 +1432,16 @@ fuse_internal_forget_send(mount_t                 mp,
 
 __private_extern__
 void
-fuse_internal_interrupt_send(struct fuse_ticket *ftick)
+fuse_internal_interrupt_send(struct fuse_ticket *ticket)
 {
     struct fuse_dispatcher fdi;
     struct fuse_interrupt_in *fii;
 
-    fdi.ticket = ftick;
+    fdi.ticket = ticket;
     fuse_dispatcher_init(&fdi, sizeof(*fii));
-    fuse_dispatcher_make(&fdi, FUSE_INTERRUPT, ftick->data->mp, (uint64_t)0, NULL);
+    fuse_dispatcher_make(&fdi, FUSE_INTERRUPT, ticket->data->mp, (uint64_t)0, NULL);
     fii = fdi.indata;
-    fii->unique = ftick->unique;
+    fii->unique = ticket->unique;
     fdi.ticket->invalid = true;
     fuse_insert_message(fdi.ticket);
 }
@@ -1488,26 +1488,26 @@ fuse_internal_vnode_disappear(vnode_t vp, vfs_context_t context, int how)
 
 __private_extern__
 int
-fuse_internal_init_callback(struct fuse_ticket *ftick, __unused uio_t uio)
+fuse_internal_init_callback(struct fuse_ticket *ticket, __unused uio_t uio)
 {
     int err = 0;
     struct fuse_init_out *fiio;
-    struct fuse_data *data = ftick->data;
+    struct fuse_data *data = ticket->data;
 
     fuse_trace_printf_func();
 
-    if ((err = ftick->aw_ohead.error)) {
+    if ((err = ticket->aw_ohead.error)) {
         log("fuse4x: user-space initialization failed (%d)\n", err);
         goto out;
     }
 
-    err = fticket_pull(ftick, uio);
+    err = fuse_ticket_pull(ticket, uio);
     if (err) {
         log("fuse4x: cannot pull ticket\n");
         goto out;
     }
 
-    fiio = fticket_resp(ftick)->base;
+    fiio = fuse_ticket_resp(ticket)->base;
 
     if ((fiio->major < FUSE_KERNEL_VERSION) ||
         (fiio->minor < FUSE_KERNEL_MINOR_VERSION)) {
@@ -1518,7 +1518,7 @@ fuse_internal_init_callback(struct fuse_ticket *ftick, __unused uio_t uio)
         goto out;
     }
 
-    if (fticket_resp(ftick)->len == sizeof(struct fuse_init_out)) {
+    if (fuse_ticket_resp(ticket)->len == sizeof(struct fuse_init_out)) {
         data->max_write = fiio->max_write;
     } else {
         err = EINVAL;
@@ -1537,7 +1537,7 @@ fuse_internal_init_callback(struct fuse_ticket *ftick, __unused uio_t uio)
     }
 
 out:
-    fuse_ticket_drop(ftick);
+    fuse_ticket_drop(ticket);
 
     if (err) {
         fuse_data_kill(data);

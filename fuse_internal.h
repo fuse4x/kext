@@ -690,7 +690,7 @@ fuse_internal_fsync(vnode_t                 vp,
                     void                   *param);
 
 int
-fuse_internal_fsync_callback(struct fuse_ticket *ftick, uio_t uio);
+fuse_internal_fsync_callback(struct fuse_ticket *ticket, uio_t uio);
 
 
 /* readdir */
@@ -824,7 +824,7 @@ fuse_internal_newentry_core(vnode_t                 dvp,
 /* entity destruction */
 
 int
-fuse_internal_forget_callback(struct fuse_ticket *ftick, uio_t uio);
+fuse_internal_forget_callback(struct fuse_ticket *ticket, uio_t uio);
 
 void
 fuse_internal_forget_send(mount_t                 mp,
@@ -834,7 +834,7 @@ fuse_internal_forget_send(mount_t                 mp,
                           struct fuse_dispatcher *dispatcher);
 
 void
-fuse_internal_interrupt_send(struct fuse_ticket *ftick);
+fuse_internal_interrupt_send(struct fuse_ticket *ticket);
 
 enum {
     REVOKE_NONE = 0,
@@ -844,7 +844,7 @@ enum {
 
 /* fuse start/stop */
 
-int fuse_internal_init_callback(struct fuse_ticket *ftick, uio_t uio);
+int fuse_internal_init_callback(struct fuse_ticket *ticket, uio_t uio);
 int fuse_send_init(struct fuse_data *data, vfs_context_t context);
 
 /* other */

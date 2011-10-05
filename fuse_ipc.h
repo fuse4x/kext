@@ -56,7 +56,7 @@ do {                                                   \
 struct fuse_ticket;
 struct fuse_data;
 
-typedef int fuse_callback_t(struct fuse_ticket *ftick, uio_t uio);
+typedef int fuse_callback_t(struct fuse_ticket *ticket, uio_t uio);
 
 struct fuse_ticket {
     uint64_t                     unique;
@@ -90,20 +90,20 @@ struct fuse_ticket {
 
 static __inline__
 struct fuse_iov *
-fticket_resp(struct fuse_ticket *ftick)
+fuse_ticket_resp(struct fuse_ticket *ticket)
 {
-    return &ftick->aw_fiov;
+    return &ticket->aw_fiov;
 }
 
 static __inline__
 enum fuse_opcode
-fticket_opcode(struct fuse_ticket *ftick)
+fuse_ticket_opcode(struct fuse_ticket *ticket)
 {
-    return (((struct fuse_in_header *)(ftick->ms_fiov.base))->opcode);
+    return (((struct fuse_in_header *)(ticket->ms_fiov.base))->opcode);
 }
 
 
-int fticket_pull(struct fuse_ticket *ftick, uio_t uio);
+int fuse_ticket_pull(struct fuse_ticket *ticket, uio_t uio);
 
 struct fuse_data {
     fuse_device_t              fdev;
@@ -197,12 +197,12 @@ fuse_get_mpdata(mount_t mp)
 }
 
 struct fuse_ticket *fuse_ticket_fetch(struct fuse_data *data);
-void fuse_ticket_drop(struct fuse_ticket *ftick);
-void fuse_ticket_drop_invalid(struct fuse_ticket *ftick);
-void fuse_ticket_kill(struct fuse_ticket *ftick);
-void fuse_insert_callback(struct fuse_ticket *ftick, fuse_callback_t *callback);
-void fuse_insert_message(struct fuse_ticket *ftick);
-void fuse_insert_message_head(struct fuse_ticket *ftick);
+void fuse_ticket_drop(struct fuse_ticket *ticket);
+void fuse_ticket_drop_invalid(struct fuse_ticket *ticket);
+void fuse_ticket_kill(struct fuse_ticket *ticket);
+void fuse_insert_callback(struct fuse_ticket *ticket, fuse_callback_t *callback);
+void fuse_insert_message(struct fuse_ticket *ticket);
+void fuse_insert_message_head(struct fuse_ticket *ticket);
 
 struct fuse_data *fuse_data_alloc(struct proc *p);
 void fuse_data_destroy(struct fuse_data *data);

@@ -55,16 +55,16 @@ static __inline__
 void
 fuse_reject_answers(struct fuse_data *data)
 {
-    struct fuse_ticket *ftick;
+    struct fuse_ticket *ticket;
 
     fuse_lck_mtx_lock(data->aw_mtx);
 
-    TAILQ_FOREACH(ftick, &data->aw_head, aw_link) {
-        fuse_lck_mtx_lock(ftick->aw_mtx);
-        ftick->answered = true;
-        ftick->aw_errno = ENOTCONN;
-        fuse_wakeup(ftick);
-        fuse_lck_mtx_unlock(ftick->aw_mtx);
+    TAILQ_FOREACH(ticket, &data->aw_head, aw_link) {
+        fuse_lck_mtx_lock(ticket->aw_mtx);
+        ticket->answered = true;
+        ticket->aw_errno = ENOTCONN;
+        fuse_wakeup(ticket);
+        fuse_lck_mtx_unlock(ticket->aw_mtx);
     }
     TAILQ_INIT(&data->aw_head); // Remove all tickets from the queue
 
@@ -245,7 +245,7 @@ fuse_device_read(dev_t dev, uio_t uio, int ioflag)
 
     struct fuse_device *fdev;
     struct fuse_data   *data;
-    struct fuse_ticket *ftick;
+    struct fuse_ticket *ticket;
 
     fuse_trace_printf_func();
 
@@ -266,7 +266,7 @@ again:
         return ENODEV;
     }
 
-    if ((ftick = STAILQ_FIRST(&data->ms_head))) {
+    if ((ticket = STAILQ_FIRST(&data->ms_head))) {
         STAILQ_REMOVE_HEAD(&data->ms_head, ms_link);
     } else {
         if (ioflag & FNONBLOCK) {
@@ -284,28 +284,28 @@ again:
     fuse_lck_mtx_unlock(data->ms_mtx);
 
     if (data->dead) {
-         if (ftick) {
-             fuse_ticket_drop_invalid(ftick);
+         if (ticket) {
+             fuse_ticket_drop_invalid(ticket);
          }
          return ENODEV;
     }
 
-    switch (ftick->ms_type) {
+    switch (ticket->ms_type) {
 
     case FT_M_FIOV:
-        buf[0]    = ftick->ms_fiov.base;
-        buflen[0] = ftick->ms_fiov.len;
+        buf[0]    = ticket->ms_fiov.base;
+        buflen[0] = ticket->ms_fiov.len;
         break;
 
     case FT_M_BUF:
-        buf[0]    = ftick->ms_fiov.base;
-        buflen[0] = ftick->ms_fiov.len;
-        buf[1]    = ftick->ms_bufdata;
-        buflen[1] = ftick->ms_bufsize;
+        buf[0]    = ticket->ms_fiov.base;
+        buflen[0] = ticket->ms_fiov.len;
+        buf[1]    = ticket->ms_bufdata;
+        buflen[1] = ticket->ms_bufsize;
         break;
 
     default:
-        panic("fuse4x: unknown message type for ticket %p", ftick);
+        panic("fuse4x: unknown message type for ticket %p", ticket);
     }
 
     for (i = 0; buf[i]; i++) {
@@ -325,7 +325,7 @@ again:
     /*
      * XXX: Stop gap! I really need to finish interruption plumbing.
      */
-    if (ftick->answered) {
+    if (ticket->answered) {
         err = EINTR;
     }
 
@@ -335,7 +335,7 @@ again:
      * a reply, so he sets the 'invalid' field in the ticket.
      */
 
-    fuse_ticket_drop_invalid(ftick);
+    fuse_ticket_drop_invalid(ticket);
 
     return err;
 }
@@ -348,8 +348,8 @@ fuse_device_write(dev_t dev, uio_t uio, __unused int ioflag)
 
     struct fuse_device    *fdev;
     struct fuse_data      *data;
-    struct fuse_ticket    *ftick;
-    struct fuse_ticket    *x_ftick;
+    struct fuse_ticket    *ticket;
+    struct fuse_ticket    *x_ticket;
     struct fuse_out_header ohead;
 
     fuse_trace_printf_func();
@@ -389,10 +389,10 @@ fuse_device_write(dev_t dev, uio_t uio, __unused int ioflag)
 
     fuse_lck_mtx_lock(data->aw_mtx);
 
-    TAILQ_FOREACH_SAFE(ftick, &data->aw_head, aw_link, x_ftick) {
-        if (ftick->unique == ohead.unique) {
+    TAILQ_FOREACH_SAFE(ticket, &data->aw_head, aw_link, x_ticket) {
+        if (ticket->unique == ohead.unique) {
             found = true;
-            TAILQ_REMOVE(&ftick->data->aw_head, ftick, aw_link);
+            TAILQ_REMOVE(&ticket->data->aw_head, ticket, aw_link);
             break;
         }
     }
@@ -400,11 +400,11 @@ fuse_device_write(dev_t dev, uio_t uio, __unused int ioflag)
     fuse_lck_mtx_unlock(data->aw_mtx);
 
     if (found) {
-        if (ftick->aw_callback) {
-            memcpy(&ftick->aw_ohead, &ohead, sizeof(ohead));
-            err = ftick->aw_callback(ftick, uio);
+        if (ticket->aw_callback) {
+            memcpy(&ticket->aw_ohead, &ohead, sizeof(ohead));
+            err = ticket->aw_callback(ticket, uio);
         } else {
-            fuse_ticket_drop(ftick);
+            fuse_ticket_drop(ticket);
             return err;
         }
     } else {
