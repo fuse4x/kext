@@ -1426,7 +1426,7 @@ fuse_internal_forget_send(mount_t                 mp,
     ffi = fdip->indata;
     ffi->nlookup = nlookup;
 
-    fticket_invalidate(fdip->tick);
+    fdip->tick->invalid = true;
     fuse_insert_message(fdip->tick);
 }
 
@@ -1442,7 +1442,7 @@ fuse_internal_interrupt_send(struct fuse_ticket *ftick)
     fdisp_make(&fdi, FUSE_INTERRUPT, ftick->data->mp, (uint64_t)0, NULL);
     fii = fdi.indata;
     fii->unique = ftick->unique;
-    fticket_invalidate(fdi.tick);
+    fdi.tick->invalid = true;
     fuse_insert_message(fdi.tick);
 }
 

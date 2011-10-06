@@ -207,7 +207,10 @@ fticket_refresh(struct fuse_ticket *ftick)
     ftick->aw_bufsize = 0;
     ftick->aw_type = FT_A_FIOV;
 
-    ftick->flag = 0;
+    ftick->answered = false;
+    ftick->invalid = false;
+    ftick->dirty = false;
+    ftick->killed = false;
 }
 
 static void
@@ -232,7 +235,7 @@ fticket_wait_answer(struct fuse_ticket *ftick)
 
     fuse_lck_mtx_lock(ftick->aw_mtx);
 
-    if (fticket_answered(ftick)) {
+    if (ftick->answered) {
         goto out;
     }
 
@@ -240,7 +243,7 @@ fticket_wait_answer(struct fuse_ticket *ftick)
 
     if (data->dead) {
         err = ENOTCONN;
-        fticket_set_answered(ftick);
+        ftick->answered = true;
         goto out;
     }
 
@@ -267,7 +270,7 @@ fticket_wait_answer(struct fuse_ticket *ftick)
         }
 
         err = ENOTCONN;
-        fticket_set_answered(ftick);
+        ftick->answered = true;
 
         goto out;
     }
@@ -284,7 +287,7 @@ fticket_wait_answer(struct fuse_ticket *ftick)
 out:
     fuse_lck_mtx_unlock(ftick->aw_mtx);
 
-    if (!(err || fticket_answered(ftick))) {
+    if (!(err || ftick->answered)) {
         log("fuse4x: requester was woken up but still no answer");
         err = ENXIO;
     }
@@ -304,7 +307,7 @@ fticket_aw_pull_uio(struct fuse_ticket *ftick, uio_t uio)
         case FT_A_FIOV:
             err = fiov_adjust_canfail(fticket_resp(ftick), len);
             if (err) {
-                fticket_set_killl(ftick);
+                ftick->killed = true;
                 log("fuse4x: failed to pull uio (error=%d)\n", err);
                 break;
             }
@@ -564,7 +567,7 @@ fuse_ticket_drop(struct fuse_ticket *ftick)
 
     if ((fuse_max_freetickets >= 0 &&
         fuse_max_freetickets <= ftick->data->freeticket_counter) ||
-        (ftick->flag & FT_KILLL)) {
+        ftick->killed) {
         die = true;
     } else {
         fuse_lck_mtx_unlock(ftick->data->ticket_mtx);
@@ -596,7 +599,7 @@ fuse_ticket_kill(struct fuse_ticket *ftick)
 void
 fuse_ticket_drop_invalid(struct fuse_ticket *ftick)
 {
-    if (ftick->flag & FT_INVAL) {
+    if (ftick->invalid) {
         fuse_ticket_drop(ftick);
     }
 }
@@ -618,11 +621,11 @@ fuse_insert_callback(struct fuse_ticket *ftick, fuse_handler_t *handler)
 void
 fuse_insert_message(struct fuse_ticket *ftick)
 {
-    if (ftick->flag & FT_DIRTY) {
+    if (ftick->dirty) {
         panic("fuse4x: ticket reused without being refreshed");
     }
 
-    ftick->flag |= FT_DIRTY;
+    ftick->dirty = true;
 
     if (ftick->data->dead) {
         return;
@@ -640,11 +643,11 @@ fuse_insert_message(struct fuse_ticket *ftick)
 void
 fuse_insert_message_head(struct fuse_ticket *ftick)
 {
-    if (ftick->flag & FT_DIRTY) {
+    if (ftick->dirty) {
         panic("fuse4x: ticket reused without being refreshed");
     }
 
-    ftick->flag |= FT_DIRTY;
+    ftick->dirty = true;
 
     if (ftick->data->dead) {
         return;
@@ -882,10 +885,10 @@ fuse_standard_handler(struct fuse_ticket *ftick, uio_t uio)
 
     fuse_lck_mtx_lock(ftick->aw_mtx);
 
-    if (fticket_answered(ftick)) {
+    if (ftick->answered) {
         dropflag = true;
     } else {
-        fticket_set_answered(ftick);
+        ftick->answered = true;
         ftick->aw_errno = err;
         fuse_wakeup(ftick);
     }
@@ -995,13 +998,13 @@ fdisp_wait_answ(struct fuse_dispatcher *fdip)
     if ((err = fticket_wait_answer(fdip->tick))) { /* interrupted */
         fuse_lck_mtx_lock(fdip->tick->aw_mtx);
 
-        if (fticket_answered(fdip->tick)) {
+        if (fdip->tick->answered) {
             /* IPC: already answered */
             fuse_lck_mtx_unlock(fdip->tick->aw_mtx);
             goto out;
         } else {
             /* IPC: explicitly setting to answered */
-            fticket_set_answered(fdip->tick);
+            fdip->tick->answered = true;
             fuse_lck_mtx_unlock(fdip->tick->aw_mtx);
             return err;
         }

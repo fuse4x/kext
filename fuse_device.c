@@ -60,7 +60,7 @@ fuse_reject_answers(struct fuse_data *data)
     fuse_lck_mtx_lock(data->aw_mtx);
     while ((ftick = fuse_aw_pop(data))) {
         fuse_lck_mtx_lock(ftick->aw_mtx);
-        fticket_set_answered(ftick);
+        ftick->answered = true;
         ftick->aw_errno = ENOTCONN;
         fuse_wakeup(ftick);
         fuse_lck_mtx_unlock(ftick->aw_mtx);
@@ -320,14 +320,14 @@ again:
     /*
      * XXX: Stop gap! I really need to finish interruption plumbing.
      */
-    if (fticket_answered(ftick)) {
+    if (ftick->answered) {
         err = EINTR;
     }
 
     /*
      * The FORGET message is an example of a ticket that has explicitly
      * been invalidated by the sender. The sender is not expecting or wanting
-     * a reply, so he sets the FT_INVALID bit in the ticket.
+     * a reply, so he sets the 'invalid' field in the ticket.
      */
 
     fuse_ticket_drop_invalid(ftick);

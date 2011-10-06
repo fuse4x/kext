@@ -61,7 +61,11 @@ typedef int fuse_handler_t(struct fuse_ticket *ftick, uio_t uio);
 struct fuse_ticket {
     uint64_t                     unique;
     struct fuse_data            *data;
-    int                          flag;
+
+    bool                         answered:1; // request of ticket has already been answered
+    bool                         invalid:1; // ticket is invalidated
+    bool                         dirty:1; // ticket has been used
+    bool                         killed:1; // ticket has been marked for death (KILLL => KILL_LATER)
 
     STAILQ_ENTRY(fuse_ticket)    freetickets_link;
     TAILQ_ENTRY(fuse_ticket)     alltickets_link;
@@ -84,37 +88,11 @@ struct fuse_ticket {
     TAILQ_ENTRY(fuse_ticket)     aw_link;
 };
 
-#define FT_ANSW  0x01  // request of ticket has already been answered
-#define FT_INVAL 0x02  // ticket is invalidated
-#define FT_DIRTY 0x04  // ticket has been used
-#define FT_KILLL 0x08  // ticket has been marked for death (KILLL => KILL_LATER)
-
 static __inline__
 struct fuse_iov *
 fticket_resp(struct fuse_ticket *ftick)
 {
     return &ftick->aw_fiov;
-}
-
-static __inline__
-int
-fticket_answered(struct fuse_ticket *ftick)
-{
-    return (ftick->flag & FT_ANSW);
-}
-
-static __inline__
-void
-fticket_set_answered(struct fuse_ticket *ftick)
-{
-    ftick->flag |= FT_ANSW;
-}
-
-static __inline__
-void
-fticket_set_killl(struct fuse_ticket *ftick)
-{
-    ftick->flag |= FT_KILLL;
 }
 
 static __inline__
@@ -124,12 +102,6 @@ fticket_opcode(struct fuse_ticket *ftick)
     return (((struct fuse_in_header *)(ftick->ms_fiov.base))->opcode);
 }
 
-static __inline__
-void
-fticket_invalidate(struct fuse_ticket *ftick)
-{
-    ftick->flag |= FT_INVAL;
-}
 
 int fticket_pull(struct fuse_ticket *ftick, uio_t uio);
 
