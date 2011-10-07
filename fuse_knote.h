@@ -11,6 +11,7 @@
 #if M_FUSE4X_ENABLE_KQUEUE
 
 #include <sys/event.h>
+#include <sys/queue.h>
 
 /* What a kludge! */
 #ifndef KNOTE

@@ -19,6 +19,7 @@
 #include <sys/proc.h>
 #include <sys/vm.h>
 #include <sys/fcntl.h>
+#include <sys/queue.h>
 #include <sys/select.h>
 #include <kern/assert.h>
 #include <libkern/libkern.h>
