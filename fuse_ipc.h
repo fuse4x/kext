@@ -196,7 +196,6 @@ void fuse_ticket_drop_invalid(struct fuse_ticket *ticket);
 void fuse_ticket_kill(struct fuse_ticket *ticket);
 void fuse_insert_callback(struct fuse_ticket *ticket, fuse_callback_t *callback);
 void fuse_insert_message(struct fuse_ticket *ticket);
-void fuse_insert_message_head(struct fuse_ticket *ticket);
 
 struct fuse_data *fuse_data_alloc(struct proc *p);
 void fuse_data_destroy(struct fuse_data *data);

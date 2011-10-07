@@ -643,28 +643,6 @@ fuse_insert_message(struct fuse_ticket *ticket)
     fuse_lck_mtx_unlock(ticket->data->ms_mtx);
 }
 
-void
-fuse_insert_message_head(struct fuse_ticket *ticket)
-{
-    if (ticket->dirty) {
-        panic("fuse4x: ticket reused without being refreshed");
-    }
-
-    ticket->dirty = true;
-
-    if (ticket->data->dead) {
-        return;
-    }
-
-    fuse_lck_mtx_lock(ticket->data->ms_mtx);
-    STAILQ_INSERT_HEAD(&ticket->data->ms_head, ticket, ms_link);
-    fuse_wakeup_one((caddr_t)ticket->data);
-#if M_FUSE4X_ENABLE_DSELECT
-    selwakeup((struct selinfo*)&ticket->data->d_rsel);
-#endif /* M_FUSE4X_ENABLE_DSELECT */
-    fuse_lck_mtx_unlock(ticket->data->ms_mtx);
-}
-
 static int
 fuse_body_audit(struct fuse_ticket *ticket, size_t blen)
 {
