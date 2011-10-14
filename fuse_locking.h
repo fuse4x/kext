@@ -7,10 +7,10 @@
 #ifndef _FUSE_LOCKING_H_
 #define _FUSE_LOCKING_H_
 
-#include <IOKit/IOLocks.h>
-
 #include "fuse.h"
 #include "fuse_node.h"
+
+#include <IOKit/IOLocks.h>
 
 enum fusefslocktype {
     FUSEFS_SHARED_LOCK    = 1,

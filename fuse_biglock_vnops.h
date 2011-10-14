@@ -5,9 +5,10 @@
 #ifndef _FUSE_BIGLOCK_VNOPS_H_
 #define _FUSE_BIGLOCK_VNOPS_H_
 
-#include <fuse_param.h>
 #include "fuse.h"
 #include "fuse_locking.h"
+
+#include <fuse_param.h>
 
 #if M_FUSE4X_ENABLE_BIGLOCK
 

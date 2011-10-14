@@ -3,16 +3,16 @@
  * Copyright (C) 2011 Anatol Pomozov. All Rights Reserved.
  */
 
-#include <sys/systm.h>
-#include <sys/types.h>
-#include <sys/sysctl.h>
-
 #include "fuse.h"
 #include "fuse_kernel.h"
 #include "fuse_device.h"
 #include "fuse_sysctl.h"
 #include <fuse_param.h>
 #include <fuse_version.h>
+
+#include <sys/systm.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
 
 /* NB: none of these are bigger than unsigned 32-bit. */
 

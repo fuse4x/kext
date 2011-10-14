@@ -5,6 +5,7 @@
 #ifndef _FUSE_VNOPS_H_
 #define _FUSE_VNOPS_H_
 
+#include "fuse.h"
 #include <fuse_param.h>
 
 typedef int (*fuse_vnode_op_t)(void *);

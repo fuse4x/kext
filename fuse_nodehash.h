@@ -23,13 +23,14 @@
 #ifndef _FUSE_NODEHASH_H_
 #define _FUSE_NODEHASH_H_
 
+#include "fuse.h"
+#include "fuse_device.h"
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <sys/systm.h>
 #include <sys/vnode.h>
 #include <libkern/OSMalloc.h>
-
-#include "fuse_device.h"
 
 /*
     Theory of Operation

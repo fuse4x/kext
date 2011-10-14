@@ -25,6 +25,7 @@
 #include "fuse_ipc.h"
 #include "fuse_node.h"
 #include "fuse_locking.h"
+
 #include <stdbool.h>
 
 lck_attr_t     *fuse_lock_attr    = NULL;

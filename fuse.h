@@ -6,17 +6,17 @@
 #ifndef _FUSE4X_H_
 #define _FUSE4X_H_
 
+#include <fuse_param.h>
+#include <fuse_version.h>
+
+#include <IOKit/IOLib.h>
+#include <kern/thread_call.h>
+#include <libkern/OSMalloc.h>
+#include <libkern/locks.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/event.h>
 #include <sys/proc.h>
-#include <kern/thread_call.h>
-#include <libkern/OSMalloc.h>
-#include <libkern/locks.h>
-#include <IOKit/IOLib.h>
-
-#include <fuse_param.h>
-#include <fuse_version.h>
 
 // #define FUSE_COUNT_MEMORY  1
 // #define FUSE_DEBUG         1

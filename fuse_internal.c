@@ -4,7 +4,18 @@
  * Copyright (C) 2011 Anatol Pomozov. All Rights Reserved.
  */
 
-#include <sys/param.h>
+#include "fuse.h"
+#include "fuse_file.h"
+#include "fuse_internal.h"
+#include "fuse_ipc.h"
+#include "fuse_locking.h"
+#include "fuse_node.h"
+#include "fuse_file.h"
+#include "fuse_nodehash.h"
+#include "fuse_sysctl.h"
+#include "fuse_kludges.h"
+
+#include <AvailabilityMacros.h>
 #include <kern/assert.h>
 #include <libkern/libkern.h>
 #include <libkern/OSMalloc.h>
@@ -26,18 +37,7 @@
 #include <sys/buf.h>
 #include <sys/namei.h>
 #include <sys/mman.h>
-#include <AvailabilityMacros.h>
-
-#include "fuse.h"
-#include "fuse_file.h"
-#include "fuse_internal.h"
-#include "fuse_ipc.h"
-#include "fuse_locking.h"
-#include "fuse_node.h"
-#include "fuse_file.h"
-#include "fuse_nodehash.h"
-#include "fuse_sysctl.h"
-#include "fuse_kludges.h"
+#include <sys/param.h>
 
 #if M_FUSE4X_ENABLE_BIGLOCK
 #include "fuse_biglock_vnops.h"

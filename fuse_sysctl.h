@@ -6,6 +6,8 @@
 #ifndef _FUSE_SYSCTL_H_
 #define _FUSE_SYSCTL_H_
 
+#include "fuse.h"
+
 extern int32_t  fuse_admin_group;
 extern int32_t  fuse_allow_other;
 extern int32_t  fuse_fh_current;

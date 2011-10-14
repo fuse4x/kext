@@ -8,6 +8,14 @@
 #ifndef _FUSE_INTERNAL_H_
 #define _FUSE_INTERNAL_H_
 
+#include "fuse.h"
+#include "fuse_ipc.h"
+#include "fuse_kludges.h"
+#include "fuse_locking.h"
+#include "fuse_node.h"
+#include "fuse_kernel.h"
+
+#include <AvailabilityMacros.h>
 #include <kern/clock.h>
 #include <sys/types.h>
 #include <sys/kauth.h>
@@ -20,13 +28,7 @@
 #include <sys/vnode.h>
 #include <sys/xattr.h>
 #include <stdbool.h>
-#include <AvailabilityMacros.h>
 
-#include "fuse_ipc.h"
-#include "fuse_kludges.h"
-#include "fuse_locking.h"
-#include "fuse_node.h"
-#include "fuse_kernel.h"
 
 struct fuse_attr;
 struct fuse_data;

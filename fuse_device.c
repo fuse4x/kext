@@ -5,17 +5,17 @@
 
 
 #include "fuse.h"
-#include "fuse_kernel.h"
 #include "fuse_device.h"
 #include "fuse_ipc.h"
 #include "fuse_internal.h"
+#include "fuse_kernel.h"
 #include "fuse_kludges.h"
 #include "fuse_locking.h"
 #include "fuse_nodehash.h"
 #include "fuse_sysctl.h"
 
-#include <stdbool.h>
 #include <libkern/libkern.h>
+#include <stdbool.h>
 #include <sys/queue.h>
 
 static int  fuse_cdev_major          = -1;

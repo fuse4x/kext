@@ -7,30 +7,30 @@
 #ifndef _FUSE_IPC_H_
 #define _FUSE_IPC_H_
 
-#include <mach/mach_types.h>
-#include <sys/errno.h>
-#include <sys/mount.h>
-#include <sys/vnode.h>
-#include <sys/vnode_if.h>
-#include <sys/kernel_types.h>
-#include <sys/stat.h>
-#include <sys/dirent.h>
-#include <sys/uio.h>
-#include <sys/proc.h>
-#include <sys/vm.h>
-#include <sys/fcntl.h>
-#include <sys/queue.h>
-#include <sys/select.h>
-#include <kern/assert.h>
-#include <libkern/libkern.h>
-#include <libkern/OSMalloc.h>
-#include <libkern/locks.h>
-
 #include "fuse.h"
 #include "fuse_kernel.h"
 #include "fuse_device.h"
 #include "fuse_kludges.h"
 #include "fuse_locking.h"
+
+#include <kern/assert.h>
+#include <libkern/libkern.h>
+#include <libkern/OSMalloc.h>
+#include <libkern/locks.h>
+#include <mach/mach_types.h>
+#include <sys/errno.h>
+#include <sys/mount.h>
+#include <sys/dirent.h>
+#include <sys/kernel_types.h>
+#include <sys/stat.h>
+#include <sys/proc.h>
+#include <sys/fcntl.h>
+#include <sys/queue.h>
+#include <sys/select.h>
+#include <sys/uio.h>
+#include <sys/vm.h>
+#include <sys/vnode.h>
+#include <sys/vnode_if.h>
 
 struct fuse_iov {
     void   *base;

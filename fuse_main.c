@@ -4,16 +4,6 @@
  * Copyright (C) 2011 Anatol Pomozov. All Rights Reserved.
  */
 
-#include <sys/param.h>
-#include <sys/systm.h>
-#include <sys/conf.h>
-#include <mach/mach_types.h>
-#include <miscfs/devfs/devfs.h>
-
-#include <libkern/libkern.h>
-#include <libkern/OSMalloc.h>
-#include <libkern/locks.h>
-
 #include "fuse.h"
 #include "fuse_device.h"
 #include "fuse_ipc.h"
@@ -22,6 +12,15 @@
 #include "fuse_nodehash.h"
 #include "fuse_sysctl.h"
 #include <fuse_mount.h>
+
+#include <libkern/libkern.h>
+#include <libkern/OSMalloc.h>
+#include <libkern/locks.h>
+#include <mach/mach_types.h>
+#include <miscfs/devfs/devfs.h>
+#include <sys/param.h>
+#include <sys/systm.h>
+#include <sys/conf.h>
 
 OSMallocTag  fuse_malloc_tag = NULL;
 

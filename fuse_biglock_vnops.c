@@ -4,6 +4,15 @@
  * Copyright (C) 2011 Anatol Pomozov. All Rights Reserved.
  */
 
+#include "fuse.h"
+#include "fuse_kludges.h"
+#include "fuse_locking.h"
+#include "fuse_node.h"
+#include "fuse_biglock_vnops.h"
+#include "fuse_ipc.h"
+
+#include <fuse_param.h>
+
 #include <sys/param.h>
 #include <kern/assert.h>
 #include <libkern/libkern.h>
@@ -27,15 +36,6 @@
 #include <sys/namei.h>
 #include <sys/mman.h>
 #include <vfs/vfs_support.h>
-
-#include <fuse_param.h>
-
-#include "fuse.h"
-#include "fuse_kludges.h"
-#include "fuse_locking.h"
-#include "fuse_node.h"
-#include "fuse_biglock_vnops.h"
-#include "fuse_ipc.h"
 
 #if M_FUSE4X_ENABLE_BIGLOCK
 

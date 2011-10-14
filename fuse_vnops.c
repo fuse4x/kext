@@ -4,30 +4,6 @@
  * Copyright (C) 2011 Anatol Pomozov. All Rights Reserved.
  */
 
-#include <sys/param.h>
-#include <kern/assert.h>
-#include <libkern/libkern.h>
-#include <libkern/OSMalloc.h>
-#include <libkern/locks.h>
-#include <mach/mach_types.h>
-#include <sys/dirent.h>
-#include <sys/disk.h>
-#include <sys/errno.h>
-#include <sys/fcntl.h>
-#include <sys/kernel_types.h>
-#include <sys/mount.h>
-#include <sys/proc.h>
-#include <sys/stat.h>
-#include <sys/ubc.h>
-#include <sys/unistd.h>
-#include <sys/vnode.h>
-#include <sys/vnode_if.h>
-#include <sys/xattr.h>
-#include <sys/buf.h>
-#include <sys/namei.h>
-#include <sys/mman.h>
-#include <vfs/vfs_support.h>
-
 #include "fuse.h"
 #include "fuse_file.h"
 #include "fuse_internal.h"
@@ -44,6 +20,30 @@
 #if M_FUSE4X_ENABLE_BIGLOCK
 #include "fuse_biglock_vnops.h"
 #endif
+
+#include <kern/assert.h>
+#include <libkern/libkern.h>
+#include <libkern/OSMalloc.h>
+#include <libkern/locks.h>
+#include <mach/mach_types.h>
+#include <sys/dirent.h>
+#include <sys/disk.h>
+#include <sys/errno.h>
+#include <sys/fcntl.h>
+#include <sys/kernel_types.h>
+#include <sys/mount.h>
+#include <sys/param.h>
+#include <sys/proc.h>
+#include <sys/stat.h>
+#include <sys/ubc.h>
+#include <sys/unistd.h>
+#include <sys/vnode.h>
+#include <sys/vnode_if.h>
+#include <sys/xattr.h>
+#include <sys/buf.h>
+#include <sys/namei.h>
+#include <sys/mman.h>
+#include <vfs/vfs_support.h>
 
 /*
     struct vnop_access_args {
