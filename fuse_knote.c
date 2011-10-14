@@ -120,7 +120,7 @@ filt_fusevnode(struct knote *kn, long hint)
         kn->kn_fflags |= (int)hint;
     }
 
-    if ((hint == NOTE_REVOKE)) {
+    if (hint == NOTE_REVOKE) {
         kn->kn_flags |= (EV_EOF | EV_ONESHOT);
         return 1;
     }

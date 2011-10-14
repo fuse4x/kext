@@ -63,10 +63,10 @@ struct fuse_ticket {
     uint64_t                     unique;
     struct fuse_data            *data;
 
-    bool                         answered:1; // request of ticket has already been answered
-    bool                         invalid:1; // ticket is invalidated
-    bool                         dirty:1; // ticket has been used
-    bool                         killed:1; // ticket has been marked for death (KILLL => KILL_LATER)
+    bool                         answered: 1; // request of ticket has already been answered
+    bool                         invalid: 1; // ticket is invalidated
+    bool                         dirty: 1; // ticket has been used
+    bool                         killed: 1; // ticket has been marked for death (KILLL => KILL_LATER)
 
     STAILQ_ENTRY(fuse_ticket)    freetickets_link;
     TAILQ_ENTRY(fuse_ticket)     alltickets_link;

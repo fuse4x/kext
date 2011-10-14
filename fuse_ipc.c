@@ -898,7 +898,7 @@ fuse_dispatcher_make(struct fuse_dispatcher *dispatcher,
         dispatcher->ticket = fuse_ticket_fetch(data);
     }
 
-    if (dispatcher->ticket == 0) {
+    if (!dispatcher->ticket) {
         panic("fuse4x: fuse_ticket_fetch() failed");
     }
 
