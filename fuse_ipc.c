@@ -235,15 +235,13 @@ static int
 fuse_ticket_wait_answer(struct fuse_ticket *ticket)
 {
     int err = 0;
-    struct fuse_data *data;
+    struct fuse_data *data = ticket->data;
 
     fuse_lck_mtx_lock(ticket->aw_mtx);
 
     if (ticket->answered) {
         goto out;
     }
-
-    data = ticket->data;
 
     if (data->dead) {
         err = ENOTCONN;
@@ -565,38 +563,40 @@ fuse_ticket_fetch(struct fuse_data *data)
 void
 fuse_ticket_drop(struct fuse_ticket *ticket)
 {
+    struct fuse_data *data = ticket->data;
     bool die = false;
 
-    fuse_lck_mtx_lock(ticket->data->ticket_mtx);
+    fuse_lck_mtx_lock(data->ticket_mtx);
 
     if ((fuse_max_freetickets >= 0 &&
-        fuse_max_freetickets <= ticket->data->freeticket_counter) ||
+        fuse_max_freetickets <= data->freeticket_counter) ||
         ticket->killed) {
         die = true;
     } else {
-        fuse_lck_mtx_unlock(ticket->data->ticket_mtx);
+        fuse_lck_mtx_unlock(data->ticket_mtx);
         fuse_ticket_refresh(ticket);
-        fuse_lck_mtx_lock(ticket->data->ticket_mtx);
+        fuse_lck_mtx_lock(data->ticket_mtx);
     }
 
     /* locked here */
 
     if (die) {
         fuse_remove_allticks(ticket);
-        fuse_lck_mtx_unlock(ticket->data->ticket_mtx);
+        fuse_lck_mtx_unlock(data->ticket_mtx);
         fuse_ticket_destroy(ticket);
     } else {
         fuse_push_freeticks(ticket);
-        fuse_lck_mtx_unlock(ticket->data->ticket_mtx);
+        fuse_lck_mtx_unlock(data->ticket_mtx);
     }
 }
 
 void
 fuse_ticket_kill(struct fuse_ticket *ticket)
 {
-    fuse_lck_mtx_lock(ticket->data->ticket_mtx);
+    struct fuse_data *data = ticket->data;
+    fuse_lck_mtx_lock(data->ticket_mtx);
     fuse_remove_allticks(ticket);
-    fuse_lck_mtx_unlock(ticket->data->ticket_mtx);
+    fuse_lck_mtx_unlock(data->ticket_mtx);
     fuse_ticket_destroy(ticket);
 }
 
@@ -611,37 +611,41 @@ fuse_ticket_drop_invalid(struct fuse_ticket *ticket)
 void
 fuse_insert_callback(struct fuse_ticket *ticket, fuse_callback_t *callback)
 {
-    if (ticket->data->dead) {
+    struct fuse_data *data = ticket->data;
+
+    if (data->dead) {
         return;
     }
 
     ticket->aw_callback = callback;
 
-    fuse_lck_mtx_lock(ticket->data->aw_mtx);
-    TAILQ_INSERT_TAIL(&ticket->data->aw_head, ticket, aw_link);
-    fuse_lck_mtx_unlock(ticket->data->aw_mtx);
+    fuse_lck_mtx_lock(data->aw_mtx);
+    TAILQ_INSERT_TAIL(&data->aw_head, ticket, aw_link);
+    fuse_lck_mtx_unlock(data->aw_mtx);
 }
 
 void
 fuse_insert_message(struct fuse_ticket *ticket)
 {
+    struct fuse_data *data = ticket->data;
+
     if (ticket->dirty) {
         panic("fuse4x: ticket reused without being refreshed");
     }
 
     ticket->dirty = true;
 
-    if (ticket->data->dead) {
+    if (data->dead) {
         return;
     }
 
-    fuse_lck_mtx_lock(ticket->data->ms_mtx);
-    STAILQ_INSERT_TAIL(&ticket->data->ms_head, ticket, ms_link);
-    fuse_wakeup_one((caddr_t)ticket->data);
+    fuse_lck_mtx_lock(data->ms_mtx);
+    STAILQ_INSERT_TAIL(&data->ms_head, ticket, ms_link);
+    fuse_wakeup_one((caddr_t)data);
 #if M_FUSE4X_ENABLE_DSELECT
-    selwakeup((struct selinfo*)&ticket->data->d_rsel);
+    selwakeup((struct selinfo*)&data->d_rsel);
 #endif /* M_FUSE4X_ENABLE_DSELECT */
-    fuse_lck_mtx_unlock(ticket->data->ms_mtx);
+    fuse_lck_mtx_unlock(data->ms_mtx);
 }
 
 static int
@@ -972,29 +976,30 @@ int
 fuse_dispatcher_wait_answer(struct fuse_dispatcher *dispatcher)
 {
     int err = 0;
+    struct fuse_ticket *ticket = dispatcher->ticket;
 
     dispatcher->answer_errno = 0;
-    fuse_insert_callback(dispatcher->ticket, fuse_standard_callback);
-    fuse_insert_message(dispatcher->ticket);
+    fuse_insert_callback(ticket, fuse_standard_callback);
+    fuse_insert_message(ticket);
 
-    if ((err = fuse_ticket_wait_answer(dispatcher->ticket))) { /* interrupted */
-        fuse_lck_mtx_lock(dispatcher->ticket->aw_mtx);
+    if ((err = fuse_ticket_wait_answer(ticket))) { /* interrupted */
+        fuse_lck_mtx_lock(ticket->aw_mtx);
 
-        if (dispatcher->ticket->answered) {
+        if (ticket->answered) {
             /* IPC: already answered */
-            fuse_lck_mtx_unlock(dispatcher->ticket->aw_mtx);
+            fuse_lck_mtx_unlock(ticket->aw_mtx);
             goto out;
         } else {
             /* IPC: explicitly setting to answered */
-            dispatcher->ticket->answered = true;
-            fuse_lck_mtx_unlock(dispatcher->ticket->aw_mtx);
+            ticket->answered = true;
+            fuse_lck_mtx_unlock(ticket->aw_mtx);
             return err;
         }
     }
 
     /* IPC was NOT interrupt */
 
-    if (dispatcher->ticket->aw_errno) {
+    if (ticket->aw_errno) {
 
         /* Explicitly EIO-ing */
 
@@ -1002,7 +1007,7 @@ fuse_dispatcher_wait_answer(struct fuse_dispatcher *dispatcher)
         goto out;
     }
 
-    if ((err = dispatcher->ticket->aw_ohead.error)) {
+    if ((err = ticket->aw_ohead.error)) {
 
         /* Explicitly setting status */
 
@@ -1010,13 +1015,13 @@ fuse_dispatcher_wait_answer(struct fuse_dispatcher *dispatcher)
         goto out;
     }
 
-    dispatcher->answer = dispatcher->ticket->aw_fiov.base;
-    dispatcher->iosize = dispatcher->ticket->aw_fiov.len;
+    dispatcher->answer = ticket->aw_fiov.base;
+    dispatcher->iosize = ticket->aw_fiov.len;
 
     return 0;
 
 out:
-    fuse_ticket_drop(dispatcher->ticket);
+    fuse_ticket_drop(ticket);
 
     return err;
 }
