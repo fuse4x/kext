@@ -667,10 +667,6 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
         fuse_ticket_drop(fdi.ticket);
     }
 
-    /*
-     * Note that dounmount() signals a VQ_UNMOUNT VFS event.
-     */
-
     fuse_data_kill(data);
 
 alreadydead:
