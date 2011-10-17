@@ -567,27 +567,19 @@ void
 fuse_ticket_drop(struct fuse_ticket *ticket)
 {
     struct fuse_data *data = ticket->data;
-    bool die = false;
 
     fuse_lck_mtx_lock(data->ticket_mtx);
 
     if ((fuse_max_freetickets >= 0 &&
         fuse_max_freetickets <= data->freeticket_counter) ||
         ticket->killed) {
-        die = true;
-    } else {
-        fuse_lck_mtx_unlock(data->ticket_mtx);
-        fuse_ticket_refresh(ticket);
-        fuse_lck_mtx_lock(data->ticket_mtx);
-    }
-
-    /* locked here */
-
-    if (die) {
         fuse_remove_allticks(ticket);
         fuse_lck_mtx_unlock(data->ticket_mtx);
         fuse_ticket_destroy(ticket);
     } else {
+        fuse_lck_mtx_unlock(data->ticket_mtx);
+        fuse_ticket_refresh(ticket);
+        fuse_lck_mtx_lock(data->ticket_mtx);
         fuse_push_freeticks(ticket);
         fuse_lck_mtx_unlock(data->ticket_mtx);
     }
