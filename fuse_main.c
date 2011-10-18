@@ -141,7 +141,7 @@ fusefs_start(__unused kmod_info_t *ki, __unused void *d)
 
     fuse_sysctl_start();
 
-    log("fuse4x: starting (version %s, %s)\n", FUSE4X_VERSION, FUSE4X_TIMESTAMP);
+    log("fuse4x: starting (version %s, %s)\n", FUSE4X_STRINGIFY(FUSE4X_KEXT_VERSION), FUSE4X_TIMESTAMP);
 
     return KERN_SUCCESS;
 
@@ -175,7 +175,7 @@ fusefs_stop(__unused kmod_info_t *ki, __unused void *d)
 
     fuse_sysctl_stop();
 
-    IOLog("fuse4x: stopping (version %s, %s)\n", FUSE4X_VERSION, FUSE4X_TIMESTAMP);
+    IOLog("fuse4x: stopping (version %s, %s)\n", FUSE4X_STRINGIFY(FUSE4X_KEXT_VERSION), FUSE4X_TIMESTAMP);
 
     return KERN_SUCCESS;
 }

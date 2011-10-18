@@ -252,7 +252,7 @@ SYSCTL_INT(_vfs_generic_fuse4x_version, OID_AUTO, api_minor, CTLFLAG_RD,
 SYSCTL_STRING(_vfs_generic_fuse4x_version, OID_AUTO, number, CTLFLAG_RD,
               FUSE4X_VERSION, 0, "");
 SYSCTL_STRING(_vfs_generic_fuse4x_version, OID_AUTO, string, CTLFLAG_RD,
-              FUSE4X_VERSION ", " FUSE4X_TIMESTAMP, 0, "");
+              FUSE4X_STRINGIFY(FUSE4X_KEXT_VERSION) ", " FUSE4X_TIMESTAMP, 0, "");
 
 static struct sysctl_oid *fuse_sysctl_list[] =
 {

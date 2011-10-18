@@ -158,6 +158,9 @@ FUSE_OSFree(void *addr, size_t size, OSMallocTag tag)
 
 #endif /* FUSE_COUNT_MEMORY */
 
+#ifndef FUSE4X_KEXT_VERSION
+#define FUSE4X_KEXT_VERSION FUSE4X_VERSION_LITERAL
+#endif
 
 #define FUSE4X_TIMESTAMP __DATE__ ", " __TIME__
 

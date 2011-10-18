@@ -23,6 +23,9 @@ system('git clean -xdf') if release
 configuration = release ? 'Distribution' : 'Debug'
 flags = '-configuration ' + configuration
 
+version = `git describe --tags --dirty`.chomp
+flags += " GCC_PREPROCESSOR_DEFINITIONS=FUSE4X_KEXT_VERSION=#{version}"
+
 system("xcodebuild SYMROOT=build SHARED_PRECOMPS_DIR=build -PBXBuildsContinueAfterErrors=0 -parallelizeTargets -alltargets #{flags}") or abort("cannot build kext")
 
 unless root_dir
