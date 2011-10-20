@@ -71,7 +71,7 @@ fuse_reject_answers(struct fuse_data *data)
     fuse_lck_mtx_unlock(data->aw_mtx);
 }
 
-/* /dev/fuseN implementation */
+/* /dev/fuse4xN implementation */
 
 d_open_t   fuse_device_open;
 d_close_t  fuse_device_close;
@@ -492,7 +492,7 @@ fuse_devices_stop(void)
             fuse_interface_available = true;
             fuse_lck_mtx_unlock(fuse_device_mutex);
             proc_name(fuse_device_table[i].pid, p_comm, MAXCOMLEN + 1);
-            log("fuse4x: /dev/fuse%d is still active (pid=%d %s)\n",
+            log("fuse4x: /dev/fuse4x%d is still active (pid=%d %s)\n",
                   i, fuse_device_table[i].pid, p_comm);
             return KERN_FAILURE;
         }
@@ -502,7 +502,7 @@ fuse_devices_stop(void)
             fuse_lck_mtx_unlock(fuse_device_mutex);
             proc_name(fuse_device_table[i].pid, p_comm, MAXCOMLEN + 1);
             /* The pid can't possibly be active here. */
-            log("fuse4x: /dev/fuse%d has a lingering mount (pid=%d, %s)\n",
+            log("fuse4x: /dev/fuse4x%d has a lingering mount (pid=%d, %s)\n",
                   i, fuse_device_table[i].pid, p_comm);
             return KERN_FAILURE;
         }
