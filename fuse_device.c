@@ -392,7 +392,7 @@ fuse_device_write(dev_t dev, uio_t uio, __unused int ioflag)
     TAILQ_FOREACH_SAFE(ticket, &data->aw_head, aw_link, x_ticket) {
         if (ticket->unique == ohead.unique) {
             found = true;
-            TAILQ_REMOVE(&ticket->data->aw_head, ticket, aw_link);
+            TAILQ_REMOVE(&data->aw_head, ticket, aw_link);
             break;
         }
     }
