@@ -624,7 +624,7 @@ fuse_internal_attr_loadvap(vnode_t vp, struct vnode_attr *out_vap,
     VATTR_RETURN(out_vap, va_modify_time, in_vap->va_modify_time);
 
     /*
-     * When __DARWIN_64_BIT_INO_T is not enabled, the User library
+     * When _DARWIN_FEATURE_64_BIT_INODE is not enabled, the User library
      * will set va_create_time to -1. In that case, we will have
      * to ask for it separately, if necessary.
      */
