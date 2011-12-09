@@ -22,6 +22,10 @@
 
 #include "fuse.h"
 #include "fuse_nodehash.h"
+#if M_FUSE4X_ENABLE_BIGLOCK
+#include "fuse_biglock_vnops.h"
+#include "fuse_ipc.h"
+#endif
 #include <fuse_param.h>
 
 #include <sys/vnode.h>
@@ -644,7 +648,14 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
 
                 lck_mtx_unlock(gHashMutex);
 
+#if M_FUSE4X_ENABLE_BIGLOCK
+                struct fuse_data *data = dev->data;
+                fuse_biglock_unlock(data->biglock);
+#endif
                 err = vnode_getwithvid(candidateVN, vid);
+#if M_FUSE4X_ENABLE_BIGLOCK
+                fuse_biglock_lock(data->biglock);
+#endif
 
                 if (err == 0) {
                     /* All ok; return the HNode/vnode to the caller. */
@@ -1022,7 +1033,14 @@ HNodeLookupRealQuickIfExists(fuse_device_t dev,
             assert(candidateVN != NULL);
             vid = vnode_vid(candidateVN);
             lck_mtx_unlock(gHashMutex);
+#if M_FUSE4X_ENABLE_BIGLOCK
+            struct fuse_data *data = dev->data;
+            fuse_biglock_unlock(data->biglock);
+#endif
             err = vnode_getwithvid(candidateVN, vid);
+#if M_FUSE4X_ENABLE_BIGLOCK
+            fuse_biglock_lock(data->biglock);
+#endif
             needsUnlock = false;
             if (err == 0) {
                 assert(thisNode != NULL);
