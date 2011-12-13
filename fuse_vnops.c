@@ -1292,7 +1292,14 @@ fuse_vnop_lookup(struct vnop_lookup_args *ap)
         op = FUSE_GETATTR;
         goto calldaemon;
     } else {
+#if M_FUSE4X_ENABLE_BIGLOCK
+        struct fuse_data *data = fuse_get_mpdata(mp);
+        fuse_biglock_unlock(data->biglock);
+#endif
         err = fuse_vncache_lookup(dvp, vpp, cnp);
+#if M_FUSE4X_ENABLE_BIGLOCK
+        fuse_biglock_lock(data->biglock);
+#endif
         switch (err) {
 
         case -1: /* positive match */
