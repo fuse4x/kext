@@ -2598,7 +2598,6 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
                      */
 
                     if (open_count != aux_count) {
-#if M_FUSE4X_ENABLE_UNSUPPORTED
                         const char *vname = vnode_getname(vp);
                         log("fuse4x: vnode reclaimed with valid fufh "
                               "(%s type=%d, vtype=%d, open_count=%d, busy=%d, "
@@ -2608,13 +2607,6 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
                         if (vname) {
                             vnode_putname(vname);
                         }
-#else
-                        log("fuse4x: vnode reclaimed with valid fufh "
-                              "(type=%d, vtype=%d, open_count=%d, busy=%d, "
-                              "aux_count=%d)\n",
-                              type, vnode_vtype(vp), open_count,
-                              vnode_isinuse(vp, 0), aux_count);
-#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
                     } /* if counts did not match (both=1 for match currently) */
                     OSIncrementAtomic((SInt32 *)&fuse_fh_zombies);
                 } /* !deadfs */

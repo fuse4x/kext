@@ -120,7 +120,6 @@ int
 fuse_filehandle_preflight_status(vnode_t vp, vnode_t dvp, vfs_context_t context,
                                  fufh_type_t fufh_type)
 {
-    vfs_context_t icontext = context;
     kauth_action_t action  = 0;
     mount_t mp = vnode_mount(vp);
     int err = 0;
@@ -129,13 +128,11 @@ fuse_filehandle_preflight_status(vnode_t vp, vnode_t dvp, vfs_context_t context,
         goto out;
     }
 
-#if M_FUSE4X_ENABLE_UNSUPPORTED
-    if (!icontext) {
-        icontext = vfs_context_current();
+    if (!context) {
+        context = vfs_context_current();
     }
-#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
 
-    if (!icontext) {
+    if (!context) {
         goto out;
     }
 
@@ -158,7 +155,7 @@ fuse_filehandle_preflight_status(vnode_t vp, vnode_t dvp, vfs_context_t context,
     }
 
     if (!err) {
-        err = vnode_authorize(vp, dvp, action, icontext);
+        err = vnode_authorize(vp, dvp, action, context);
     }
 
 out:

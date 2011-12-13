@@ -31,12 +31,6 @@
 #include <sys/vnode.h>
 #include <kern/assert.h>
 
-#if M_FUSE4X_ENABLE_UNSUPPORTED
-#define LCK_MTX_ASSERT lck_mtx_assert
-#else
-#define LCK_MTX_ASSERT(gHashMutex, LCK_MTX_ASSERT_OWNED) do { } while (0)
-#endif
-
 /*
  * The HNode structure represents an entry in the VFS plug-ins hash table.
  * See the comments in the header file for a detailed description of the
@@ -398,7 +392,7 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
     lck_mtx_lock(gHashMutex);
 
     do {
-        LCK_MTX_ASSERT(gHashMutex, LCK_MTX_ASSERT_OWNED);
+        lck_mtx_assert(gHashMutex, LCK_MTX_ASSERT_OWNED);
 
         err = EAGAIN;
 
@@ -715,7 +709,7 @@ HNodeAttachComplete(HNodeRef hnode)
     assert(hnode != NULL);
     assert(hnode->magic == gMagic);
 
-    LCK_MTX_ASSERT(gHashMutex, LCK_MTX_ASSERT_OWNED);
+    lck_mtx_assert(gHashMutex, LCK_MTX_ASSERT_OWNED);
 
     assert(hnode->attachOutstanding);
     hnode->attachOutstanding = false;
@@ -739,7 +733,7 @@ HNodeForkVNodeDecrement(HNodeRef hnode)
     assert(hnode != NULL);
     assert(hnode->magic == gMagic);
 
-    LCK_MTX_ASSERT(gHashMutex, LCK_MTX_ASSERT_OWNED);
+    lck_mtx_assert(gHashMutex, LCK_MTX_ASSERT_OWNED);
 
     scrubIt = false;
 
@@ -1007,7 +1001,7 @@ HNodeLookupRealQuickIfExists(fuse_device_t dev,
 
     lck_mtx_lock(gHashMutex);
 
-    LCK_MTX_ASSERT(gHashMutex, LCK_MTX_ASSERT_OWNED);
+    lck_mtx_assert(gHashMutex, LCK_MTX_ASSERT_OWNED);
 
     thisNode = LIST_FIRST(HNodeGetFirstFromHashTable(dev, ino));
 

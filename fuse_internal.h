@@ -54,12 +54,11 @@ struct fuse_ticket;
          ((tvp)->tv_nsec cmp (uvp)->tv_nsec) : \
          ((tvp)->tv_sec cmp (uvp)->tv_sec))
 
-/* miscellaneous */
 
-#if M_FUSE4X_ENABLE_UNSUPPORTED
+#ifndef MAC_OS_X_VERSION_10_6
 extern const char *vnode_getname(vnode_t vp);
 extern void  vnode_putname(const char *name);
-#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
+#endif
 
 
 static __inline__

@@ -74,16 +74,13 @@ fuse_filehandle_get(vnode_t       vp,
 
     OSIncrementAtomic((SInt32 *)&fuse_fh_upcall_count);
     if ((err = fuse_dispatcher_wait_answer(&fdi))) {
-#if M_FUSE4X_ENABLE_UNSUPPORTED
         const char *vname = vnode_getname(vp);
-#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
         if (err == ENOENT) {
             /*
              * See comment in fuse_vnop_reclaim().
              */
             cache_purge(vp);
         }
-#if M_FUSE4X_ENABLE_UNSUPPORTED
         log("fuse4x: filehandle_get: failed for %s "
               "(type=%d, err=%d, caller=%p)\n",
               (vname) ? vname : "?", fufh_type, err,
@@ -91,7 +88,6 @@ fuse_filehandle_get(vnode_t       vp,
         if (vname) {
             vnode_putname(vname);
         }
-#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
         if (err == ENOENT) {
 #if M_FUSE4X_ENABLE_BIGLOCK
             struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));

@@ -156,26 +156,14 @@ fuse_internal_access(vnode_t                   vp,
     }
 
     if (err == ENOENT) {
-
-        const char *vname = NULL;
-
-#if M_FUSE4X_ENABLE_UNSUPPORTED
-        vname = vnode_getname(vp);
-#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
+        const char *vname = vnode_getname(vp);
 
         log("fuse4x: disappearing vnode %p (name=%s type=%d action=%x)\n",
-              vp, (vname) ? vname : "?", vnode_vtype(vp), action);
+            vp, (vname) ? vname : "?", vnode_vtype(vp), action);
 
-#if M_FUSE4X_ENABLE_UNSUPPORTED
         if (vname) {
             vnode_putname(vname);
         }
-#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
-
-        /*
-         * On 10.4, I think I can get Finder to lock because of /.Trashes/<uid>
-         * unless I use REVOKE_NONE here.
-         */
 
 #if M_FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_unlock(data->biglock);
@@ -1577,12 +1565,8 @@ fuse_send_init(struct fuse_data *data, vfs_context_t context)
 static int
 fuse_internal_print_vnodes_callback(vnode_t vp, __unused void *cargs)
 {
-    const char *vname = NULL;
     struct fuse_vnode_data *fvdat = VTOFUD(vp);
-
-#if M_FUSE4X_ENABLE_UNSUPPORTED
-    vname = vnode_getname(vp);
-#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
+    const char *vname = vname = vnode_getname(vp);
 
     if (vname) {
         log("fuse4x: vp=%p ino=%lld parent=%lld inuse=%d %s\n",
@@ -1600,11 +1584,9 @@ fuse_internal_print_vnodes_callback(vnode_t vp, __unused void *cargs)
         }
     }
 
-#if M_FUSE4X_ENABLE_UNSUPPORTED
     if (vname) {
         vnode_putname(vname);
     }
-#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
 
     return VNODE_RETURNED;
 }
@@ -1621,27 +1603,17 @@ __private_extern__
 void
 fuse_preflight_log(vnode_t vp, fufh_type_t fufh_type, int err, char *message)
 {
-    const char *vname = NULL;
-
-#if M_FUSE4X_ENABLE_UNSUPPORTED
-    vname = vnode_getname(vp);
-#else
-    (void)vname;
-    (void)vp;
-#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
+    const char *vname = vnode_getname(vp);
 
     if (vname) {
-        log("fuse4x: file handle preflight "
-              "(caller=%s, type=%d, err=%d, name=%s)\n",
-              message, fufh_type, err, vname);
+        log("fuse4x: file handle preflight (caller=%s, type=%d, err=%d, name=%s)\n",
+            message, fufh_type, err, vname);
     } else {
-        log("fuse4x: file handle preflight "
-              "(caller=%s, type=%d, err=%d)\n", message, fufh_type, err);
+        log("fuse4x: file handle preflight (caller=%s, type=%d, err=%d)\n",
+            message, fufh_type, err);
     }
 
-#if M_FUSE4X_ENABLE_UNSUPPORTED
     if (vname) {
         vnode_putname(vname);
     }
-#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
 }

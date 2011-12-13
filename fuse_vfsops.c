@@ -200,9 +200,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
 
     err = ENOTSUP;
 
-#if M_FUSE4X_ENABLE_UNSUPPORTED
     vfs_setlocklocal(mp);
-#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
 
     /** Option Processing. **/
 

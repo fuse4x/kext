@@ -28,21 +28,17 @@
 
 // #define M_FUSE4X_SERIALIZE_LOGGING 1
 
-#define M_FUSE4X_ENABLE_FIFOFS            0
-#define M_FUSE4X_ENABLE_INTERRUPT         1
-#define M_FUSE4X_ENABLE_SPECFS            0
-#define M_FUSE4X_ENABLE_TSLOCKING         1
-#define M_FUSE4X_ENABLE_UNSUPPORTED       1
-#define M_FUSE4X_ENABLE_XATTR             1
-
-#if M_FUSE4X_ENABLE_UNSUPPORTED
-#define M_FUSE4X_ENABLE_DSELECT         0
-#define M_FUSE4X_ENABLE_EXCHANGE        1
-#define M_FUSE4X_ENABLE_KQUEUE          1
+#define M_FUSE4X_ENABLE_FIFOFS       0
+#define M_FUSE4X_ENABLE_INTERRUPT    1
+#define M_FUSE4X_ENABLE_SPECFS       0
+#define M_FUSE4X_ENABLE_TSLOCKING    1
+#define M_FUSE4X_ENABLE_XATTR        1
+#define M_FUSE4X_ENABLE_DSELECT      0
+#define M_FUSE4X_ENABLE_EXCHANGE     1
+#define M_FUSE4X_ENABLE_KQUEUE       1
 #if __LP64__
 #define M_FUSE4X_ENABLE_BIGLOCK 1
 #endif /* __LP64__ */
-#endif /* M_FUSE4X_ENABLE_UNSUPPORTED */
 
 #if M_FUSE4X_ENABLE_BIGLOCK
 #define FUSE_VNOP_EXPORT __private_extern__
