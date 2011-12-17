@@ -45,6 +45,20 @@
 #include <sys/mman.h>
 #include <vfs/vfs_support.h>
 
+
+#define COM_APPLE_ "com.apple."
+
+/* xattr */
+static __inline__
+bool
+fuse_skip_apple_xattr_mp(mount_t mp, const char *name)
+{
+    return name &&
+        (fuse_get_mpdata(mp)->dataflags & FSESS_NO_APPLEXATTR) &&
+        (bcmp(name, COM_APPLE_, sizeof(COM_APPLE_) - 1) == 0);
+}
+
+
 /*
     struct vnop_access_args {
         struct vnodeop_desc *a_desc;

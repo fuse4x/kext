@@ -753,25 +753,6 @@ errno_t
 fuse_internal_strategy_buf(struct vnop_strategy_args *ap);
 
 
-/* xattr */
-
-static __inline__
-int
-fuse_skip_apple_xattr_mp(mount_t mp, const char *name)
-{
-    int ismpoption = fuse_get_mpdata(mp)->dataflags & FSESS_NO_APPLEXATTR;
-
-    if (ismpoption && name) {
-         #define COM_APPLE_ "com.apple."
-        if (bcmp(name, COM_APPLE_, sizeof(COM_APPLE_) - 1) == 0) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-
 /* entity creation */
 
 static __inline__
