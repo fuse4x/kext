@@ -13,6 +13,7 @@
 		DE134AFE13BE336D00113A90 /* fuse_param.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D531388751A009DC919 /* fuse_param.h */; };
 		DE134AFF13BE336D00113A90 /* fuse_version.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D541388751A009DC919 /* fuse_version.h */; };
 		DE134B0113BE3A8F00113A90 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE134B0013BE3A8F00113A90 /* CoreFoundation.framework */; };
+		DE3ED531149F1D51007E2A7C /* kext.exports in Resources */ = {isa = PBXBuildFile; fileRef = DE3ED530149F1D51007E2A7C /* kext.exports */; };
 		DEBF0B1313886AAC00A1755B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = DEBF0B1113886AAC00A1755B /* InfoPlist.strings */; };
 		DEE25D27138874AF009DC919 /* fuse_biglock_vnops.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D0A138874AF009DC919 /* fuse_biglock_vnops.c */; };
 		DEE25D28138874AF009DC919 /* fuse_biglock_vnops.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D0B138874AF009DC919 /* fuse_biglock_vnops.h */; };
@@ -66,6 +67,7 @@
 		DE134AEA13BD566100113A90 /* load_fuse4x */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = load_fuse4x; sourceTree = BUILT_PRODUCTS_DIR; };
 		DE134AFA13BE326E00113A90 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		DE134B0013BE3A8F00113A90 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		DE3ED530149F1D51007E2A7C /* kext.exports */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = kext.exports; sourceTree = "<group>"; };
 		DEBF0B0913886AAC00A1755B /* fuse4x.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = fuse4x.kext; sourceTree = BUILT_PRODUCTS_DIR; };
 		DEBF0B0D13886AAC00A1755B /* Kernel.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Kernel.framework; path = System/Library/Frameworks/Kernel.framework; sourceTree = SDKROOT; };
 		DEBF0B1013886AAC00A1755B /* kext-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "kext-Info.plist"; sourceTree = "<group>"; };
@@ -169,6 +171,7 @@
 				DEE25D24138874AF009DC919 /* fuse_vnops.c */,
 				DEE25D25138874AF009DC919 /* fuse_vnops.h */,
 				DEE25D26138874AF009DC919 /* fuse.h */,
+				DE3ED530149F1D51007E2A7C /* kext.exports */,
 				DEBF0B0F13886AAC00A1755B /* Supporting Files */,
 				DEBF0B0B13886AAC00A1755B /* Frameworks */,
 				DEBF0B0A13886AAC00A1755B /* Products */,
@@ -322,6 +325,7 @@
 			files = (
 				DEBF0B1313886AAC00A1755B /* InfoPlist.strings in Resources */,
 				DEE25D45138874BA009DC919 /* API.txt in Resources */,
+				DE3ED531149F1D51007E2A7C /* kext.exports in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
