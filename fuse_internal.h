@@ -590,7 +590,7 @@ fuse_internal_attr_loadvap(vnode_t vp, struct vnode_attr *out_vap,
         if (fvdat->filesize != (off_t)in_vap->va_data_size) {
             hint |= NOTE_WRITE;
             /* Remote size overrides what we have. */
-            (void)ubc_msync(vp, (off_t)0, fvdat->filesize, (off_t*)0,
+            (void)ubc_msync(vp, (off_t)0, fvdat->filesize, NULL,
                             UBC_PUSHALL | UBC_INVALIDATE | UBC_SYNC);
             purged = 1;
             if (fvdat->filesize > (off_t)in_vap->va_data_size) {
@@ -637,7 +637,7 @@ fuse_internal_attr_loadvap(vnode_t vp, struct vnode_attr *out_vap,
         fvdat->modify_time.tv_nsec = in_vap->va_modify_time.tv_nsec;
         hint |= NOTE_ATTRIB;
         if (fuse_isautocache_mp(mp) && !purged) {
-            (void)ubc_msync(vp, (off_t)0, fvdat->filesize, (off_t*)0,
+            (void)ubc_msync(vp, (off_t)0, fvdat->filesize, NULL,
                             UBC_PUSHALL | UBC_INVALIDATE | UBC_SYNC);
         }
     }

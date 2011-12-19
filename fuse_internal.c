@@ -214,9 +214,9 @@ fuse_internal_exchange(vnode_t       fvp,
     memcpy((char *)fdi.indata + sizeof(*fei) + flen + 1, tname, tlen);
     ((char *)fdi.indata)[sizeof(*fei) + flen + tlen + 1] = '\0';
 
-    ubc_msync(fvp, (off_t)0, (off_t)ffud->filesize, (off_t*)0,
+    ubc_msync(fvp, (off_t)0, (off_t)ffud->filesize, NULL,
               UBC_PUSHALL | UBC_INVALIDATE | UBC_SYNC);
-    ubc_msync(tvp, (off_t)0, (off_t)tfud->filesize, (off_t*)0,
+    ubc_msync(tvp, (off_t)0, (off_t)tfud->filesize, NULL,
               UBC_PUSHALL | UBC_INVALIDATE | UBC_SYNC);
 
     if (!(err = fuse_dispatcher_wait_answer(&fdi))) {

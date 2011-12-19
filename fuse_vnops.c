@@ -1765,7 +1765,7 @@ fuse_vnop_mnomap(struct vnop_mnomap_args *ap)
      * I once noted that sync() is not going to help here, but I think
      * I've forgotten the context. Need to think about this again.
      *
-     * ubc_msync(vp, (off_t)0, ubc_getsize(vp), (off_t*)0, UBC_PUSHDIRTY);
+     * ubc_msync(vp, (off_t)0, ubc_getsize(vp), NULL, UBC_PUSHDIRTY);
      */
 
     /*
@@ -1967,7 +1967,7 @@ ok:
          * - nosyncwrites disabled FOR THE ENTIRE MOUNT
          * - no vncache for the vnode (handled in lookup)
          */
-        ubc_msync(vp, (off_t)0, ubc_getsize(vp), (off_t*)0,
+        ubc_msync(vp, (off_t)0, ubc_getsize(vp), NULL,
                   UBC_PUSHALL | UBC_INVALIDATE);
         vnode_setnocache(vp);
         vnode_setnoreadahead(vp);
@@ -1975,7 +1975,7 @@ ok:
         fvdat->flag |= FN_DIRECT_IO;
         goto out;
     } else if (fufh->fuse_open_flags & FOPEN_PURGE_UBC) {
-        ubc_msync(vp, (off_t)0, ubc_getsize(vp), (off_t*)0,
+        ubc_msync(vp, (off_t)0, ubc_getsize(vp), NULL,
                   UBC_PUSHALL | UBC_INVALIDATE);
         fufh->fuse_open_flags &= ~FOPEN_PURGE_UBC;
         hint |= NOTE_WRITE;
