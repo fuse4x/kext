@@ -53,7 +53,6 @@ fuse_internal_access(vnode_t                   vp,
                      struct fuse_access_param *facp)
 {
     int err = 0;
-    int default_error = 0;
     uint32_t mask = 0;
     int dataflags;
     mount_t mp;
@@ -73,17 +72,13 @@ fuse_internal_access(vnode_t                   vp,
         return 0;
     }
 
-    if (facp->facc_flags & FACCESS_FROM_VNOP) {
-        default_error = ENOTSUP;
-    }
-
     /*
      * (action & KAUTH_VNODE_GENERIC_WRITE_BITS) on a read-only file system
      * would have been handled by higher layers.
      */
 
     if (!fuse_implemented(data, FSESS_NOIMPLBIT(ACCESS))) {
-        return default_error;
+        return ENOTSUP;
     }
 
     if (!vnode_isvroot(vp) && !(facp->facc_flags & FACCESS_NOCHECKSPY)) {
@@ -93,7 +88,7 @@ fuse_internal_access(vnode_t                   vp,
     }
 
     if (!(facp->facc_flags & FACCESS_DO_ACCESS)) {
-        return default_error;
+        return ENOTSUP;
     }
 
     if (vnode_isdir(vp)) {
@@ -146,7 +141,7 @@ fuse_internal_access(vnode_t                   vp,
          */
         vfs_clearauthopaque(mp);
         fuse_clear_implemented(data, FSESS_NOIMPLBIT(ACCESS));
-        err = default_error;
+        err = ENOTSUP;
     }
 
     if (err == ENOENT) {
