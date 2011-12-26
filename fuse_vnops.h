@@ -10,10 +10,6 @@
 
 typedef int (*fuse_vnode_op_t)(void *);
 
-#if M_FUSE4X_ENABLE_FIFOFS
-typedef int (*fuse_fifo_op_t)(void *);
-#endif
-
 #if M_FUSE4X_ENABLE_SPECFS
 typedef int (*fuse_spec_op_t)(void *);
 #endif
@@ -139,49 +135,6 @@ FUSE_VNOP_EXPORT int fuse_vnop_symlink(struct vnop_symlink_args *ap);
 FUSE_VNOP_EXPORT int fuse_vnop_write(struct vnop_write_args *ap);
 
 
-#if M_FUSE4X_ENABLE_FIFOFS
-
-/* fifofs */
-
-int     fifo_ebadf(void *);
-
-FUSE_VNOP_EXPORT int fuse_fifo_vnop_close(struct vnop_close_args *);
-FUSE_VNOP_EXPORT int fuse_fifo_vnop_read(struct vnop_read_args *);
-FUSE_VNOP_EXPORT int fuse_fifo_vnop_write(struct vnop_write_args *);
-
-int     fifo_advlock(struct vnop_advlock_args *);
-int     fifo_close(struct vnop_close_args *);
-int     fifo_inactive(struct vnop_inactive_args *);
-int     fifo_ioctl(struct vnop_ioctl_args *);
-int     fifo_lookup(struct vnop_lookup_args *);
-int     fifo_open(struct vnop_open_args *);
-int     fifo_pathconf(struct vnop_pathconf_args *);
-int     fifo_read(struct vnop_read_args *);
-int     fifo_select(struct vnop_select_args *);
-int     fifo_write(struct vnop_write_args *);
-
-#define fifo_access   (int (*)(struct vnop_access_args *))fifo_ebadf
-#define fifo_blktooff (int (*)(struct vnop_blktooff_args *))err_blktooff
-#define fifo_bwrite   (int (*)(struct vnop_bwrite_args *))nullop
-#define fifo_create   (int (*)(struct vnop_create_args *))err_create
-#define fifo_fsync    (int (*)(struct vnop_fsync_args *))nullop
-#define fifo_getattr  (int (*)(struct vnop_getattr_args *))fifo_ebadf
-#define fifo_link     (int (*)(struct vnop_link_args *))err_link
-#define fifo_mkdir    (int (*)(struct vnop_mkdir_args *))err_mkdir
-#define fifo_mknod    (int (*)(struct vnop_mknod_args *))err_mknod
-#define fifo_mmap     (int (*)(struct vnop_mmap_args *))err_mmap
-#define fifo_readdir  (int (*)(struct vnop_readdir_args *))err_readdir
-#define fifo_readlink (int (*)(struct vnop_readlink_args *))err_readlink
-#define fifo_reclaim  (int (*)(struct vnop_reclaim_args *))nullop
-#define fifo_remove   (int (*)(struct vnop_remove_args *))err_remove
-#define fifo_rename   (int (*)(struct vnop_rename_args *))err_rename
-#define fifo_revoke   (int (*)(struct vnop_revoke_args *))nop_revoke
-#define fifo_rmdir    (int (*)(struct vnop_rmdir_args *))err_rmdir
-#define fifo_setattr  (int (*)(struct vnop_setattr_args *))fifo_ebadf
-#define fifo_strategy (int (*)(struct vnop_strategy_args *))err_strategy
-#define fifo_symlink  (int (*)(struct vnop_symlink_args *))err_symlink
-
-#endif /* M_FUSE4X_ENABLE_FIFOFS */
 
 #if M_FUSE4X_ENABLE_SPECFS
 

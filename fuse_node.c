@@ -141,14 +141,6 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
 #else
             if (0) {
 #endif
-#if M_FUSE4X_ENABLE_FIFOFS
-            } else if (vtyp == VFIFO) {
-                params.vnfs_vops = fuse_fifo_operations;
-                params.vnfs_rdev = 0;
-                (void)rdev;
-#else
-            } else if (0) {
-#endif
             } else {
                 params.vnfs_vops = fuse_vnode_operations;
                 params.vnfs_rdev = 0;

@@ -15,10 +15,6 @@
 
 extern errno_t (**fuse_vnode_operations)(void *);
 
-#if M_FUSE4X_ENABLE_FIFOFS
-extern errno_t (**fuse_fifo_operations)(void *);
-#endif /* M_FUSE4X_ENABLE_FIFOFS */
-
 #if M_FUSE4X_ENABLE_SPECFS
 extern errno_t (**fuse_spec_operations)(void *);
 #endif /* M_FUSE4X_ENABLE_SPECFS */

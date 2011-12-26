@@ -1858,11 +1858,9 @@ fuse_vnop_open(struct vnop_open_args *ap)
         return ENXIO;
     }
 
-#if !M_FUSE4X_ENABLE_FIFOFS
     if (vnode_isfifo(vp)) {
         return EPERM;
     }
-#endif
 
     CHECK_BLANKET_DENIAL(vp, context, ENOENT);
 
@@ -3580,41 +3578,6 @@ fuse_vnop_write(struct vnop_write_args *ap)
     return error;
 }
 
-#if M_FUSE4X_ENABLE_FIFOFS
-
-/* fifofs */
-
-FUSE_VNOP_EXPORT
-int
-fuse_fifo_vnop_close(struct vnop_close_args *ap)
-{
-    if (vnode_isinuse(ap->a_vp, 1)) {
-        /* XXX: TBD */
-    }
-
-    return fifo_close(ap);
-}
-
-FUSE_VNOP_EXPORT
-int
-fuse_fifo_vnop_read(struct vnop_read_args *ap)
-{
-    VTOFUD(ap->a_vp)->c_flag |= C_TOUCH_ACCTIME;
-
-    return fifo_read(ap);
-}
-
-FUSE_VNOP_EXPORT
-int
-fuse_fifo_vnop_write(struct vnop_write_args *ap)
-{
-    VTOFUD(ap->a_vp)->c_flag |= (C_TOUCH_CHGTIME | C_TOUCH_MODTIME);
-
-    return fifo_write(ap);
-}
-
-#endif /* M_FUSE4X_ENABLE_FIFOFS */
-
 #if M_FUSE4X_ENABLE_SPECFS
 
 /* specfs */
@@ -3713,54 +3676,6 @@ struct vnodeopv_entry_desc fuse_vnode_operation_entries[] = {
     { &vnop_write_desc,         (fuse_vnode_op_t) fuse_vnop_write         },
     { NULL, NULL }
 };
-
-#if M_FUSE4X_ENABLE_FIFOFS
-
-/* fifofs */
-
-struct vnodeopv_entry_desc fuse_fifo_operation_entries[] = {
-    { &vnop_advlock_desc,       (fuse_fifo_op_t)err_advlock             },
-    { &vnop_blktooff_desc,      (fuse_fifo_op_t)err_blktooff            },
-    { &vnop_blockmap_desc,      (fuse_fifo_op_t)err_blockmap            },
-    { &vnop_bwrite_desc,        (fuse_fifo_op_t)fifo_bwrite             },
-    { &vnop_close_desc,         (fuse_fifo_op_t)fuse_fifo_vnop_close    }, // c
-    { &vnop_copyfile_desc,      (fuse_fifo_op_t)err_copyfile            },
-    { &vnop_create_desc,        (fuse_fifo_op_t)fifo_create             },
-    { &vnop_default_desc,       (fuse_fifo_op_t)vn_default_error        },
-    { &vnop_fsync_desc,         (fuse_fifo_op_t)fuse_vnop_fsync         },
-    { &vnop_getattr_desc,       (fuse_fifo_op_t)fuse_vnop_getattr       },
-    { &vnop_inactive_desc,      (fuse_fifo_op_t)fuse_vnop_inactive      },
-    { &vnop_ioctl_desc,         (fuse_fifo_op_t)fifo_ioctl              },
-#if M_FUSE4X_ENABLE_KQUEUE
-    { &vnop_kqfilt_add_desc,    (fuse_fifo_op_t)fuse_vnop_kqfilt_add    },
-    { &vnop_kqfilt_remove_desc, (fuse_fifo_op_t)fuse_vnop_kqfilt_remove },
-#endif
-    { &vnop_link_desc,          (fuse_fifo_op_t)fifo_link               },
-    { &vnop_lookup_desc,        (fuse_fifo_op_t)fifo_lookup             },
-    { &vnop_mkdir_desc,         (fuse_fifo_op_t)fifo_mkdir              },
-    { &vnop_mknod_desc,         (fuse_fifo_op_t)fifo_mknod              },
-    { &vnop_mmap_desc,          (fuse_fifo_op_t)fifo_mmap               },
-    { &vnop_offtoblk_desc,      (fuse_fifo_op_t)err_offtoblk            },
-    { &vnop_open_desc,          (fuse_fifo_op_t)fifo_open               },
-    { &vnop_pagein_desc,        (fuse_fifo_op_t)fuse_vnop_pagein        }, // n
-    { &vnop_pageout_desc,       (fuse_fifo_op_t)fuse_vnop_pageout       }, // n
-    { &vnop_pathconf_desc,      (fuse_fifo_op_t)fifo_pathconf           },
-    { &vnop_read_desc,          (fuse_fifo_op_t)fuse_fifo_vnop_read     }, // c
-    { &vnop_readdir_desc,       (fuse_fifo_op_t)fifo_readdir            },
-    { &vnop_readlink_desc,      (fuse_fifo_op_t)fifo_readlink           },
-    { &vnop_reclaim_desc,       (fuse_fifo_op_t)fuse_vnop_reclaim       }, // n
-    { &vnop_remove_desc,        (fuse_fifo_op_t)fifo_remove             },
-    { &vnop_rename_desc,        (fuse_fifo_op_t)fifo_rename             },
-    { &vnop_revoke_desc,        (fuse_fifo_op_t)fifo_revoke             },
-    { &vnop_rmdir_desc,         (fuse_fifo_op_t)fifo_rmdir              },
-    { &vnop_select_desc,        (fuse_fifo_op_t)fifo_select             },
-    { &vnop_setattr_desc,       (fuse_fifo_op_t)fuse_vnop_setattr       }, // n
-    { &vnop_strategy_desc,      (fuse_fifo_op_t)fifo_strategy           },
-    { &vnop_symlink_desc,       (fuse_fifo_op_t)fifo_symlink            },
-    { &vnop_write_desc,         (fuse_fifo_op_t)fuse_fifo_vnop_write    },
-    { (struct vnodeop_desc*)NULL, (fuse_fifo_op_t)NULL                  }
-};
-#endif /* M_FUSE4X_ENABLE_FIFOFS */
 
 #if M_FUSE4X_ENABLE_SPECFS
 
