@@ -131,10 +131,6 @@ struct fuse_data {
     uint32_t                   deadticket_counter; // protected by ticket_mtx
     uint64_t                   ticketer; // protected by ticket_mtx
 
-#if M_FUSE4X_EXPLICIT_RENAME_LOCK
-    lck_rw_t                  *rename_lock;
-#endif /* M_FUSE4X_EXPLICIT_RENAME_LOCK */
-
     uint32_t                   max_write;
     uint32_t                   max_read;
     uint32_t                   blocksize;

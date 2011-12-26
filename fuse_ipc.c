@@ -395,10 +395,6 @@ fuse_data_alloc(struct proc *p)
     data->deadticket_counter = 0;
     data->ticketer           = 0;
 
-#if M_FUSE4X_EXCPLICIT_RENAME_LOCK
-    data->rename_lock = lck_rw_alloc_init(fuse_lock_group, fuse_lock_attr);
-#endif
-
 #if M_FUSE4X_ENABLE_BIGLOCK
     data->biglock        = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
 #endif
@@ -419,11 +415,6 @@ fuse_data_destroy(struct fuse_data *data)
 
     lck_mtx_free(data->ticket_mtx, fuse_lock_group);
     data->ticket_mtx = NULL;
-
-#if M_FUSE4X_EXPLICIT_RENAME_LOCK
-    lck_rw_free(data->rename_lock, fuse_lock_group);
-    data->rename_lock = NULL;
-#endif
 
 #if M_FUSE4X_ENABLE_BIGLOCK
     lck_mtx_free(data->biglock, fuse_lock_group);
