@@ -781,12 +781,6 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
 
     fuse_internal_attr_loadvap(vp, vap, context);
 
-#if M_FUSE4X_EXPERIMENTAL_JUNK
-    if (vap != VTOVA(vp)) {
-        memcpy(vap, VTOVA(vp), sizeof(*vap));
-    }
-#endif
-
     /* ATTR_FUDGE_CASE */
     if (vnode_isreg(vp) && fuse_isnoubc(vp)) {
         /*
@@ -3494,16 +3488,6 @@ fuse_vnop_write(struct vnop_write_args *ap)
     if (offset < 0) {
         return EFBIG;
     }
-
-#if M_FUSE4X_EXPERIMENTAL_JUNK
-    if (original_resid == 0) {
-        return 0;
-    }
-
-    if (offset + original_resid > /* some maximum file size */) {
-        return EFBIG;
-    }
-#endif
 
     if (offset + original_resid > original_size) {
         /* Need to extend the file. */
