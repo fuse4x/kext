@@ -984,9 +984,6 @@ fuse_vnop_inactive(struct vnop_inactive_args *ap)
     return 0;
 }
 
-extern int fuse_setextendedsecurity(mount_t mp, int state);
-
-
 #if M_FUSE4X_ENABLE_KQUEUE
 
 #include "fuse_knote.h"

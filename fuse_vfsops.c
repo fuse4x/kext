@@ -1290,45 +1290,6 @@ fuse_vfsop_setattr(mount_t mp, struct vfs_attr *fsap, vfs_context_t context)
 out:
     return error;
 }
-
-__private_extern__
-int
-fuse_setextendedsecurity(mount_t mp, int state)
-{
-    int err = EINVAL;
-    struct fuse_data *data;
-
-    data = fuse_get_mpdata(mp);
-
-    if (!data) {
-        return ENXIO;
-    }
-
-    if (state == 1) {
-        /* Turning on extended security. */
-        if ((data->dataflags & FSESS_NO_VNCACHE) ||
-            (data->dataflags & FSESS_DEFER_PERMISSIONS)) {
-            return EINVAL;
-        }
-        data->dataflags |= (FSESS_EXTENDED_SECURITY |
-                            FSESS_DEFAULT_PERMISSIONS);;
-        if (vfs_authopaque(mp)) {
-            vfs_clearauthopaque(mp);
-        }
-        if (vfs_authopaqueaccess(mp)) {
-            vfs_clearauthopaqueaccess(mp);
-        }
-        vfs_setextendedsecurity(mp);
-        err = 0;
-    } else if (state == 0) {
-        /* Turning off extended security. */
-        data->dataflags &= ~FSESS_EXTENDED_SECURITY;
-        vfs_clearextendedsecurity(mp);
-        err = 0;
-    }
-
-    return err;
-}
 #if M_FUSE4X_ENABLE_BIGLOCK
 
 static errno_t

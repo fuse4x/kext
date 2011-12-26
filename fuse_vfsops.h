@@ -47,9 +47,4 @@ static errno_t
 fuse_vfsop_setattr(mount_t mp, struct vfs_attr *fsap,
                    __unused vfs_context_t context);
 
-/* Other VFS operations */
-
-extern int
-fuse_setextendedsecurity(mount_t mp, int state);
-
 #endif /* _FUSE_VFSOPS_H_ */
