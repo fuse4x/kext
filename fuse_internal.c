@@ -1555,7 +1555,7 @@ static int
 fuse_internal_print_vnodes_callback(vnode_t vp, __unused void *cargs)
 {
     struct fuse_vnode_data *fvdat = VTOFUD(vp);
-    const char *vname = vname = vnode_getname(vp);
+    const char *vname = vnode_getname(vp);
 
     if (vname) {
         log("fuse4x: vp=%p ino=%lld parent=%lld inuse=%d %s\n",
