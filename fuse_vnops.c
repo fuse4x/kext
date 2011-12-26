@@ -3578,41 +3578,6 @@ fuse_vnop_write(struct vnop_write_args *ap)
     return error;
 }
 
-#if M_FUSE4X_ENABLE_SPECFS
-
-/* specfs */
-
-FUSE_VNOP_EXPORT
-int
-fuse_spec_vnop_close(struct vnop_close_args *ap)
-{
-    if (vnode_isinuse(ap->a_vp, 1)) {
-        /* XXX: TBD */
-    }
-
-    return spec_close(ap);
-}
-
-FUSE_VNOP_EXPORT
-int
-fuse_spec_vnop_read(struct vnop_read_args *ap)
-{
-    VTOFUD(ap->a_vp)->c_flag |= C_TOUCH_ACCTIME;
-
-    return spec_read(ap);
-}
-
-FUSE_VNOP_EXPORT
-int
-fuse_spec_vnop_write(struct vnop_write_args *ap)
-{
-    VTOFUD(ap->a_vp)->c_flag |= (C_TOUCH_CHGTIME | C_TOUCH_MODTIME);
-
-    return spec_write(ap);
-}
-
-#endif /* M_FUSE4X_ENABLE_SPECFS */
-
 struct vnodeopv_entry_desc fuse_vnode_operation_entries[] = {
     { &vnop_access_desc,        (fuse_vnode_op_t) fuse_vnop_access        },
     { &vnop_advlock_desc,       (fuse_vnode_op_t) err_advlock             },
@@ -3676,45 +3641,3 @@ struct vnodeopv_entry_desc fuse_vnode_operation_entries[] = {
     { &vnop_write_desc,         (fuse_vnode_op_t) fuse_vnop_write         },
     { NULL, NULL }
 };
-
-#if M_FUSE4X_ENABLE_SPECFS
-
-/* specfs */
-
-struct vnodeopv_entry_desc fuse_spec_operation_entries[] = {
-    { &vnop_advlock_desc,  (fuse_spec_op_t)err_advlock          },
-    { &vnop_blktooff_desc, (fuse_spec_op_t)fuse_vnop_blktooff   }, // native
-    { &vnop_close_desc,    (fuse_spec_op_t)fuse_spec_vnop_close }, // custom
-    { &vnop_copyfile_desc, (fuse_spec_op_t)err_copyfile         },
-    { &vnop_create_desc,   (fuse_spec_op_t)spec_create          },
-    { &vnop_default_desc,  (fuse_spec_op_t)vn_default_error     },
-    { &vnop_fsync_desc,    (fuse_spec_op_t)fuse_vnop_fsync      }, // native
-    { &vnop_getattr_desc,  (fuse_spec_op_t)fuse_vnop_getattr    }, // native
-    { &vnop_inactive_desc, (fuse_spec_op_t)fuse_vnop_inactive   }, // native
-    { &vnop_ioctl_desc,    (fuse_spec_op_t)spec_ioctl           },
-    { &vnop_link_desc,     (fuse_spec_op_t)spec_link            },
-    { &vnop_lookup_desc,   (fuse_spec_op_t)spec_lookup          },
-    { &vnop_mkdir_desc,    (fuse_spec_op_t)spec_mkdir           },
-    { &vnop_mknod_desc,    (fuse_spec_op_t)spec_mknod           },
-    { &vnop_mmap_desc,     (fuse_spec_op_t)spec_mmap            },
-    { &vnop_offtoblk_desc, (fuse_spec_op_t)fuse_vnop_offtoblk   }, // native
-    { &vnop_open_desc,     (fuse_spec_op_t)spec_open            },
-    { &vnop_pagein_desc,   (fuse_spec_op_t)fuse_vnop_pagein     }, // native
-    { &vnop_pageout_desc,  (fuse_spec_op_t)fuse_vnop_pageout    }, // native
-    { &vnop_pathconf_desc, (fuse_spec_op_t)spec_pathconf        },
-    { &vnop_read_desc,     (fuse_spec_op_t)fuse_spec_vnop_read  }, // custom
-    { &vnop_readdir_desc,  (fuse_spec_op_t)spec_readdir         },
-    { &vnop_readlink_desc, (fuse_spec_op_t)spec_readlink        },
-    { &vnop_reclaim_desc,  (fuse_spec_op_t)fuse_vnop_reclaim    }, // native
-    { &vnop_remove_desc,   (fuse_spec_op_t)spec_remove          },
-    { &vnop_rename_desc,   (fuse_spec_op_t)spec_rename          },
-    { &vnop_revoke_desc,   (fuse_spec_op_t)spec_revoke          },
-    { &vnop_rmdir_desc,    (fuse_spec_op_t)spec_rmdir           },
-    { &vnop_select_desc,   (fuse_spec_op_t)spec_select          },
-    { &vnop_setattr_desc,  (fuse_spec_op_t)fuse_vnop_setattr    }, // native
-    { &vnop_strategy_desc, (fuse_spec_op_t)spec_strategy        },
-    { &vnop_symlink_desc,  (fuse_spec_op_t)spec_symlink         },
-    { &vnop_write_desc,    (fuse_spec_op_t)fuse_spec_vnop_write }, // custom
-    { (struct vnodeop_desc*)NULL, (fuse_spec_op_t)NULL          },
-};
-#endif /* M_FUSE4X_ENABLE_SPECFS */

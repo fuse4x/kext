@@ -39,22 +39,9 @@ static struct vnodeopv_desc fuse_vnode_operation_vector_desc = {
 #endif /* M_FUSE4X_ENABLE_BIGLOCK */
 };
 
-#if M_FUSE4X_ENABLE_SPECFS
-errno_t (**fuse_spec_operations)(void *);
-
-static struct vnodeopv_desc fuse_spec_operation_vector_desc = {
-    &fuse_spec_operations,      // opv_desc_vector_p
-    fuse_spec_operation_entries // opv_desc_ops
-};
-#endif /* M_FUSE4X_ENABLE_SPECFS */
-
 static struct vnodeopv_desc *fuse_vnode_operation_vector_desc_list[] =
 {
     &fuse_vnode_operation_vector_desc,
-
-#if M_FUSE4X_ENABLE_SPECFS
-    &fuse_spec_operation_vector_desc,
-#endif
 };
 
 #if M_FUSE4X_ENABLE_BIGLOCK

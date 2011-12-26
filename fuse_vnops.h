@@ -10,10 +10,6 @@
 
 typedef int (*fuse_vnode_op_t)(void *);
 
-#if M_FUSE4X_ENABLE_SPECFS
-typedef int (*fuse_spec_op_t)(void *);
-#endif
-
 /*
  * VNOPs
  */
@@ -133,53 +129,5 @@ FUSE_VNOP_EXPORT int fuse_vnop_symlink(struct vnop_symlink_args *ap);
 // FUSE_VNOP_EXPORT int fuse_vnop_whiteout(struct vnop_whiteout_args *ap);
 
 FUSE_VNOP_EXPORT int fuse_vnop_write(struct vnop_write_args *ap);
-
-
-
-#if M_FUSE4X_ENABLE_SPECFS
-
-/* specfs */
-
-int     spec_ebadf(void *);
-
-FUSE_VNOP_EXPORT int fuse_spec_vnop_close(struct vnop_close_args *);
-FUSE_VNOP_EXPORT int fuse_spec_vnop_read(struct vnop_read_args *);
-FUSE_VNOP_EXPORT int fuse_spec_vnop_write(struct vnop_write_args *);
-
-int     spec_blktooff(struct vnop_blktooff_args *);
-int     spec_blockmap(struct vnop_blockmap_args *);
-int     spec_close(struct vnop_close_args *);
-int     spec_fsync(struct vnop_fsync_args *);
-int     spec_ioctl(struct vnop_ioctl_args *);
-int     spec_lookup(struct vnop_lookup_args *);
-int     spec_offtoblk(struct vnop_offtoblk_args *);
-int     spec_open(struct vnop_open_args *);
-int     spec_pathconf(struct vnop_pathconf_args *);
-int     spec_read(struct vnop_read_args *);
-int     spec_select(struct vnop_select_args *);
-int     spec_strategy(struct vnop_strategy_args *);
-int     spec_write(struct vnop_write_args *);
-
-#define spec_access   (int (*)(struct vnop_access_args *))spec_ebadf
-#define spec_advlock  (int (*)(struct vnop_advlock_args *))err_advlock
-#define spec_bwrite   (int (*)(struct vnop_bwrite_args *))nop_bwrite
-#define spec_create   (int (*)(struct vnop_create_args *))err_create
-#define spec_getattr  (int (*)(struct vnop_getattr_args *))spec_ebadf
-#define spec_inactive (int (*)(struct vnop_inactive_args *))nop_inactive
-#define spec_link     (int (*)(struct vnop_link_args *))err_link
-#define spec_mkdir    (int (*)(struct vnop_mkdir_args *))err_mkdir
-#define spec_mknod    (int (*)(struct vnop_mknod_args *))err_mknod
-#define spec_mmap     (int (*)(struct vnop_mmap_args *))err_mmap
-#define spec_readdir  (int (*)(struct vnop_readdir_args *))err_readdir
-#define spec_readlink (int (*)(struct vnop_readlink_args *))err_readlink
-#define spec_reclaim  (int (*)(struct vnop_reclaim_args *))nop_reclaim
-#define spec_remove   (int (*)(struct vnop_remove_args *))err_remove
-#define spec_rename   (int (*)(struct vnop_rename_args *))err_rename
-#define spec_revoke   (int (*)(struct vnop_revoke_args *))nop_revoke
-#define spec_rmdir    (int (*)(struct vnop_rmdir_args *))err_rmdir
-#define spec_setattr  (int (*)(struct vnop_setattr_args *))spec_ebadf
-#define spec_symlink  (int (*)(struct vnop_symlink_args *))err_symlink
-
-#endif /* M_FUSE4X_ENABLE_SPECFS */
 
 #endif /* _FUSE_VNOPS_H_ */

@@ -133,20 +133,8 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
             params.vnfs_str    = NULL;
             params.vnfs_dvp    = dvp; /* NULLVP for the root vnode */
             params.vnfs_fsnode = hn;
-
-#if M_FUSE4X_ENABLE_SPECFS
-            if ((vtyp == VBLK) || (vtyp == VCHR)) {
-                params.vnfs_vops = fuse_spec_operations;
-                params.vnfs_rdev = (dev_t)rdev;
-#else
-            if (0) {
-#endif
-            } else {
-                params.vnfs_vops = fuse_vnode_operations;
-                params.vnfs_rdev = 0;
-                (void)rdev;
-            }
-
+            params.vnfs_vops = fuse_vnode_operations;
+            params.vnfs_rdev = 0;
             params.vnfs_marksystem = 0;
             params.vnfs_cnp        = NULL;
             params.vnfs_flags      = VNFS_NOCACHE | VNFS_CANTCACHE;
