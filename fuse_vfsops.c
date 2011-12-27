@@ -112,7 +112,7 @@ struct vfs_fsentry fuse_vfs_entry = {
     FUSE4X_FS_TYPE,
 
     // Flags specifying file system capabilities
-#if M_FUSE4X_ENABLE_BIGLOCK
+#if M_FUSE4X_ENABLE_BIGLOCK || M_FUSE4X_ENABLE_SIMPLE_LOCK
     VFS_TBLTHREADSAFE |
 #endif
     VFS_TBL64BITREADY | VFS_TBLNOTYPENUM,
