@@ -547,8 +547,8 @@ out:
 static errno_t
 fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
 {
-    int   err        = 0;
-    int   flags      = 0;
+    int err = 0;
+    bool force = false;
 
     fuse_device_t          fdev;
     struct fuse_data      *data;
@@ -559,7 +559,7 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
     fuse_trace_printf_vfsop();
 
     if (mntflags & MNT_FORCE) {
-        flags |= FORCECLOSE;
+        force = true;
     }
 
     data = fuse_get_mpdata(mp);
@@ -595,18 +595,18 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
          */
 
     } else if (!data->inited) {
-        flags |= FORCECLOSE;
+        force = true;
         log("fuse4x: forcing unmount on not-yet-alive file system\n");
         fuse_data_kill(data);
     }
 
     fuse_rootvp = data->rootvp;
 
-    fuse_trace_printf("%s: Calling vflush(mp, fuse_rootvp, flags=0x%X);\n", __FUNCTION__, flags);
+    fuse_trace_printf("%s: Calling vflush(mp, fuse_rootvp, flags=0x%X);\n", __FUNCTION__, force ? FORCECLOSE : 0);
 #if M_FUSE4X_ENABLE_BIGLOCK
     fuse_biglock_unlock(data->biglock);
 #endif
-    err = vflush(mp, fuse_rootvp, flags);
+    err = vflush(mp, fuse_rootvp, force ? FORCECLOSE : 0);
 #if M_FUSE4X_ENABLE_BIGLOCK
     fuse_biglock_lock(data->biglock);
 #endif
@@ -618,7 +618,7 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
         return err;
     }
 
-    if (vnode_isinuse(fuse_rootvp, 1) && !(flags & FORCECLOSE)) {
+    if (vnode_isinuse(fuse_rootvp, 1) && !force) {
 #if M_FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_unlock(data->biglock);
 #endif
