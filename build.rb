@@ -31,6 +31,11 @@ system("xcodebuild SYMROOT=build SHARED_PRECOMPS_DIR=build -PBXBuildsContinueAft
 unless root_dir
   # we need to reload the kext
   if system('kextstat | grep org.fuse4x.kext.fuse4x') then
+    active_fs = `mount -t fuse4x`
+    unless active_fs.empty? then
+      abort("\n\nCannot unload fuse4x kernel extension because it is still in use by following filesystems:\n#{active_fs}")
+    end
+
     system('sudo kextunload -b org.fuse4x.kext.fuse4x') or abort('cannot unload the kext')
   end
 end
