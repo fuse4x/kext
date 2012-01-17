@@ -13,7 +13,6 @@
 		DE134AFE13BE336D00113A90 /* fuse_param.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D531388751A009DC919 /* fuse_param.h */; };
 		DE134AFF13BE336D00113A90 /* fuse_version.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D541388751A009DC919 /* fuse_version.h */; };
 		DE134B0113BE3A8F00113A90 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE134B0013BE3A8F00113A90 /* CoreFoundation.framework */; };
-		DE3ED531149F1D51007E2A7C /* kext.exports in Resources */ = {isa = PBXBuildFile; fileRef = DE3ED530149F1D51007E2A7C /* kext.exports */; };
 		DEBF0B1313886AAC00A1755B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = DEBF0B1113886AAC00A1755B /* InfoPlist.strings */; };
 		DEE25D27138874AF009DC919 /* fuse_biglock_vnops.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D0A138874AF009DC919 /* fuse_biglock_vnops.c */; };
 		DEE25D28138874AF009DC919 /* fuse_biglock_vnops.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D0B138874AF009DC919 /* fuse_biglock_vnops.h */; };
@@ -321,7 +320,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				DEBF0B1313886AAC00A1755B /* InfoPlist.strings in Resources */,
-				DE3ED531149F1D51007E2A7C /* kext.exports in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -390,7 +388,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
+				SDKROOT = "";
 			};
 			name = Debug;
 		};
@@ -403,7 +401,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				MACOSX_DEPLOYMENT_TARGET = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
+				SDKROOT = "";
 			};
 			name = Release;
 		};
