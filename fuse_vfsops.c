@@ -527,6 +527,9 @@ out:
 
             vfs_ioattr(mp, &ioattr);
             ioattr.io_devblocksize = data->blocksize;
+            ioattr.io_maxsegreadsize = ioattr.io_maxsegwritesize =
+              ioattr.io_maxreadcnt = ioattr.io_maxwritecnt = data->iosize;
+            ioattr.io_segreadcnt = ioattr.io_segwritecnt = data->iosize / PAGE_SIZE;
             vfs_setioattr(mp, &ioattr);
         }
     }
