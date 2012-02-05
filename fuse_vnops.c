@@ -391,7 +391,7 @@ fuse_vnop_create(struct vnop_create_args *ap)
     }
 
     fuse_dispatcher_init(dispatcher, sizeof(*fci) + cnp->cn_namelen + 1);
-    fuse_dispatcher_make(dispatcher, FUSE_CREATE, vnode_mount(dvp), parent_nodeid, context);
+    fuse_dispatcher_make(dispatcher, FUSE_CREATE, mp, parent_nodeid, context);
 
     fci = dispatcher->indata;
     fci->mode = mode;
@@ -419,7 +419,7 @@ good_old:
     gone_good_old = true;
     fmni.mode = mode; /* fvdat->flags; */
     fmni.rdev = 0;
-    fuse_internal_newentry_makerequest(vnode_mount(dvp), parent_nodeid, cnp,
+    fuse_internal_newentry_makerequest(mp, parent_nodeid, cnp,
                                        FUSE_MKNOD, &fmni, sizeof(fmni),
                                        dispatcher, context);
     err = fuse_dispatcher_wait_answer(dispatcher);
