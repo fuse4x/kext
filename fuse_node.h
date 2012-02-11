@@ -18,7 +18,6 @@ extern errno_t (**fuse_vnode_operations)(void *);
 enum {
     kFSNodeMagic    = 'FUSE',
     kFSNodeBadMagic = 'FU**',
-    kHNodeMagic     = 'HNOD',
 };
 
 #define FN_ACCESS_NOOP       0x00000001

@@ -60,7 +60,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
     dummy_device = mntdata->fdev;
 
     err = HNodeLookupCreatingIfNecessary(dummy_device, feo->nodeid,
-                                         0 /* fork index */, &hn, &vn);
+                                         &hn, &vn);
     if ((err == 0) && (vn == NULL)) {
 
         struct vnode_fsparam params;
@@ -160,10 +160,10 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
             if (oflags) {
                 *oflags |= MAKEENTRY;
             }
-            HNodeAttachVNodeSucceeded(hn, 0 /* forkIndex */, vn);
+            HNodeAttachVNodeSucceeded(hn, vn);
             OSIncrementAtomic((SInt32 *)&fuse_vnodes_current);
         } else {
-            if (HNodeAttachVNodeFailed(hn, 0 /* forkIndex */)) {
+            if (HNodeAttachVNodeFailed(hn)) {
                 FSNodeScrub(fvdat);
                 HNodeScrubDone(hn);
             }

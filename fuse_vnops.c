@@ -2624,7 +2624,7 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
 
     fuse_vncache_purge(vp);
 
-    hn = HNodeFromVNode(vp);
+    hn = vnode_fsnode(vp);
     if (HNodeDetachVNode(hn, vp)) {
         FSNodeScrub(fvdat);
         HNodeScrubDone(hn);

@@ -123,7 +123,7 @@ fusefs_start(__unused kmod_info_t *ki, __unused void *d)
     }
 
     ret = HNodeInit(fuse_lock_group, fuse_lock_attr, fuse_malloc_tag,
-                    kHNodeMagic, sizeof(struct fuse_vnode_data));
+                    sizeof(struct fuse_vnode_data));
     if (ret != KERN_SUCCESS) {
         goto error;
     }

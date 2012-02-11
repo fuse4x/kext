@@ -47,10 +47,6 @@
  */
 
 struct HNode {
-
-    /* [1] -> gMagic, that is, client supplied magic number */
-    uint32_t magic;
-
     /* [2] next pointer for hash chain */
     LIST_ENTRY(HNode) hashLink;
 
@@ -66,26 +62,7 @@ struct HNode {
     /* [2] true if someone is waiting for attachOutstanding to go false */
     bool waiting;
 
-    /* [2] size of forkVNodes array, must be non-zero */
-    size_t forkVNodesSize;
-
-    /* [2] # of non-NULL vnodes in array (+1 if attachOutstanding is true) */
-    size_t forkVNodesCount;
-
-    /* [2] array of vnodes, indexed by forkIndex */
-    vnode_t *forkVNodes;
-
-    union {
-        /* [2] if forkVNodesSize == 1, the vnode is stored internally */
-        vnode_t  internal;
-
-        /*
-         * [2] if forkVNodesSize > 1, the vnodes are stored in a separately
-         * allocated array
-         */
-        vnode_t *external;
-
-    } forkVNodesStorage;
+    vnode_t vnode;
 };
 typedef struct HNode HNode;
 
@@ -110,7 +87,6 @@ typedef struct HNode HNode;
  * See the header comments for HNodeInit for more details.
  */
 
-static uint32_t     gMagic;
 static lck_grp_t   *gLockGroup;
 static size_t       gFSNodeSize;
 static OSMallocTag  gOSMallocTag;
@@ -156,7 +132,6 @@ extern errno_t
 HNodeInit(lck_grp_t   *lockGroup,
           lck_attr_t  *lockAttr,
           OSMallocTag  mallocTag,
-          uint32_t     magic,
           size_t       fsNodeSize)
 {
     errno_t     err;
@@ -166,7 +141,6 @@ HNodeInit(lck_grp_t   *lockGroup,
     assert(mallocTag != NULL);
     assert(fsNodeSize != 0);
 
-    gMagic       = magic;
     gFSNodeSize  = fsNodeSize;
     gOSMallocTag = mallocTag;
     gLockGroup   = lockGroup;
@@ -214,158 +188,24 @@ HNodeTerm(void)
     gLockGroup = NULL;
     gOSMallocTag = NULL;
     gFSNodeSize = 0;
-    gMagic = 0;
 }
 
 extern void *
 FSNodeGenericFromHNode(HNodeRef hnode)
 {
     assert(hnode != NULL);
-    assert(hnode->magic == gMagic);
     return (void *) &hnode[1];
-}
-
-extern HNodeRef
-HNodeFromFSNodeGeneric(void *fsNode)
-{
-    assert(fsNode != NULL);
-    return  &((HNodeRef) fsNode)[-1];
-}
-
-extern HNodeRef
-HNodeFromVNode(vnode_t vn)
-{
-    HNodeRef hnode;
-
-    assert(vn != NULL);
-    hnode = vnode_fsnode(vn);
-    assert(hnode != NULL);
-    assert(hnode->magic = gMagic);
-
-    return hnode;
-}
-
-extern void *
-FSNodeGenericFromVNode(vnode_t vn)
-{
-    assert(vn != NULL);
-    return FSNodeGenericFromHNode(HNodeFromVNode(vn));
-}
-
-extern fuse_device_t
-HNodeGetDevice(HNodeRef hnode)
-{
-    assert(hnode != NULL);
-    assert(hnode->magic == gMagic);
-    return hnode->dev;
-}
-
-extern uint64_t
-HNodeGetInodeNumber(HNodeRef hnode)
-{
-    assert(hnode != NULL);
-    assert(hnode->magic == gMagic);
-    return hnode->ino;
-}
-
-extern vnode_t
-HNodeGetVNodeForForkAtIndex(HNodeRef hnode, __unused size_t forkIndex)
-{
-    vnode_t     vn;
-
-    assert(hnode != NULL);
-    assert(hnode->magic == gMagic);
-    assert(forkIndex < hnode->forkVNodesSize);
-
-    /*
-     * Locking and unlocking gHashMutex /is/ needed, because another thread
-     * might be swapping in an expanded forkVNodes array. Because of the
-     * multi-threaded nature of the kernel, no amount of clever ordering of
-     * this swap can prevent the possibility of us seeing inconsistent data.
-     */
-
-    lck_mtx_lock(gHashMutex);
-
-    vn = hnode->forkVNodes[forkIndex];
-
-    lck_mtx_unlock(gHashMutex);
-
-    return vn;
-}
-
-/*
- * The fact that the caller must hold some sort of reference on the vnode
- * prevents the vnode from being reclaimed, which means that we're
- * guaranteed to find the vnode in the fork array.
- */
-extern size_t
-HNodeGetForkIndexForVNode(vnode_t vn)
-{
-    HNodeRef    hnode;
-    size_t      forkCount;
-    size_t      forkIndex;
-
-    assert(vn != NULL);
-
-    /* HNodeFromVNode asserts the validity of its result */
-    hnode = HNodeFromVNode(vn);
-
-    /*
-     * Locking and unlocking gHashMutex is needed, because another thread might
-     * be switching in an expanded forkVNodes array.
-     */
-
-    lck_mtx_lock(gHashMutex);
-
-    forkCount = hnode->forkVNodesSize;
-    for (forkIndex = 0; forkIndex < forkCount; forkIndex++) {
-        if (vn == hnode->forkVNodes[forkIndex]) {
-            break;
-        }
-    }
-    /* That is, that vn is in forkVNodes */
-    assert(forkIndex != forkCount);
-
-    lck_mtx_unlock(gHashMutex);
-
-    return forkIndex;
-}
-
-extern void
-HNodeExchangeFromFSNode(void *fsnode1, void *fsnode2)
-{
-    struct HNode tmpHNode;
-
-    lck_mtx_lock(gHashMutex);
-
-    HNodeRef hnode1 = HNodeFromFSNodeGeneric(fsnode1);
-    HNodeRef hnode2 = HNodeFromFSNodeGeneric(fsnode2);
-
-    memcpy(&tmpHNode, hnode1, sizeof(struct HNode));
-    memcpy(hnode1, hnode2, sizeof(struct HNode));
-    memcpy(hnode2, &tmpHNode, sizeof(struct HNode));
-
-    LIST_REMOVE(hnode1, hashLink);
-    LIST_REMOVE(hnode2, hashLink);
-    LIST_INSERT_HEAD(HNodeGetFirstFromHashTable(hnode1->dev, hnode1->ino),
-                     hnode1, hashLink);
-    LIST_INSERT_HEAD(HNodeGetFirstFromHashTable(hnode2->dev, hnode2->ino),
-                     hnode2, hashLink);
-
-    lck_mtx_unlock(gHashMutex);
 }
 
 extern errno_t
 HNodeLookupCreatingIfNecessary(fuse_device_t dev,
                                uint64_t      ino,
-                               size_t        forkIndex,
                                HNodeRef *hnodePtr,
                                vnode_t  *vnPtr)
 {
     errno_t    err;
     HNodeRef   thisNode;
     HNodeRef   newNode;
-    vnode_t   *newForkBuffer;
     bool       needsUnlock;
     vnode_t    resultVN;
     uint32_t   vid;
@@ -385,7 +225,6 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
     assert(gHashMutex != NULL);
 
     newNode = NULL;
-    newForkBuffer = NULL;
     needsUnlock = true;
     resultVN = NULL;
 
@@ -400,7 +239,6 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
 
         thisNode = LIST_FIRST(HNodeGetFirstFromHashTable(dev, ino));
         while (thisNode != NULL) {
-            assert(thisNode->magic == gMagic);
 
             if ((thisNode->dev == dev) && (thisNode->ino == ino)) {
                 break;
@@ -434,34 +272,9 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
 
                     memset(newNode, 0, sizeof(*newNode) + gFSNodeSize);
 
-                    newNode->magic = gMagic;
                     newNode->dev   = dev;
                     newNode->ino   = ino;
-
-                    /*
-                     * If we're dealing with the first fork, use the internal
-                     * buffer. Otherwise allocate an external buffer.
-                     */
-
-                    if (forkIndex == 0) {
-                        newNode->forkVNodesSize = 1;
-                        newNode->forkVNodes = &newNode->forkVNodesStorage.internal;
-                        newNode->forkVNodesStorage.internal = NULL;
-                    } else {
-                        newNode->forkVNodesSize = forkIndex + 1;
-                        newNode->forkVNodesStorage.external = FUSE_OSMalloc(sizeof(*newNode->forkVNodesStorage.external) * (forkIndex + 1), gOSMallocTag);
-                        newNode->forkVNodes = newNode->forkVNodesStorage.external;
-                        if (newNode->forkVNodesStorage.external == NULL) {
-                            /*
-                             * If this allocation fails, we don't have to clean
-                             * up newNode, because we'll fall out of the loop
-                             * and newNode will get cleaned  up at the end.
-                             */
-                            err = ENOMEM;
-                        } else {
-                            memset(newNode->forkVNodesStorage.external, 0, sizeof(*newNode->forkVNodesStorage.external) * (forkIndex + 1));
-                        }
-                    }
+                    newNode->vnode = NULL;
                 }
 
                 lck_mtx_lock(gHashMutex);
@@ -519,85 +332,7 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
                  * msleep drops and reacquires the mutex; the hash table may
                  * have changed, so we loop.
                  */
-            } else if (forkIndex >= thisNode->forkVNodesSize) {
-                /*
-                 * If the fork vnode array (a buffer described by
-                 * thisNode->forkVNodes and thisNode->forkVNodesSize) is too
-                 * small, install a new buffer, big enough to hold the vnode
-                 * fork forkIndex'th fork.
-                 */
-
-                if (newForkBuffer == NULL) {
-                    /*
-                     * If we don't already have a new fork buffer, allocate
-                     * one. Because this drops the mutex, we have to loop and
-                     * start again from scratch.
-                     */
-
-                    lck_mtx_unlock(gHashMutex);
-
-                    newForkBuffer = FUSE_OSMalloc(sizeof(*newForkBuffer) * (forkIndex + 1), gOSMallocTag);
-                    if (newForkBuffer == NULL) {
-                        err = ENOMEM;
-                    } else {
-                        memset(newForkBuffer, 0, sizeof(*newForkBuffer) * (forkIndex + 1));
-                    }
-
-                    lck_mtx_lock(gHashMutex);
-                } else {
-
-                    /*
-                     * Insert the newForkBuffer into theNode. This only works
-                     * because readers of the thisNode->forkVNodes array
-                     * (notably this routine and HNodeGetVNodeForForkAtIndex)
-                     * always take gHashMutex. If that wasn't the case, you
-                     * could get into some subtle race conditions as thread A
-                     * brings a copy of thisNode->forkVNodes into a register
-                     * and then gets blocked, then thread B runs and expands
-                     * the array and frees the buffer that is being pointed
-                     * to be thread A's register.
-                     */
-
-                    vnode_t *oldForkBuffer;
-                    size_t   oldForkBufferSize;
-
-                    oldForkBufferSize = 0; /* Quieten a false warning */
-
-                    /*
-                     * We only free the old fork buffer if it was external,
-                     * rather than the single vnode buffer embedded in the HNode
-                     */
-
-                    oldForkBuffer = NULL;
-                    if (thisNode->forkVNodesSize > 1) {
-                        oldForkBuffer = thisNode->forkVNodesStorage.external;
-                        oldForkBufferSize = thisNode->forkVNodesSize;
-                    }
-                    memcpy(newForkBuffer, thisNode->forkVNodes,
-                      sizeof(*thisNode->forkVNodes) * thisNode->forkVNodesSize);
-                    thisNode->forkVNodes = newForkBuffer;
-                    thisNode->forkVNodesSize = (forkIndex + 1);
-                    thisNode->forkVNodesStorage.external = newForkBuffer;
-
-                    /* So we don't free it at the end */
-                    newForkBuffer = NULL;
-
-                    /*
-                     * Drop the mutex around the free, and then start
-                     * again from scratch.
-                     */
-
-                    lck_mtx_unlock(gHashMutex);
-
-                    if (oldForkBuffer != NULL) {
-                        FUSE_OSFree(oldForkBuffer,
-                                    sizeof(*oldForkBuffer) * oldForkBufferSize,
-                                    gOSMallocTag);
-                    }
-
-                    lck_mtx_lock(gHashMutex);
-                }
-            } else if (thisNode->forkVNodes[forkIndex] == NULL) {
+            } else if (thisNode->vnode == NULL) {
                 /*
                  * If there's no existing vnode associated with this fork of
                  * the HNode, we're done. The caller is responsible for
@@ -609,7 +344,6 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
                  */
 
                 thisNode->attachOutstanding = true;
-                thisNode->forkVNodesCount += 1;
 
                 /* Results for the caller. */
 
@@ -628,7 +362,7 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
                  * from being freed.
                  */
 
-                candidateVN = thisNode->forkVNodes[forkIndex];
+                candidateVN = thisNode->vnode;
                 assert(candidateVN != NULL);
 
                 /*
@@ -681,13 +415,6 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
         lck_mtx_unlock(gHashMutex);
     }
 
-    /* Free newForkBuffer if we allocated it but didn't use it. */
-
-    if (newForkBuffer != NULL) {
-        FUSE_OSFree(newForkBuffer, sizeof(*newForkBuffer) * (forkIndex + 1),
-                    gOSMallocTag);
-    }
-
     /* Free newNode if we allocated it but didn't put it into the table. */
 
     if (newNode != NULL) {
@@ -707,7 +434,6 @@ static void
 HNodeAttachComplete(HNodeRef hnode)
 {
     assert(hnode != NULL);
-    assert(hnode->magic == gMagic);
 
     lck_mtx_assert(gHashMutex, LCK_MTX_ASSERT_OWNED);
 
@@ -731,38 +457,31 @@ HNodeForkVNodeDecrement(HNodeRef hnode)
     bool scrubIt;
 
     assert(hnode != NULL);
-    assert(hnode->magic == gMagic);
 
     lck_mtx_assert(gHashMutex, LCK_MTX_ASSERT_OWNED);
 
     scrubIt = false;
 
-    hnode->forkVNodesCount -= 1;
-    assert(hnode->forkVNodesCount >= 0);
-    if (hnode->forkVNodesCount == 0) {
-        LIST_REMOVE(hnode, hashLink);
+    LIST_REMOVE(hnode, hashLink);
 
-        /* We test for this case before decrementing it because it's unsigned */
-        assert(gHashNodeCount > 0);
+    /* We test for this case before decrementing it because it's unsigned */
+    assert(gHashNodeCount > 0);
 
-        gHashNodeCount -= 1;
+    gHashNodeCount -= 1;
 
-        scrubIt = true;
-    }
+    scrubIt = true;
 
     return scrubIt;
 }
 
 extern void
-HNodeAttachVNodeSucceeded(HNodeRef hnode, size_t forkIndex, vnode_t vn)
+HNodeAttachVNodeSucceeded(HNodeRef hnode, vnode_t vn)
 {
     errno_t junk;
 
     lck_mtx_lock(gHashMutex);
 
     assert(hnode != NULL);
-    assert(hnode->magic == gMagic);
-    assert(forkIndex < hnode->forkVNodesSize);
     assert(vn != NULL);
     assert(vnode_fsnode(vn) == hnode);
 
@@ -774,9 +493,7 @@ HNodeAttachVNodeSucceeded(HNodeRef hnode, size_t forkIndex, vnode_t vn)
     HNodeAttachComplete(hnode);
 
     /* Record the vnode's association with this HNode. */
-
-    assert(hnode->forkVNodes[forkIndex] == NULL);
-    hnode->forkVNodes[forkIndex] = vn;
+    hnode->vnode = vn;
     junk = vnode_addfsref(vn);
     assert(junk == 0);
 
@@ -784,15 +501,13 @@ HNodeAttachVNodeSucceeded(HNodeRef hnode, size_t forkIndex, vnode_t vn)
 }
 
 extern bool
-HNodeAttachVNodeFailed(HNodeRef hnode, __unused size_t forkIndex)
+HNodeAttachVNodeFailed(HNodeRef hnode)
 {
     bool   scrubIt;
 
     lck_mtx_lock(gHashMutex);
 
     assert(hnode != NULL);
-    assert(hnode->magic == gMagic);
-    assert(forkIndex < hnode->forkVNodesSize);
 
     /*
      * If someone is waiting for the HNode, wake them up. They won't actually
@@ -817,29 +532,16 @@ extern bool
 HNodeDetachVNode(HNodeRef hnode, vnode_t vn)
 {
     errno_t   junk;
-    size_t    forkIndex;
     bool scrubIt;
 
     lck_mtx_lock(gHashMutex);
 
     assert(hnode != NULL);
-    assert(hnode->magic == gMagic);
     assert(vn != NULL);
-
-    /* Find the fork index for vn. */
-
-    for (forkIndex = 0; forkIndex < hnode->forkVNodesSize; forkIndex++) {
-        if (hnode->forkVNodes[forkIndex] == vn) {
-            break;
-        }
-    }
-
-    /* If this trips, vn isn't in the forkVNodes array */
-    assert(forkIndex < hnode->forkVNodesSize);
 
     /* Disassociate the vnode with this fork of the HNode. */
 
-    hnode->forkVNodes[forkIndex] = NULL;
+    hnode->vnode = NULL;
     junk = vnode_removefsref(vn);
     assert(junk == 0);
     vnode_clearfsnode(vn);
@@ -860,13 +562,6 @@ extern void
 HNodeScrubDone(HNodeRef hnode)
 {
     assert(hnode != NULL);
-    assert(hnode->magic == gMagic);
-
-    if (hnode->forkVNodesSize > 1) {
-        FUSE_OSFree(hnode->forkVNodesStorage.external,
-            sizeof(*hnode->forkVNodesStorage.external) * hnode->forkVNodesSize,
-            gOSMallocTag);
-    }
 
     /*
      * If anyone is waiting on this HNode, that would be bad.
@@ -880,182 +575,3 @@ HNodeScrubDone(HNodeRef hnode)
     FUSE_OSFree(hnode, sizeof(*hnode) + gFSNodeSize, gOSMallocTag);
 }
 
-/*
- * There's a significant thread safety bug here. Specifically, the forkVNodes
- * array is not included as part of the snapshot. If we switch the HNode's
- * forkVNodes array between the point where we take the snapshot at the point
- * where we print it, bad things will happen.
- */
-extern void
-HNodePrintState(void)
-{
-    int     err;
-    size_t  nodeCount;
-    size_t  nodeIndex;
-    HNode  *nodes;
-    u_long  hashBucketIndex;
-
-    /* Take a snapshot. */
-
-    do {
-        err = 0;
-
-        nodeCount = gHashNodeCount;
-
-        nodes = FUSE_OSMalloc(sizeof(*nodes) * nodeCount, gOSMallocTag);
-        if (nodes == NULL) {
-            err = ENOMEM;
-        }
-
-        if (err == 0) {
-
-            lck_mtx_lock(gHashMutex);
-
-            if (gHashNodeCount > nodeCount) {
-                /* Whoops, it changed size, let's try again. */
-                FUSE_OSFree(nodes, sizeof(*nodes) * nodeCount, gOSMallocTag);
-                err = EAGAIN;
-            } else {
-
-                nodeIndex = 0;
-
-                for (hashBucketIndex = 0; hashBucketIndex < gHashTableMask;
-                     hashBucketIndex++) {
-
-                    HNode *thisNode;
-
-                    LIST_FOREACH(thisNode, &gHashTable[hashBucketIndex],
-                                 hashLink) {
-                        assert(nodeIndex < nodeCount);
-                        nodes[nodeIndex] = *thisNode;
-                        nodeIndex += 1;
-                    }
-                }
-                assert(nodeIndex == nodeCount);
-            }
-
-            lck_mtx_unlock(gHashMutex);
-        }
-    } while (err == EAGAIN);
-
-    assert( (err == 0) == (nodes != NULL) );
-
-    /* Print the snapshot. */
-
-    if (err == 0) {
-        log("HNodePrintState\n");
-        for (nodeIndex = 0; nodeIndex < nodeCount; nodeIndex++) {
-            HNode  *thisNode;
-            size_t  forkIndex;
-
-            thisNode = &nodes[nodeIndex];
-
-            log("{%p.%lld %c%c ", thisNode->dev, thisNode->ino,
-                   " A"[thisNode->attachOutstanding], " W"[thisNode->waiting]);
-
-            for (forkIndex = 0; forkIndex < thisNode->forkVNodesSize;
-                 forkIndex++) {
-                if (forkIndex > 0) {
-                    log(" ");
-                }
-                log("%p", thisNode->forkVNodes[forkIndex]);
-            }
-            log("}");
-
-            if (nodes[nodeIndex].hashLink.le_next == NULL) {
-                log("\n");
-            }
-        }
-    }
-
-    if (nodes != NULL) {
-        FUSE_OSFree(nodes, sizeof(*nodes) * nodeCount, gOSMallocTag);
-    }
-}
-
-/*
- * Device Kill
- */
-
-extern errno_t
-HNodeLookupRealQuickIfExists(fuse_device_t dev,
-                             uint64_t      ino,
-                             size_t        forkIndex,
-                             HNodeRef     *hnodePtr,
-                             vnode_t      *vnPtr)
-{
-    errno_t   err = EAGAIN;
-    HNodeRef  thisNode;
-    bool      needsUnlock;
-    vnode_t   resultVN;
-    uint32_t  vid;
-
-    assert(hnodePtr != NULL);
-    assert(*hnodePtr == NULL);
-    assert(vnPtr != NULL);
-    assert(*vnPtr == NULL);
-    assert(gHashMutex != NULL);
-
-    needsUnlock = true;
-    resultVN = NULL;
-
-    lck_mtx_lock(gHashMutex);
-
-    lck_mtx_assert(gHashMutex, LCK_MTX_ASSERT_OWNED);
-
-    thisNode = LIST_FIRST(HNodeGetFirstFromHashTable(dev, ino));
-
-    while (thisNode != NULL) {
-        assert(thisNode->magic == gMagic);
-        if ((thisNode->dev == dev) && (thisNode->ino == ino)) {
-            break;
-        }
-        thisNode = LIST_NEXT(thisNode, hashLink);
-    }
-
-    if (thisNode == NULL) {
-        err = ENOENT;
-    } else {
-        if (thisNode->attachOutstanding) {
-            err = EAGAIN;
-        } else if (forkIndex >= thisNode->forkVNodesSize) {
-            err = ENOENT;
-        } else if (thisNode->forkVNodes[forkIndex] == NULL) {
-            err = ENOENT;
-        } else {
-            vnode_t candidateVN = thisNode->forkVNodes[forkIndex];
-            assert(candidateVN != NULL);
-            vid = vnode_vid(candidateVN);
-            lck_mtx_unlock(gHashMutex);
-#if M_FUSE4X_ENABLE_BIGLOCK
-            struct fuse_data *data = dev->data;
-            fuse_biglock_unlock(data->biglock);
-#endif
-            err = vnode_getwithvid(candidateVN, vid);
-#if M_FUSE4X_ENABLE_BIGLOCK
-            fuse_biglock_lock(data->biglock);
-#endif
-            needsUnlock = false;
-            if (err == 0) {
-                assert(thisNode != NULL);
-                assert(resultVN == NULL);
-                resultVN = candidateVN;
-            } else {
-                err = EAGAIN;
-            }
-        }
-    }
-
-    if (err == 0) {
-        *hnodePtr = thisNode;
-        *vnPtr    = resultVN;
-    }
-
-    if (needsUnlock) {
-        lck_mtx_unlock(gHashMutex);
-    }
-
-    assert((err == 0) == (*hnodePtr != NULL));
-
-    return err;
-}

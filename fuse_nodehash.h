@@ -371,7 +371,6 @@ typedef struct HNode * HNodeRef;
 extern errno_t HNodeInit(lck_grp_t   *lockGroup,
                          lck_attr_t  *lockAttr,
                          OSMallocTag  mallocTag,
-                         uint32_t     magic,
                          size_t       fsNodeSize);
 
 // Terminates this module.  Before calling this routine, you must ensure that all
@@ -397,72 +396,6 @@ extern void HNodeTerm(void);
 // that you'll write your own HNodeGetFSNode routine whose return value is
 // cast to the type you're using for your FSNode.
 extern void *    FSNodeGenericFromHNode(HNodeRef hnode);
-
-// Returns the HNode associated a given FSNode.  fsnode must be a valid
-// FSNode.  This routine can never fail because the HNode and FSNode are allocated
-// within the same memory block.
-//
-// This routine has the word "Generic" in it because it is expected
-// that you'll write your own FSNodeGetHNode routine whose input is of the
-// appropriate type.
-extern HNodeRef  HNodeFromFSNodeGeneric(void *fsNode);
-
-// Returns the HNode for a given vnode.  This routine should never fail.
-// The only circumstances in which it might fail are if vn is not valid,
-// or its not a vnode for your file system, or it has somehow been created
-// without an HNode.  All of these are panicworthy.
-extern HNodeRef  HNodeFromVNode(vnode_t vn);
-
-// Returns the FSNode for a given vnode.  As this is a composition of
-// HNodeFromVNode and FSNodeGenericFromHNode, it shouldn't fail and any
-// failures are panicworthy.
-extern void *    FSNodeGenericFromVNode(vnode_t vn);
-
-
-// Gets the device number associated with this HNode.  This is exactly what you passed
-// in when you created the HNode using HNodeLookupCreatingIfNecessary.
-extern fuse_device_t HNodeGetDevice(HNodeRef hnode);
-
-// Gets the inode number associated with this HNode.  This is exactly what you passed
-// in when you created the HNode using HNodeLookupCreatingIfNecessary.
-extern uint64_t      HNodeGetInodeNumber(HNodeRef hnode);
-
-// This returns the vnode for a given fork of the HNode, which may be NULL.  As this
-// doesn't take any references on the vnode, the results can be stale.
-//
-// hnode must be a valid HNodeRef.
-//
-// forkIndex must not be greater than the highest fork index that you've passed to
-// HNodeLookupCreatingIfNecessary for this HNode.
-//
-// Note:
-// This routine is more expensive than you might think because it has to take the
-// global hash table lock; if possible, it's better to remember the result from
-// another routine (like HNodeLookupCreatingIfNecessary) rather than call this routine
-// to recover the same information.
-extern vnode_t       HNodeGetVNodeForForkAtIndex(HNodeRef hnode,
-                                                 size_t forkIndex);
-
-// This returns the fork index of the given vnode within the HNode.
-//
-// vn must be a valid vnode for a vnode on this file system.  To meet this precondition,
-// the caller must hold a reference (typically an I/O reference) on the vnode when
-// calling this routine.
-//
-// Note:
-// This routine is more expensive than you might think because it has to take the
-// global hash table lock; if possible, it's better to remember the result from
-// another routine (like HNodeLookupCreatingIfNecessary) rather than call this routine
-// to recover the same information.
-extern size_t        HNodeGetForkIndexForVNode(vnode_t vn);
-
-extern void          HNodeExchangeFromFSNode(void *fsnode1, void *fsnode2);
-
-extern errno_t   HNodeLookupRealQuickIfExists(fuse_device_t dev,
-                                              uint64_t      ino,
-                                              size_t        forkIndex,
-                                              HNodeRef     *hnodePtr,
-                                              vnode_t      *vnPtr);
 
 // Looks up the HNode in the hash table, and returns a reference to it and to the vnode for
 // the specified fork (if one exists).
@@ -504,7 +437,6 @@ extern errno_t   HNodeLookupRealQuickIfExists(fuse_device_t dev,
 // FSNode "is deleted" flag, you are responsible for checking it upon return from this routine.
 extern errno_t   HNodeLookupCreatingIfNecessary(fuse_device_t dev,
                                                 uint64_t      ino,
-                                                size_t        forkIndex,
                                                 HNodeRef     *hnodePtr,
                                                 vnode_t      *vnPtr);
 
@@ -523,7 +455,6 @@ extern errno_t   HNodeLookupCreatingIfNecessary(fuse_device_t dev,
 // Note
 // This routine adds an FS reference to the vnode (it calls vnode_addfsref).
 extern void      HNodeAttachVNodeSucceeded(HNodeRef hnode,
-                                           size_t   forkIndex,
                                            vnode_t  vn);
 
 // Indicates that an attempt to create a vnode to attach to to an HNode has failed.  You
@@ -537,7 +468,7 @@ extern void      HNodeAttachVNodeSucceeded(HNodeRef hnode,
 //
 // If this routine returns true, you must scrub the FSNode associated with the HNode
 // and then call HNodeScrubDone on the HNode.
-extern bool HNodeAttachVNodeFailed(HNodeRef hnode, size_t forkIndex);
+extern bool HNodeAttachVNodeFailed(HNodeRef hnode);
 
 // Detaches a vnode from an HNode.  You must [should?] only call this from your
 // VNOPReclaim routine.
@@ -555,8 +486,5 @@ extern bool HNodeDetachVNode(HNodeRef hnode, vnode_t vn);
 // HNodeAttachVNodeFailed or HNodeDetachVNode returns true.
 extern void      HNodeScrubDone(HNodeRef hnode);
 
-// Prints the current state of this module using log().  This is a debugging aid
-// only.  It makes a best attempt to be thead safe, but there are still race conditions.
-void             HNodePrintState(void);
 
 #endif /* _FUSE_NODEHASH_H_ */
