@@ -3,8 +3,10 @@
  */
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <sys/sysctl.h>
 #include <sys/mount.h>
 #include <grp.h>
@@ -18,6 +20,20 @@
 #include <fuse_version.h>
 
 #define KEXTLOAD_PROGRAM "/sbin/kextload"
+
+#ifndef FUSE4X_DISABLE_MACFUSE_MODE
+static bool is_macfuse_mode(void)
+{
+    struct stat macfuse_file, fuse4x_file;
+    if (stat("/usr/local/lib/libfuse_ino64.dylib", &macfuse_file) < 0)
+        return false;
+    if (stat("/usr/local/lib/libfuse4x.dylib", &fuse4x_file) < 0)
+        return false;
+
+    // if macfuse file points to fuse4x file then we assume that fuse4x is in compatibility mode
+    return (macfuse_file.st_dev == fuse4x_file.st_dev) && (macfuse_file.st_ino == fuse4x_file.st_ino);
+}
+#endif
 
 int
 main(__unused int argc, __unused const char *argv[])
@@ -73,6 +89,13 @@ main(__unused int argc, __unused const char *argv[])
         /* if this fails, we don't care */
         (void)sysctlbyname(SYSCTL_FUSE4X_TUNABLES_ADMIN, NULL, NULL, &admin_gid, sizeof(admin_gid));
     }
+
+#ifndef FUSE4X_DISABLE_MACFUSE_MODE
+    if (is_macfuse_mode()) {
+        int macfuse_mode = 1;
+        (void)sysctlbyname("vfs.generic.fuse4x.control.macfuse_mode", NULL, NULL, &macfuse_mode, sizeof(macfuse_mode));
+    }
+#endif
 
     return EXIT_SUCCESS;
 }

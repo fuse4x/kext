@@ -39,6 +39,9 @@ int32_t  fuse_realloc_count          = 0;                                  // r
 int32_t  fuse_tickets_current        = 0;                                  // r
 uint32_t fuse_userkernel_bufsize     = FUSE_DEFAULT_USERKERNEL_BUFSIZE;    // rw
 int32_t  fuse_vnodes_current         = 0;                                  // r
+#ifndef FUSE4X_DISABLE_MACFUSE_MODE
+int32_t  fuse_macfuse_mode           = 0;                                  // w
+#endif
 #ifdef FUSE_COUNT_MEMORY
 int32_t  fuse_memory_allocated       = 0;                                  // r
 #endif
@@ -60,6 +63,9 @@ SYSCTL_NODE(_vfs_generic_fuse4x, OID_AUTO, version, CTLFLAG_RW, 0,
 /* fuse.control */
 
 int sysctl_fuse4x_control_kill_handler SYSCTL_HANDLER_ARGS;
+#ifndef FUSE4X_DISABLE_MACFUSE_MODE
+int sysctl_fuse4x_control_macfuse_mode_handler SYSCTL_HANDLER_ARGS;
+#endif
 int sysctl_fuse4x_control_print_vnodes_handler SYSCTL_HANDLER_ARGS;
 int sysctl_fuse4x_tunables_userkernel_bufsize_handler SYSCTL_HANDLER_ARGS;
 
@@ -91,6 +97,103 @@ sysctl_fuse4x_control_kill_handler SYSCTL_HANDLER_ARGS
 
     return error;
 }
+
+#ifndef FUSE4X_DISABLE_MACFUSE_MODE
+// some applications (e.g. TrueCrypt) check what macfuse version is installed.
+// ideally they should not hard-code such check as macfuse has several fuse provides.
+
+SYSCTL_DECL(_macfuse);
+SYSCTL_NODE(, OID_AUTO, macfuse, CTLFLAG_RW, 0,
+            "MacFUSE Sysctl Interface");
+SYSCTL_NODE(_macfuse, OID_AUTO, version, CTLFLAG_RW, 0,
+            "MacFUSE Version Information");
+SYSCTL_STRING(_macfuse_version, OID_AUTO, number, CTLFLAG_RD,
+              "2.2.0", 0, ""); // this is for you TrueCrypt
+
+static struct sysctl_oid *macfuse_sysctl_list[] = {
+    &sysctl__macfuse_version,
+    &sysctl__macfuse_version_number,
+    NULL
+};
+
+static thread_t fuse4x_macfuse_mode_thread;
+
+static void fuse4x_macfuse_mode_stop(void)
+{
+    int i;
+
+    for (i = 0; macfuse_sysctl_list[i]; i++) {
+        sysctl_unregister_oid(macfuse_sysctl_list[i]);
+    }
+    sysctl_unregister_oid(&sysctl__macfuse);
+}
+
+static void fuse4x_macfuse_mode_start(void)
+{
+    int i;
+
+    sysctl_register_oid(&sysctl__macfuse);
+    for (i = 0; macfuse_sysctl_list[i]; i++) {
+        sysctl_register_oid(macfuse_sysctl_list[i]);
+    }
+}
+
+static void fuse4x_macfuse_mode_handler(__unused void *param, __unused wait_result_t result)
+{
+    if (fuse_macfuse_mode) {
+        fuse4x_macfuse_mode_start();
+    } else {
+        fuse4x_macfuse_mode_stop();
+    }
+
+    thread_terminate(current_thread());
+}
+
+int
+sysctl_fuse4x_control_macfuse_mode_handler SYSCTL_HANDLER_ARGS
+{
+    int error = 0;
+
+    if (arg1) {
+        error = SYSCTL_OUT(req, arg1, sizeof(int));
+    } else {
+        error = SYSCTL_OUT(req, &arg2, sizeof(int));
+    }
+
+    if (error || !req->newptr) {
+        goto exit;
+    }
+    if (!arg1) {
+        error = EPERM;
+        goto exit;
+    } else {
+        int value;
+        error = SYSCTL_IN(req, &value, sizeof(value));
+        if (error) {
+            goto exit;
+        }
+
+        if (value != 0) {
+            value = 1;
+        }
+
+        if (value != fuse_macfuse_mode) {
+            fuse_macfuse_mode = value;
+            // switch the comaptibility mode
+            kern_return_t ret = kernel_thread_start(fuse4x_macfuse_mode_handler, NULL, &fuse4x_macfuse_mode_thread);
+            if (ret != KERN_SUCCESS) {
+                log("fuse4x: Cannot set macfuse compatibility mode");
+                error = EPERM;
+                goto exit;
+            }
+
+        }
+    }
+
+exit:
+    return error;
+}
+#endif
 
 int
 sysctl_fuse4x_control_print_vnodes_handler SYSCTL_HANDLER_ARGS
@@ -172,6 +275,24 @@ SYSCTL_PROC(_vfs_generic_fuse4x_control, // our parent
 
             "I",              // our data type (integer)
             "fuse4x Controls: Kill the Given File System");
+
+#ifndef FUSE4X_DISABLE_MACFUSE_MODE
+SYSCTL_PROC(_vfs_generic_fuse4x_control, // our parent
+            OID_AUTO,         // automatically assign object ID
+            macfuse_mode,             // our name
+
+            // type flag/access flag
+            (CTLTYPE_INT | CTLFLAG_WR | CTLFLAG_ANYBODY),
+
+            &fuse_macfuse_mode,       // location of our data
+            0,                // argument passed to our handler
+
+            // our handler function
+            sysctl_fuse4x_control_macfuse_mode_handler,
+
+            "I",              // our data type (integer)
+            "fuse4x Controls: Enable Macfuse Compatibility Mode");
+#endif
 
 SYSCTL_PROC(_vfs_generic_fuse4x_control,   // our parent
             OID_AUTO,           // automatically assign object ID
@@ -262,6 +383,9 @@ static struct sysctl_oid *fuse_sysctl_list[] =
     &sysctl__vfs_generic_fuse4x_tunables,
     &sysctl__vfs_generic_fuse4x_version,
     &sysctl__vfs_generic_fuse4x_control_kill,
+#ifndef FUSE4X_DISABLE_MACFUSE_MODE
+    &sysctl__vfs_generic_fuse4x_control_macfuse_mode,
+#endif
     &sysctl__vfs_generic_fuse4x_control_print_vnodes,
     &sysctl__vfs_generic_fuse4x_counters_filehandle_reuse,
     &sysctl__vfs_generic_fuse4x_counters_filehandle_upcalls,
@@ -312,4 +436,11 @@ fuse_sysctl_stop(void)
        sysctl_unregister_oid(fuse_sysctl_list[i]);
     }
     sysctl_unregister_oid(&sysctl__vfs_generic_fuse4x);
+
+#ifndef FUSE4X_DISABLE_MACFUSE_MODE
+    if (fuse_macfuse_mode) {
+        fuse4x_macfuse_mode_stop();
+    }
+    thread_deallocate(fuse4x_macfuse_mode_thread);
+#endif
 }
