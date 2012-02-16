@@ -15,7 +15,7 @@
 #include <sys/malloc.h>
 #include <sys/queue.h>
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
 #include "fuse_biglock_vnops.h"
 #endif
 
@@ -251,7 +251,7 @@ fuse_ticket_wait_answer(struct fuse_ticket *ticket)
     if (fuse_ticket_opcode(ticket) == FUSE_DESTROY)
         data->destroyed = true;
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     // release biglock before going to sleep:
     // 1) it reduces biglock contention - we really have no reason to keep the lock and prevent other requests from
     //    processing, the biglock protects vnode operations only.
@@ -262,7 +262,7 @@ fuse_ticket_wait_answer(struct fuse_ticket *ticket)
 
     err = fuse_msleep(ticket, ticket->aw_mtx, PCATCH, "fu_ans", data->daemon_timeout_p);
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     fuse_biglock_lock(data->biglock);
 #endif
 
@@ -279,7 +279,7 @@ fuse_ticket_wait_answer(struct fuse_ticket *ticket)
         goto out;
     }
 
-#if M_FUSE4X_ENABLE_INTERRUPT
+#ifdef FUSE4X_ENABLE_INTERRUPT
     else if (err == EINTR) {
        /*
         * XXX: Stop gap! I really need to finish interruption plumbing.
@@ -395,7 +395,7 @@ fuse_data_alloc(struct proc *p)
     data->deadticket_counter = 0;
     data->ticketer           = 0;
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     data->biglock        = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
 #endif
 
@@ -416,7 +416,7 @@ fuse_data_destroy(struct fuse_data *data)
     lck_mtx_free(data->ticket_mtx, fuse_lock_group);
     data->ticket_mtx = NULL;
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     lck_mtx_free(data->biglock, fuse_lock_group);
     data->biglock = NULL;
 #endif
@@ -444,9 +444,9 @@ fuse_data_kill(struct fuse_data *data)
 
     data->dead = true;
     fuse_wakeup_one((caddr_t)data);
-#if M_FUSE4X_ENABLE_DSELECT
+#ifdef FUSE4X_ENABLE_DSELECT
     selwakeup((struct selinfo*)&data->d_rsel);
-#endif /* M_FUSE4X_ENABLE_DSELECT */
+#endif /* FUSE4X_ENABLE_DSELECT */
     fuse_lck_mtx_unlock(data->ms_mtx);
 
     fuse_lck_mtx_lock(data->ticket_mtx);
@@ -628,9 +628,9 @@ fuse_insert_message(struct fuse_ticket *ticket)
     fuse_lck_mtx_lock(data->ms_mtx);
     STAILQ_INSERT_TAIL(&data->ms_head, ticket, ms_link);
     fuse_wakeup_one((caddr_t)data);
-#if M_FUSE4X_ENABLE_DSELECT
+#ifdef FUSE4X_ENABLE_DSELECT
     selwakeup((struct selinfo*)&data->d_rsel);
-#endif /* M_FUSE4X_ENABLE_DSELECT */
+#endif /* FUSE4X_ENABLE_DSELECT */
     fuse_lck_mtx_unlock(data->ms_mtx);
 }
 

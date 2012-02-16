@@ -38,12 +38,12 @@ fini_stuff(void)
         fuse_device_mutex = NULL;
     }
 
-#if M_FUSE4X_SERIALIZE_LOGGING
+#ifdef FUSE4X_SERIALIZE_LOGGING
     if (fuse_log_lock) {
         lck_mtx_free(fuse_log_lock, fuse_lock_group);
         fuse_log_lock = NULL;
     }
-#endif /* M_FUSE4X_SERIALIZE_LOGGING */
+#endif /* FUSE4X_SERIALIZE_LOGGING */
 
     if (fuse_lock_group) {
         lck_grp_free(fuse_lock_group);
@@ -96,14 +96,14 @@ init_stuff(void)
         }
     }
 
-#if M_FUSE4X_SERIALIZE_LOGGING
+#ifdef FUSE4X_SERIALIZE_LOGGING
     if (ret == KERN_SUCCESS) {
         fuse_log_lock = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
         if (fuse_log_lock == NULL) {
             ret = ENOMEM;
         }
     }
-#endif /* M_FUSE4X_SERIALIZE_LOGGING */
+#endif /* FUSE4X_SERIALIZE_LOGGING */
 
     if (ret != KERN_SUCCESS) {
         fini_stuff();

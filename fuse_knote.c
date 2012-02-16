@@ -5,7 +5,7 @@
 
 #include "fuse.h"
 
-#if M_FUSE4X_ENABLE_KQUEUE
+#ifdef FUSE4X_ENABLE_KQUEUE
 
 #include "fuse_knote.h"
 #include "fuse_node.h"
@@ -128,4 +128,4 @@ filt_fusevnode(struct knote *kn, long hint)
     return (kn->kn_fflags != 0);
 }
 
-#endif /* M_FUSE4X_ENABLE_KQUEUE */
+#endif /* FUSE4X_ENABLE_KQUEUE */

@@ -14,7 +14,7 @@
 #include <sys/types.h>
 #include <sys/vnode.h>
 
-#if M_FUSE4X_ENABLE_DSELECT
+#ifdef FUSE4X_ENABLE_DSELECT
 
 /*
  * # 10.5        10.6-32        10.6-64
@@ -40,12 +40,12 @@ struct fuse_selinfo {
 #define POLLRDBAND      0x0080          /* OOB/Urgent readable data */
 #define POLLWRBAND      0x0100          /* OOB/Urgent data can be written */
 
-#endif /* M_FUSE4X_ENABLE_DSELECT */
+#endif /* FUSE4X_ENABLE_DSELECT */
 
-#if M_FUSE4X_ENABLE_EXCHANGE
+#ifdef FUSE4X_ENABLE_EXCHANGE
 
 extern void fuse_kludge_exchange(vnode_t v1, vnode_t v2);
 
-#endif /* M_FUSE4X_ENABLE_EXCHANGE */
+#endif /* FUSE4X_ENABLE_EXCHANGE */
 
 #endif /* _FUSE_KLUDGES_H_ */

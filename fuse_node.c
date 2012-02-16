@@ -11,7 +11,7 @@
 #include "fuse_sysctl.h"
 #include <stdbool.h>
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
 #include "fuse_biglock_vnops.h"
 #endif
 
@@ -19,7 +19,7 @@ void
 FSNodeScrub(struct fuse_vnode_data *fvdat)
 {
     lck_mtx_free(fvdat->createlock, fuse_lock_group);
-#if M_FUSE4X_ENABLE_TSLOCKING
+#ifdef FUSE4X_ENABLE_TSLOCKING
     lck_rw_free(fvdat->nodelock, fuse_lock_group);
     lck_rw_free(fvdat->truncatelock, fuse_lock_group);
 #endif
@@ -118,7 +118,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
             fvdat->createlock = lck_mtx_alloc_init(fuse_lock_group,
                                                    fuse_lock_attr);
             fvdat->creator = current_thread();
-#if M_FUSE4X_ENABLE_TSLOCKING
+#ifdef FUSE4X_ENABLE_TSLOCKING
             fvdat->nodelock = lck_rw_alloc_init(fuse_lock_group,
                                                 fuse_lock_attr);
             fvdat->nodelockowner = NULL;
@@ -141,12 +141,12 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
             params.vnfs_filesize   = size;
             params.vnfs_markroot   = markroot;
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(mntdata->biglock);
 #endif
             err = vnode_create(VNCREATE_FLAVOR, (uint32_t)sizeof(params),
                                &params, &vn);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(mntdata->biglock);
 #endif
         }
@@ -174,22 +174,22 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
         if (vnode_vtype(vn) != vtyp) {
             log("fuse4x: vnode changed type behind us (old=%d, new=%d)\n",
                   vnode_vtype(vn), vtyp);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(mntdata->biglock);
 #endif
             fuse_internal_vnode_disappear(vn, context, REVOKE_SOFT);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(mntdata->biglock);
 #endif
             vnode_put(vn);
             err = EIO;
         } else if (VTOFUD(vn)->generation != generation) {
             log("fuse4x: vnode changed generation\n");
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(mntdata->biglock);
 #endif
             fuse_internal_vnode_disappear(vn, context, REVOKE_SOFT);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(mntdata->biglock);
 #endif
             vnode_put(vn);

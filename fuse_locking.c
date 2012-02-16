@@ -33,7 +33,7 @@ lck_grp_attr_t *fuse_group_attr   = NULL;
 lck_grp_t      *fuse_lock_group   = NULL;
 lck_mtx_t      *fuse_device_mutex = NULL;
 
-#if M_FUSE4X_ENABLE_TSLOCKING
+#ifdef FUSE4X_ENABLE_TSLOCKING
 
 #include <sys/ubc.h>
 
@@ -355,7 +355,7 @@ fusefs_lck_rw_done(lck_rw_t *lock)
     IORWLockUnlock((IORWLock *)lock);
 }
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
 
 /* Recursive lock used to lock the vfs functions awaiting more fine-grained
  * locking. Code was taken from IOLocks.cpp to imitate how an IORecursiveLock
@@ -531,8 +531,8 @@ void fusefs_recursive_lock_wakeup(__unused fusefs_recursive_lock *lock,
 }
 #endif
 
-#endif /* M_FUSE4X_ENABLE_BIGLOCK */
+#endif /* FUSE4X_ENABLE_BIGLOCK */
 
-#if M_FUSE4X_SERIALIZE_LOGGING
+#ifdef FUSE4X_SERIALIZE_LOGGING
 lck_mtx_t *fuse_log_lock = NULL;
-#endif /* M_FUSE4X_SERIALIZE_LOGGING */
+#endif /* FUSE4X_SERIALIZE_LOGGING */

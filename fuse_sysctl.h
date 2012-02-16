@@ -28,7 +28,7 @@ extern int32_t  fuse_tickets_current;
 extern uint32_t fuse_userkernel_bufsize;
 extern int32_t  fuse_vnodes_current;
 
-#ifdef FUSE_COUNT_MEMORY
+#ifdef FUSE4X_COUNT_MEMORY
 extern int32_t  fuse_memory_allocated;
 #endif
 

@@ -8,7 +8,7 @@
 
 #include "fuse.h"
 
-#if M_FUSE4X_ENABLE_KQUEUE
+#ifdef FUSE4X_ENABLE_KQUEUE
 
 #include <sys/event.h>
 #include <sys/queue.h>
@@ -78,6 +78,6 @@ extern struct filterops fusevnode_filtops;
 
 #else
 #define FUSE_KNOTE(vp, hint)    {}
-#endif /* M_FUSE4X_ENABLE_KQUEUE */
+#endif /* FUSE4X_ENABLE_KQUEUE */
 
 #endif /* _FUSE_NODE_H_ */

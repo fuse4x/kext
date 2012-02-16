@@ -17,7 +17,7 @@
 #include "fuse_sysctl.h"
 #include "fuse_vnops.h"
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
 #include "fuse_biglock_vnops.h"
 #endif
 
@@ -505,7 +505,7 @@ int
 fuse_vnop_exchange(struct vnop_exchange_args *ap)
 {
 
-#if M_FUSE4X_ENABLE_EXCHANGE
+#ifdef FUSE4X_ENABLE_EXCHANGE
 
     vnode_t       fvp     = ap->a_fvp;
     vnode_t       tvp     = ap->a_tvp;
@@ -593,13 +593,13 @@ out:
 
     return err;
 
-#else /* !M_FUSE4X_ENABLE_EXCHANGE */
+#else /* !FUSE4X_ENABLE_EXCHANGE */
 
     (void)ap;
 
     return ENOTSUP;
 
-#endif /* M_FUSE4X_ENABLE_EXCHANGE */
+#endif /* FUSE4X_ENABLE_EXCHANGE */
 
 }
 
@@ -758,11 +758,11 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
             goto fake;
         }
         if (err == ENOENT) {
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(data->biglock);
 #endif
             fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif
         }
@@ -818,11 +818,11 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
              * revocation.
              */
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(data->biglock);
 #endif
             fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif
             return EIO;
@@ -841,7 +841,7 @@ fake:
     return 0;
 }
 
-#if M_FUSE4X_ENABLE_XATTR
+#ifdef FUSE4X_ENABLE_XATTR
 /*
     struct vnop_getxattr_args {
         struct vnodeop_desc *a_desc;
@@ -944,7 +944,7 @@ fuse_vnop_getxattr(struct vnop_getxattr_args *ap)
 
     return err;
 }
-#endif /* M_FUSE4X_ENABLE_XATTR */
+#endif /* FUSE4X_ENABLE_XATTR */
 
 /*
     struct vnop_inactive_args {
@@ -984,7 +984,7 @@ fuse_vnop_inactive(struct vnop_inactive_args *ap)
     return 0;
 }
 
-#if M_FUSE4X_ENABLE_KQUEUE
+#ifdef FUSE4X_ENABLE_KQUEUE
 
 #include "fuse_knote.h"
 
@@ -1062,7 +1062,7 @@ fuse_vnop_kqfilt_remove(__unused struct vnop_kqfilt_remove_args *ap)
     return ENOTSUP;
 }
 
-#endif /* M_FUSE4X_ENABLE_KQUEUE */
+#endif /* FUSE4X_ENABLE_KQUEUE */
 
 /*
     struct vnop_link_args {
@@ -1132,7 +1132,7 @@ fuse_vnop_link(struct vnop_link_args *ap)
     return err;
 }
 
-#if M_FUSE4X_ENABLE_XATTR
+#ifdef FUSE4X_ENABLE_XATTR
 /*
     struct vnop_listxattr_args {
         struct vnodeop_desc *a_desc;
@@ -1210,7 +1210,7 @@ fuse_vnop_listxattr(struct vnop_listxattr_args *ap)
 
     return err;
 }
-#endif /* M_FUSE4X_ENABLE_XATTR */
+#endif /* FUSE4X_ENABLE_XATTR */
 
 /*
     struct vnop_lookup_args {
@@ -1295,12 +1295,12 @@ fuse_vnop_lookup(struct vnop_lookup_args *ap)
         op = FUSE_GETATTR;
         goto calldaemon;
     } else {
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
         struct fuse_data *data = fuse_get_mpdata(mp);
         fuse_biglock_unlock(data->biglock);
 #endif
         err = fuse_vncache_lookup(dvp, vpp, cnp);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_lock(data->biglock);
 #endif
         switch (err) {
@@ -1686,13 +1686,13 @@ retry:
     }
 
     if (!deleted) {
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
         struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
         fuse_biglock_unlock(data->biglock);
 #endif
         err = fuse_filehandle_preflight_status(vp, fvdat->parentvp,
                                                context, fufh_type);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_lock(data->biglock);
 #endif
         if (err == ENOENT) {
@@ -1701,9 +1701,9 @@ retry:
         }
     }
 
-#if FUSE_DEBUG
+#ifdef FUSE4X_DEBUG
     fuse_preflight_log(vp, fufh_type, err, "mmap");
-#endif /* FUSE_DEBUG */
+#endif /* FUSE4X_DEBUG */
 
     if (!err) {
         err = fuse_filehandle_get(vp, context, fufh_type, 0 /* mode */);
@@ -2051,7 +2051,7 @@ fuse_vnop_pagein(struct vnop_pagein_args *ap)
     struct fuse_vnode_data *fvdat;
     int err;
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
 #endif
 
@@ -2073,12 +2073,12 @@ fuse_vnop_pagein(struct vnop_pagein_args *ap)
         return EIO;
     }
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     fuse_biglock_unlock(data->biglock);
 #endif
     err = cluster_pagein(vp, pl, (upl_offset_t)pl_offset, f_offset, (int)size,
                          fvdat->filesize, flags);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
    fuse_biglock_lock(data->biglock);
 #endif
 
@@ -2111,7 +2111,7 @@ fuse_vnop_pageout(struct vnop_pageout_args *ap)
     struct fuse_vnode_data *fvdat = VTOFUD(vp);
     int error;
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
 #endif
 
@@ -2128,12 +2128,12 @@ fuse_vnop_pageout(struct vnop_pageout_args *ap)
         return ENOTSUP;
     }
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     fuse_biglock_unlock(data->biglock);
 #endif
     error = cluster_pageout(vp, pl, (upl_offset_t)pl_offset, f_offset,
                             (int)size, (off_t)fvdat->filesize, flags);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
    fuse_biglock_lock(data->biglock);
 #endif
 
@@ -2302,11 +2302,11 @@ fuse_vnop_read(struct vnop_read_args *ap)
             /* In case we get here through a short cut (e.g. no open). */
             ioflag |= IO_NOCACHE;
         }
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_unlock(data->biglock);
 #endif
         res = cluster_read(vp, uio, fvdat->filesize, ioflag);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_lock(data->biglock);
 #endif
         return res;
@@ -2352,11 +2352,11 @@ fuse_vnop_read(struct vnop_read_args *ap)
                 return err;
             }
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(data->biglock);
 #endif
             err = uiomove(fdi.answer, (int)min(fri->size, fdi.iosize), uio);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif
             if (err) {
@@ -2482,7 +2482,7 @@ fuse_vnop_readlink(struct vnop_readlink_args *ap)
     struct fuse_dispatcher fdi;
     int err;
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
 #endif
 
@@ -2509,11 +2509,11 @@ fuse_vnop_readlink(struct vnop_readlink_args *ap)
     }
 
     if (!err) {
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_unlock(data->biglock);
 #endif
         err = uiomove(fdi.answer, (int)fdi.iosize, uio);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_lock(data->biglock);
 #endif
     }
@@ -2693,7 +2693,7 @@ fuse_vnop_remove(struct vnop_remove_args *ap)
     return err;
 }
 
-#if M_FUSE4X_ENABLE_XATTR
+#ifdef FUSE4X_ENABLE_XATTR
 /*
     struct vnop_removexattr_args {
         struct vnodeop_desc *a_desc;
@@ -2769,7 +2769,7 @@ fuse_vnop_removexattr(struct vnop_removexattr_args *ap)
 
     return err;
 }
-#endif /* M_FUSE4X_ENABLE_XATTR */
+#endif /* FUSE4X_ENABLE_XATTR */
 
 /*
     struct vnop_rename_args {
@@ -2964,7 +2964,7 @@ fuse_vnop_setattr(struct vnop_setattr_args *ap)
     int sizechanged = 0;
     uint64_t newsize = 0;
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
 #endif
 
@@ -3037,11 +3037,11 @@ fuse_vnop_setattr(struct vnop_setattr_args *ap)
              * revocation and tell the caller to try again, if interested.
              */
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(data->biglock);
 #endif
             fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif
 
@@ -3074,7 +3074,7 @@ out:
     return err;
 }
 
-#if M_FUSE4X_ENABLE_XATTR
+#ifdef FUSE4X_ENABLE_XATTR
 /*
     struct vnop_setxattr_args {
         struct vnodeop_desc *a_desc;
@@ -3180,12 +3180,12 @@ fuse_vnop_setxattr(struct vnop_setxattr_args *ap)
     memcpy((char *)fdi.indata + sizeof(*fsxi), name, namelen);
     ((char *)fdi.indata)[sizeof(*fsxi) + namelen] = '\0';
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     fuse_biglock_unlock(data->biglock);
 #endif
     err = uiomove((char *)fdi.indata + sizeof(*fsxi) + namelen + 1,
                   (int)attrsize, uio);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     fuse_biglock_lock(data->biglock);
 #endif
     if (!err) {
@@ -3225,7 +3225,7 @@ fuse_vnop_setxattr(struct vnop_setxattr_args *ap)
 
     return err;
 }
-#endif /* M_FUSE4X_ENABLE_XATTR */
+#endif /* FUSE4X_ENABLE_XATTR */
 
 /*
     struct vnop_strategy_args {
@@ -3506,13 +3506,13 @@ fuse_vnop_write(struct vnop_write_args *ap)
         zero_off = 0;
     }
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
     fuse_biglock_unlock(data->biglock);
 #endif
     error = cluster_write(vp, uio, (off_t)original_size, (off_t)filesize,
                           (off_t)zero_off, (off_t)0, lflag);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     fuse_biglock_lock(data->biglock);
 #endif
 
@@ -3587,20 +3587,20 @@ struct vnodeopv_entry_desc fuse_vnode_operation_entries[] = {
     { &vnop_fsync_desc,         (fuse_vnode_op_t) fuse_vnop_fsync         },
     { &vnop_getattr_desc,       (fuse_vnode_op_t) fuse_vnop_getattr       },
 //  { &vnop_getattrlist_desc,   (fuse_vnode_op_t) fuse_vnop_getattrlist   },
-#if M_FUSE4X_ENABLE_XATTR
+#ifdef FUSE4X_ENABLE_XATTR
     { &vnop_getxattr_desc,      (fuse_vnode_op_t) fuse_vnop_getxattr      },
-#endif /* M_FUSE4X_ENABLE_XATTR */
+#endif /* FUSE4X_ENABLE_XATTR */
     { &vnop_inactive_desc,      (fuse_vnode_op_t) fuse_vnop_inactive      },
 //    { &vnop_ioctl_desc,         (fuse_vnode_op_t) fuse_vnop_ioctl         },
     { &vnop_link_desc,          (fuse_vnode_op_t) fuse_vnop_link          },
-#if M_FUSE4X_ENABLE_XATTR
+#ifdef FUSE4X_ENABLE_XATTR
     { &vnop_listxattr_desc,     (fuse_vnode_op_t) fuse_vnop_listxattr     },
-#endif /* M_FUSE4X_ENABLE_XATTR */
+#endif /* FUSE4X_ENABLE_XATTR */
     { &vnop_lookup_desc,        (fuse_vnode_op_t) fuse_vnop_lookup        },
-#if M_FUSE4X_ENABLE_KQUEUE
+#ifdef FUSE4X_ENABLE_KQUEUE
     { &vnop_kqfilt_add_desc,    (fuse_vnode_op_t) fuse_vnop_kqfilt_add    },
     { &vnop_kqfilt_remove_desc, (fuse_vnode_op_t) fuse_vnop_kqfilt_remove },
-#endif /* M_FUSE4X_ENABLE_KQUEUE */
+#endif /* FUSE4X_ENABLE_KQUEUE */
     { &vnop_mkdir_desc,         (fuse_vnode_op_t) fuse_vnop_mkdir         },
     { &vnop_mknod_desc,         (fuse_vnode_op_t) fuse_vnop_mknod         },
     { &vnop_mmap_desc,          (fuse_vnode_op_t) fuse_vnop_mmap          },
@@ -3616,9 +3616,9 @@ struct vnodeopv_entry_desc fuse_vnode_operation_entries[] = {
     { &vnop_readlink_desc,      (fuse_vnode_op_t) fuse_vnop_readlink      },
     { &vnop_reclaim_desc,       (fuse_vnode_op_t) fuse_vnop_reclaim       },
     { &vnop_remove_desc,        (fuse_vnode_op_t) fuse_vnop_remove        },
-#if M_FUSE4X_ENABLE_XATTR
+#ifdef FUSE4X_ENABLE_XATTR
     { &vnop_removexattr_desc,   (fuse_vnode_op_t) fuse_vnop_removexattr   },
-#endif /* M_FUSE4X_ENABLE_XATTR */
+#endif /* FUSE4X_ENABLE_XATTR */
     { &vnop_rename_desc,        (fuse_vnode_op_t) fuse_vnop_rename        },
     { &vnop_revoke_desc,        (fuse_vnode_op_t) fuse_vnop_revoke        },
     { &vnop_rmdir_desc,         (fuse_vnode_op_t) fuse_vnop_rmdir         },
@@ -3626,9 +3626,9 @@ struct vnodeopv_entry_desc fuse_vnode_operation_entries[] = {
     { &vnop_select_desc,        (fuse_vnode_op_t) fuse_vnop_select        },
     { &vnop_setattr_desc,       (fuse_vnode_op_t) fuse_vnop_setattr       },
 //  { &vnop_setattrlist_desc,   (fuse_vnode_op_t) fuse_vnop_setattrlist   },
-#if M_FUSE4X_ENABLE_XATTR
+#ifdef FUSE4X_ENABLE_XATTR
     { &vnop_setxattr_desc,      (fuse_vnode_op_t) fuse_vnop_setxattr      },
-#endif /* M_FUSE4X_ENABLE_XATTR */
+#endif /* FUSE4X_ENABLE_XATTR */
     { &vnop_strategy_desc,      (fuse_vnode_op_t) fuse_vnop_strategy      },
     { &vnop_symlink_desc,       (fuse_vnode_op_t) fuse_vnop_symlink       },
 //  { &vnop_whiteout_desc,      (fuse_vnode_op_t) fuse_vnop_whiteout      },

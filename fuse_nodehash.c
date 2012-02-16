@@ -22,7 +22,7 @@
 
 #include "fuse.h"
 #include "fuse_nodehash.h"
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
 #include "fuse_biglock_vnops.h"
 #include "fuse_ipc.h"
 #endif
@@ -376,12 +376,12 @@ HNodeLookupCreatingIfNecessary(fuse_device_t dev,
 
                 lck_mtx_unlock(gHashMutex);
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
                 struct fuse_data *data = dev->data;
                 fuse_biglock_unlock(data->biglock);
 #endif
                 err = vnode_getwithvid(candidateVN, vid);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
                 fuse_biglock_lock(data->biglock);
 #endif
 

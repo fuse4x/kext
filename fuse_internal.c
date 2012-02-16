@@ -39,7 +39,7 @@
 #include <sys/mman.h>
 #include <sys/param.h>
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
 #include "fuse_biglock_vnops.h"
 #endif
 
@@ -154,11 +154,11 @@ fuse_internal_access(vnode_t                   vp,
             vnode_putname(vname);
         }
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_unlock(data->biglock);
 #endif
         fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_lock(data->biglock);
 #endif
     }
@@ -166,7 +166,7 @@ fuse_internal_access(vnode_t                   vp,
     return err;
 }
 
-#if M_FUSE4X_ENABLE_EXCHANGE
+#ifdef FUSE4X_ENABLE_EXCHANGE
 
 /* exchange */
 
@@ -265,7 +265,7 @@ fuse_internal_exchange(vnode_t       fvp,
     return err;
 }
 
-#endif /* M_FUSE4X_ENABLE_EXCHANGE */
+#endif /* FUSE4X_ENABLE_EXCHANGE */
 
 /* fsync */
 
@@ -811,13 +811,13 @@ fuse_internal_remove(vnode_t               dvp,
      */
     if (need_invalidate && !err) {
         if (!vfs_busy(mp, LK_NOWAIT)) {
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             struct fuse_data *data = fuse_get_mpdata(mp);
             fuse_biglock_unlock(data->biglock);
 #endif
             vnode_iterate(mp, 0, fuse_internal_remove_callback,
                           (void *)&target_nlink);
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif
             vfs_unbusy(mp);

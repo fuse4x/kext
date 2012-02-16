@@ -19,7 +19,7 @@
 struct fuse_data;
 struct fuse_ticket;
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
 extern struct vnodeopv_entry_desc fuse_biglock_vnode_operation_entries[];
 #else
 extern struct vnodeopv_entry_desc fuse_vnode_operation_entries[];

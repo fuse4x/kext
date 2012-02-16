@@ -18,41 +18,44 @@
 #include <sys/event.h>
 #include <sys/proc.h>
 
-// #define FUSE_COUNT_MEMORY  1
-// #define FUSE_DEBUG         1
-// #define FUSE_TRACE         1
-// #define FUSE_TRACE_LK      1
-// #define FUSE_TRACE_MSLEEP  1
-// #define FUSE_TRACE_OP      1
-// #define FUSE_TRACE_VNCACHE 1
+// #define FUSE4X_COUNT_MEMORY
+// #define FUSE4X_DEBUG
+// #define FUSE4X_TRACE
+// #define FUSE4X_TRACE_LK
+// #define FUSE4X_TRACE_MSLEEP
+// #define FUSE4X_TRACE_OP
+// #define FUSE4X_TRACE_VNCACHE
 
-// #define M_FUSE4X_SERIALIZE_LOGGING 1
+// #define FUSE4X_SERIALIZE_LOGGING
 
-#define M_FUSE4X_ENABLE_INTERRUPT    1
-#define M_FUSE4X_ENABLE_XATTR        1
-#define M_FUSE4X_ENABLE_DSELECT      0
-#define M_FUSE4X_ENABLE_EXCHANGE     1
-#define M_FUSE4X_ENABLE_KQUEUE       0
-#define M_FUSE4X_ENABLE_SIMPLE_LOCK  0
-#define M_FUSE4X_ENABLE_TSLOCKING    !M_FUSE4X_ENABLE_SIMPLE_LOCK
-#if __LP64__ && !M_FUSE4X_ENABLE_SIMPLE_LOCK
-#define M_FUSE4X_ENABLE_BIGLOCK 1
+#define FUSE4X_ENABLE_INTERRUPT
+#define FUSE4X_ENABLE_XATTR
+#define FUSE4X_ENABLE_EXCHANGE
+// #define FUSE4X_ENABLE_DSELECT
+// #define FUSE4X_ENABLE_KQUEUE
+// #define FUSE4X_ENABLE_SIMPLE_LOCK
+
+#ifndef FUSE4X_ENABLE_SIMPLE_LOCK
+#define FUSE4X_ENABLE_TSLOCKING
+#if __LP64__
+#define FUSE4X_ENABLE_BIGLOCK
 #endif /* __LP64__ */
+#endif
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
 #define FUSE_VNOP_EXPORT __private_extern__
 #else
 #define FUSE_VNOP_EXPORT static
-#endif /* M_FUSE4X_ENABLE_BIGLOCK */
+#endif /* FUSE4X_ENABLE_BIGLOCK */
 
 
-#if M_FUSE4X_SERIALIZE_LOGGING
+#ifdef FUSE4X_SERIALIZE_LOGGING
 extern lck_mtx_t *fuse_log_lock;
 
 // In case if tracing (lock,sleep,operations,..) enabled it produces a lot of log output.
 // Because these logs are written from multiple threads they interference with each other.
 // To make log more readable we need to searialize the output. It is done in log() function
-// in case if M_FUSE4X_SERIALIZE_LOGGING defined.
+// in case if FUSE4X_SERIALIZE_LOGGING defined.
 #define log(fmt, args...) \
     do { \
         lck_mtx_lock(fuse_log_lock); \
@@ -62,9 +65,9 @@ extern lck_mtx_t *fuse_log_lock;
 
 #else
 #define log(fmt, args...) IOLog(fmt, ##args)
-#endif /* M_FUSE4X_SERIALIZE_LOGGING */
+#endif /* FUSE4X_SERIALIZE_LOGGING */
 
-#ifdef FUSE_TRACE
+#ifdef FUSE4X_TRACE
 #define fuse_trace_printf(fmt, ...) log(fmt, ## __VA_ARGS__)
 #define fuse_trace_printf_func()    log("%s by %d\n", __FUNCTION__, proc_selfpid())
 #else
@@ -72,7 +75,7 @@ extern lck_mtx_t *fuse_log_lock;
 #define fuse_trace_printf_func()    {}
 #endif
 
-#ifdef FUSE_TRACE_OP
+#ifdef FUSE4X_TRACE_OP
 #define fuse_trace_printf_vfsop()     log("%s by %d\n", __FUNCTION__, proc_selfpid())
 #define fuse_trace_printf_vnop_novp() log("%s by %d\n", __FUNCTION__, proc_selfpid())
 #define fuse_trace_printf_vnop()      log("%s vp=%p by %d\n", __FUNCTION__, vp, proc_selfpid())
@@ -82,7 +85,7 @@ extern lck_mtx_t *fuse_log_lock;
 #define fuse_trace_printf_vnop_novp() {}
 #endif
 
-#ifdef FUSE_TRACE_MSLEEP
+#ifdef FUSE4X_TRACE_MSLEEP
 
 #define fuse_msleep(chan, mtx, pri, wmesg, ts)                                                        \
 ({                                                                                                    \
@@ -118,7 +121,7 @@ extern lck_mtx_t *fuse_log_lock;
 
 extern OSMallocTag fuse_malloc_tag;
 
-#ifdef FUSE_COUNT_MEMORY
+#ifdef FUSE4X_COUNT_MEMORY
 
 extern int32_t fuse_memory_allocated;
 
@@ -151,7 +154,7 @@ FUSE_OSFree(void *addr, size_t size, OSMallocTag tag)
 #define FUSE_OSMalloc(size, tag)           OSMalloc((uint32_t)(size), (tag))
 #define FUSE_OSFree(addr, size, tag)       OSFree((addr), (uint32_t)(size), (tag))
 
-#endif /* FUSE_COUNT_MEMORY */
+#endif /* FUSE4X_COUNT_MEMORY */
 
 #ifndef FUSE4X_KEXT_VERSION
 #define FUSE4X_KEXT_VERSION FUSE4X_VERSION_LITERAL

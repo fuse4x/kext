@@ -665,7 +665,7 @@ fuse_internal_attr_loadvap(vnode_t vp, struct vnode_attr *out_vap,
     fuse_internal_attr_fat2vat(vp, &(fuse_out)->attr, VTOVA(vp));    \
 } while (0)
 
-#if M_FUSE4X_ENABLE_EXCHANGE
+#ifdef FUSE4X_ENABLE_EXCHANGE
 
 /* exchange */
 
@@ -679,7 +679,7 @@ fuse_internal_exchange(vnode_t       fvp,
                        int           options,
                        vfs_context_t context);
 
-#endif /* M_FUSE4X_ENABLE_EXCHANGE */
+#endif /* FUSE4X_ENABLE_EXCHANGE */
 
 /* fsync */
 

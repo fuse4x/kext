@@ -79,13 +79,13 @@ d_read_t   fuse_device_read;
 d_write_t  fuse_device_write;
 d_ioctl_t  fuse_device_ioctl;
 
-#if M_FUSE4X_ENABLE_DSELECT
+#ifdef FUSE4X_ENABLE_DSELECT
 
 d_select_t fuse_device_select;
 
 #else
 #define fuse_device_select (d_select_t*)enodev
-#endif /* M_FUSE4X_ENABLE_DSELECT */
+#endif /* FUSE4X_ENABLE_DSELECT */
 
 static struct cdevsw fuse_device_cdevsw = {
     /* open     */ fuse_device_open,
@@ -210,9 +210,9 @@ fuse_device_close(dev_t dev, __unused int flags, __unused int devtype,
 
     fuse_reject_answers(data);
 
-#if M_FUSE4X_ENABLE_DSELECT
+#ifdef FUSE4X_ENABLE_DSELECT
     selwakeup((struct selinfo*)&data->d_rsel);
-#endif /* M_FUSE4X_ENABLE_DSELECT */
+#endif /* FUSE4X_ENABLE_DSELECT */
 
     if (!data->mounted) {
         /* We're not mounted. Can destroy mpdata. */
@@ -566,7 +566,7 @@ fuse_device_ioctl(dev_t dev, u_long cmd, caddr_t udata,
     return ret;
 }
 
-#if M_FUSE4X_ENABLE_DSELECT
+#ifdef FUSE4X_ENABLE_DSELECT
 
 int
 fuse_device_select(dev_t dev, int events, void *wql, struct proc *p)
@@ -609,7 +609,7 @@ fuse_device_select(dev_t dev, int events, void *wql, struct proc *p)
     return revents;
 }
 
-#endif /* M_FUSE4X_ENABLE_DSELECT */
+#endif /* FUSE4X_ENABLE_DSELECT */
 
 int
 fuse_device_kill(int unit, struct proc *p)

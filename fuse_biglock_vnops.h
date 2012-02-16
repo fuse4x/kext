@@ -10,9 +10,9 @@
 
 #include <fuse_param.h>
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
 
-#if FUSE_TRACE_LK
+#ifdef FUSE4X_TRACE_LK
 #define biglock_log(fmt, ...)   log(fmt, ## __VA_ARGS__)
 #else
 #define biglock_log(fmt, ...)   {}
@@ -187,7 +187,7 @@ FUSE_VNOP_EXPORT int fuse_biglock_vnop_getattr(struct vnop_getattr_args *ap);
 
 // FUSE_VNOP_EXPORT int fuse_biglock_vnop_getnamedstream(struct vnop_getnamedstream_args *ap);
 
-#if M_FUSE4X_ENABLE_XATTR
+#ifdef FUSE4X_ENABLE_XATTR
 FUSE_VNOP_EXPORT int fuse_biglock_vnop_getxattr(struct vnop_getxattr_args *ap);
 #endif
 
@@ -195,7 +195,7 @@ FUSE_VNOP_EXPORT int fuse_biglock_vnop_inactive(struct vnop_inactive_args *ap);
 
 // FUSE_VNOP_EXPORT int fuse_biglock_vnop_ioctl(struct vnop_ioctl_args *ap);
 
-#if M_FUSE4X_ENABLE_KQUEUE
+#ifdef FUSE4X_ENABLE_KQUEUE
 FUSE_VNOP_EXPORT int fuse_biglock_vnop_kqfilt_add(struct vnop_kqfilt_add_args *ap);
 
 FUSE_VNOP_EXPORT int fuse_biglock_vnop_kqfilt_remove(struct vnop_kqfilt_remove_args *ap);
@@ -203,7 +203,7 @@ FUSE_VNOP_EXPORT int fuse_biglock_vnop_kqfilt_remove(struct vnop_kqfilt_remove_a
 
 FUSE_VNOP_EXPORT int fuse_biglock_vnop_link(struct vnop_link_args *ap);
 
-#if M_FUSE4X_ENABLE_XATTR
+#ifdef FUSE4X_ENABLE_XATTR
 FUSE_VNOP_EXPORT int fuse_biglock_vnop_listxattr(struct vnop_listxattr_args *ap);
 #endif
 
@@ -243,7 +243,7 @@ FUSE_VNOP_EXPORT int fuse_biglock_vnop_remove(struct vnop_remove_args *ap);
 
 // FUSE_VNOP_EXPORT int fuse_biglock_vnop_readnamedstream(struct vnop_readnamedstream_args *ap);
 
-#if M_FUSE4X_ENABLE_XATTR
+#ifdef FUSE4X_ENABLE_XATTR
 FUSE_VNOP_EXPORT int fuse_biglock_vnop_removexattr(struct vnop_removexattr_args *ap);
 #endif
 
@@ -263,7 +263,7 @@ FUSE_VNOP_EXPORT int fuse_biglock_vnop_setattr(struct vnop_setattr_args *ap);
 
 // FUSE_VNOP_EXPORT int fuse_biglock_vnop_setattrlist (struct vnop_setattrlist_args *ap);
 
-#if M_FUSE4X_ENABLE_XATTR
+#ifdef FUSE4X_ENABLE_XATTR
 FUSE_VNOP_EXPORT int fuse_biglock_vnop_setxattr(struct vnop_setxattr_args *ap);
 #endif
 
@@ -275,6 +275,6 @@ FUSE_VNOP_EXPORT int fuse_biglock_vnop_symlink(struct vnop_symlink_args *ap);
 
 FUSE_VNOP_EXPORT int fuse_biglock_vnop_write(struct vnop_write_args *ap);
 
-#endif /* M_FUSE4X_ENABLE_BIGLOCK */
+#endif /* FUSE4X_ENABLE_BIGLOCK */
 
 #endif /* _FUSE_BIGLOCK_VNOPS_H_ */

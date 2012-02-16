@@ -6,7 +6,7 @@
 #include "fuse_kludges.h"
 #include <libkern/version.h>
 
-#if M_FUSE4X_ENABLE_EXCHANGE
+#ifdef FUSE4X_ENABLE_EXCHANGE
 
 /* The shop of horrors. */
 
@@ -81,4 +81,4 @@ fuse_kludge_exchange(vnode_t v1, vnode_t v2)
     }
 }
 
-#endif /* M_FUSE4X_ENABLE_EXCHANGE */
+#endif /* FUSE4X_ENABLE_EXCHANGE */

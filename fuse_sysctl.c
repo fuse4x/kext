@@ -42,7 +42,7 @@ int32_t  fuse_vnodes_current         = 0;                                  // r
 #ifndef FUSE4X_DISABLE_MACFUSE_MODE
 int32_t  fuse_macfuse_mode           = 0;                                  // w
 #endif
-#ifdef FUSE_COUNT_MEMORY
+#ifdef FUSE4X_COUNT_MEMORY
 int32_t  fuse_memory_allocated       = 0;                                  // r
 #endif
 
@@ -337,7 +337,7 @@ SYSCTL_INT(_vfs_generic_fuse4x_resourceusage, OID_AUTO, mounts, CTLFLAG_RD,
            &fuse_mount_count, 0, "");
 SYSCTL_INT(_vfs_generic_fuse4x_resourceusage, OID_AUTO, vnodes, CTLFLAG_RD,
            &fuse_vnodes_current, 0, "");
-#ifdef FUSE_COUNT_MEMORY
+#ifdef FUSE4X_COUNT_MEMORY
 SYSCTL_INT(_vfs_generic_fuse4x_resourceusage, OID_AUTO, memory_bytes, CTLFLAG_RD,
            &fuse_memory_allocated, 0, "");
 #endif
@@ -397,7 +397,7 @@ static struct sysctl_oid *fuse_sysctl_list[] =
     &sysctl__vfs_generic_fuse4x_resourceusage_filehandles_zombies,
     &sysctl__vfs_generic_fuse4x_resourceusage_ipc_iovs,
     &sysctl__vfs_generic_fuse4x_resourceusage_ipc_tickets,
-#ifdef FUSE_COUNT_MEMORY
+#ifdef FUSE4X_COUNT_MEMORY
     &sysctl__vfs_generic_fuse4x_resourceusage_memory_bytes,
 #endif
     &sysctl__vfs_generic_fuse4x_resourceusage_mounts,

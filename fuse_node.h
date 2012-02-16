@@ -80,7 +80,7 @@ struct fuse_vnode_data {
     lck_mtx_t *createlock;
     void      *creator;
 
-#if M_FUSE4X_ENABLE_TSLOCKING
+#ifdef FUSE4X_ENABLE_TSLOCKING
     /*
      * The nodelock must be held when data in the FUSE node is accessed or
      * modified. Typically, we would take this lock at the beginning of a
@@ -98,9 +98,9 @@ struct fuse_vnode_data {
 
     /** miscellaneous **/
 
-#if M_FUSE4X_ENABLE_KQUEUE
+#ifdef FUSE4X_ENABLE_KQUEUE
     struct klist c_knotes;
-#endif /* M_FUSE4X_ENABLE_KQUEUE */
+#endif /* FUSE4X_ENABLE_KQUEUE */
 };
 typedef struct fuse_vnode_data * fusenode_t;
 
@@ -153,7 +153,7 @@ static __inline__
 void
 fuse_vncache_enter(vnode_t dvp, vnode_t vp, struct componentname *cnp)
 {
-#if FUSE_TRACE_VNCACHE
+#ifdef FUSE4X_TRACE_VNCACHE
     log("fuse4x: cache enter dvp=%p, vp=%p, %s\n", dvp, vp, cnp->cn_nameptr);
 #endif
     return cache_enter(dvp, vp, cnp);
@@ -163,7 +163,7 @@ static __inline__
 void
 fuse_vncache_purge(vnode_t vp)
 {
-#if FUSE_TRACE_VNCACHE
+#ifdef FUSE4X_TRACE_VNCACHE
     log("fuse4x: cache purge vp=%p\n", vp);
 #endif
     return cache_purge(vp);
@@ -174,7 +174,7 @@ int
 fuse_vncache_lookup(vnode_t dvp, vnode_t *vpp, struct componentname *cnp)
 {
     int ret = cache_lookup(dvp, vpp, cnp);
-#if FUSE_TRACE_VNCACHE
+#ifdef FUSE4X_TRACE_VNCACHE
     log("fuse4x: cache lookup ret=%d, dvp=%p, *vpp=%p, %s\n",
           ret, dvp, *vpp, cnp->cn_nameptr);
 #endif

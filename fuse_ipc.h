@@ -114,9 +114,9 @@ struct fuse_data {
     bool                       destroyed: 1;
     bool                       dead: 1;
 
-#if M_FUSE4X_ENABLE_DSELECT
+#ifdef FUSE4X_ENABLE_DSELECT
     struct fuse_selinfo        d_rsel;
-#endif /* M_FUSE4X_ENABLE_DSELECT */
+#endif /* FUSE4X_ENABLE_DSELECT */
 
     lck_mtx_t                 *ms_mtx;
     STAILQ_HEAD(, fuse_ticket) ms_head;
@@ -141,7 +141,7 @@ struct fuse_data {
 
     struct timespec            daemon_timeout;
     struct timespec           *daemon_timeout_p;
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
     lck_mtx_t                 *biglock;
 #endif
 };

@@ -41,7 +41,7 @@ extern lck_grp_attr_t *fuse_group_attr;
 extern lck_grp_t      *fuse_lock_group;
 extern lck_mtx_t      *fuse_device_mutex;
 
-#ifdef FUSE_TRACE_LK
+#ifdef FUSE4X_TRACE_LK
 
 #define fuse_lck_mtx_lock(m)                                                                 \
 {                                                                                            \
@@ -57,12 +57,12 @@ extern lck_mtx_t      *fuse_device_mutex;
     log("1: lck_mtx_unlock(%p): %s@%d by %d\n", (m), __FUNCTION__, __LINE__, proc_selfpid());  \
 }
 
-#else /* !FUSE_TRACE_LK */
+#else /* !FUSE4X_TRACE_LK */
 
 #define fuse_lck_mtx_lock(m)            lck_mtx_lock((m))
 #define fuse_lck_mtx_unlock(m)          lck_mtx_unlock((m))
 
-#endif /* FUSE_TRACE_LK */
+#endif /* FUSE4X_TRACE_LK */
 
 #define fuse_lck_rw_lock_shared(l)      lck_rw_lock_shared((l))
 #define fuse_lck_rw_lock_exclusive(l)   lck_rw_lock_exclusive((l))
@@ -70,7 +70,7 @@ extern lck_mtx_t      *fuse_device_mutex;
 #define fuse_lck_rw_unlock_exclusive(l) lck_rw_unlock_exclusive((l))
 #define fuse_lck_mtx_try_lock(l)        IOLockTryLock((IOLock *)l)
 
-#if M_FUSE4X_ENABLE_BIGLOCK
+#ifdef FUSE4X_ENABLE_BIGLOCK
 
 typedef struct _fusefs_recursive_lock fusefs_recursive_lock;
 
@@ -79,6 +79,6 @@ extern void fusefs_recursive_lock_free(fusefs_recursive_lock* lock);
 extern void fusefs_recursive_lock_lock(fusefs_recursive_lock *lock);
 extern void fusefs_recursive_lock_unlock(fusefs_recursive_lock *lock);
 
-#endif /* M_FUSE4X_ENABLE_BIGLOCK */
+#endif /* FUSE4X_ENABLE_BIGLOCK */
 
 #endif /* _FUSE_LOCKING_H_ */
