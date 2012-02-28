@@ -15,6 +15,14 @@ abort("root directory #{root_dir} does not exist") if ARGV.index('--root') and n
 
 system('git clean -xdf') if release
 
+
+version = `git describe --tags --dirty`.chomp
+c_definitions = "FUSE4X_KEXT_VERSION=#{version}"
+if release
+  c_definitions += ' FUSE4X_ENABLE_MACFUSE_MODE'
+end
+
+
 # Kext uses special configuration for final release.
 # This configuration sets base SDK to 10.5 for i386 arch and 10.6 for x86_64, this
 # is needed because kexts does not have forward compatibility and one have to compile a kext
@@ -22,9 +30,7 @@ system('git clean -xdf') if release
 # load_fuse4x is a user-space program and still uses default SDK + target set to 10.5
 configuration = release ? 'Distribution' : 'Debug'
 flags = '-configuration ' + configuration
-
-version = `git describe --tags --dirty`.chomp
-flags += " GCC_PREPROCESSOR_DEFINITIONS=FUSE4X_KEXT_VERSION=#{version}"
+flags += " GCC_PREPROCESSOR_DEFINITIONS='#{c_definitions}'"
 
 system("xcodebuild SYMROOT=build SHARED_PRECOMPS_DIR=build -PBXBuildsContinueAfterErrors=0 -parallelizeTargets -alltargets #{flags}") or abort("cannot build kext")
 

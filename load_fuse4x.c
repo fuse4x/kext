@@ -21,7 +21,7 @@
 
 #define KEXTLOAD_PROGRAM "/sbin/kextload"
 
-#ifndef FUSE4X_DISABLE_MACFUSE_MODE
+#ifdef FUSE4X_ENABLE_MACFUSE_MODE
 static bool is_macfuse_mode(void)
 {
     struct stat macfuse_file, fuse4x_file;
@@ -90,7 +90,7 @@ main(__unused int argc, __unused const char *argv[])
         (void)sysctlbyname(SYSCTL_FUSE4X_TUNABLES_ADMIN, NULL, NULL, &admin_gid, sizeof(admin_gid));
     }
 
-#ifndef FUSE4X_DISABLE_MACFUSE_MODE
+#ifdef FUSE4X_ENABLE_MACFUSE_MODE
     if (is_macfuse_mode()) {
         int macfuse_mode = 1;
         (void)sysctlbyname("vfs.generic.fuse4x.control.macfuse_mode", NULL, NULL, &macfuse_mode, sizeof(macfuse_mode));
