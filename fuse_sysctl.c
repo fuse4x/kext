@@ -100,7 +100,7 @@ sysctl_fuse4x_control_kill_handler SYSCTL_HANDLER_ARGS
 
 #ifndef FUSE4X_DISABLE_MACFUSE_MODE
 // some applications (e.g. TrueCrypt) check what macfuse version is installed.
-// ideally they should not hard-code such check as macfuse has several fuse provides.
+// ideally they should not hard-code such check as macosx has several fuse providers.
 
 SYSCTL_DECL(_macfuse);
 SYSCTL_NODE(, OID_AUTO, macfuse, CTLFLAG_RW, 0,
