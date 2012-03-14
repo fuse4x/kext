@@ -77,7 +77,6 @@ d_open_t   fuse_device_open;
 d_close_t  fuse_device_close;
 d_read_t   fuse_device_read;
 d_write_t  fuse_device_write;
-d_ioctl_t  fuse_device_ioctl;
 
 #ifdef FUSE4X_ENABLE_DSELECT
 
@@ -92,7 +91,7 @@ static struct cdevsw fuse_device_cdevsw = {
     /* close    */ fuse_device_close,
     /* read     */ fuse_device_read,
     /* write    */ fuse_device_write,
-    /* ioctl    */ fuse_device_ioctl,
+    /* ioctl    */ eno_ioctl,
     /* stop     */ eno_stop,
     /* reset    */ eno_reset,
     /* ttys     */ NULL,
@@ -531,40 +530,6 @@ fuse_devices_stop(void)
     return KERN_SUCCESS;
 }
 
-/* Control/Debug Utilities */
-
-
-int
-fuse_device_ioctl(dev_t dev, u_long cmd, caddr_t udata,
-                  __unused int flags, __unused proc_t proc)
-{
-    int ret = EINVAL;
-    struct fuse_device *fdev;
-    struct fuse_data   *data;
-
-    fuse_trace_printf_func();
-
-    fdev = FUSE_DEVICE_FROM_UNIT_FAST(minor(dev));
-    if (!fdev) {
-        return ENXIO;
-    }
-
-    data = fdev->data;
-    if (!data) {
-        return ENXIO;
-    }
-
-    switch (cmd) {
-    case FUSEDEVIOCSETDAEMONDEAD:
-        fuse_data_kill(data);
-        ret = 0;
-        break;
-    default:
-        break;
-    }
-
-    return ret;
-}
 
 #ifdef FUSE4X_ENABLE_DSELECT
 
