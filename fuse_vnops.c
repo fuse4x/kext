@@ -2418,15 +2418,13 @@ fuse_vnop_readdir(struct vnop_readdir_args *ap)
         return EINVAL;
     }
 
-#define DE_SIZE (int)(sizeof(struct fuse_dirent))
-
-    if ((uio_iovcnt(uio) > 1) ||
-        (uio_resid(uio) < (user_ssize_t)DE_SIZE)) {
+    const user_ssize_t dirent_size = (user_ssize_t)sizeof(struct fuse_dirent);
+    if ((uio_iovcnt(uio) > 1) || (uio_resid(uio) < dirent_size)) {
         return EINVAL;
     }
 
     /*
-     *  if ((uio_offset(uio) % DE_SIZE) != 0) { ...
+     *  if ((uio_offset(uio) % dirent_size) != 0) { ...
      */
 
     fvdat = VTOFUD(vp);
@@ -2444,9 +2442,8 @@ fuse_vnop_readdir(struct vnop_readdir_args *ap)
         OSIncrementAtomic((SInt32 *)&fuse_fh_reuse_count);
     }
 
-#define DIRCOOKEDSIZE FUSE_DIRENT_ALIGN(FUSE_NAME_OFFSET + MAXNAMLEN + 1)
-
-    fiov_init(&cookediov, DIRCOOKEDSIZE);
+    size_t dircookedsize = FUSE_DIRENT_ALIGN(FUSE_NAME_OFFSET + MAXNAMLEN + 1);
+    fiov_init(&cookediov, dircookedsize);
 
     err = fuse_internal_readdir(vp, uio, context, fufh, &cookediov,
                                 numdirentPtr);
