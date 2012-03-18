@@ -638,9 +638,9 @@ fuse_device_print_vnodes(int unit_flags, struct proc *p)
 
     fuse_lck_mtx_lock(fdev->mtx);
 
-    if (fdev->data) {
-
-        mount_t mp = fdev->data->mp;
+    struct fuse_data *data = fdev->data;
+    if (data) {
+        mount_t mp = data->mp;
 
         if (vfs_busy(mp, LK_NOWAIT)) {
             fuse_lck_mtx_unlock(fdev->mtx);
@@ -651,8 +651,8 @@ fuse_device_print_vnodes(int unit_flags, struct proc *p)
         if (p) {
             kauth_cred_t request_cred = kauth_cred_proc_ref(p);
             if ((kauth_cred_getuid(request_cred) == 0) ||
-                (fuse_match_cred(fdev->data->daemoncred, request_cred) == 0)) {
-                fuse_internal_print_vnodes(fdev->data->mp);
+                (fuse_match_cred(data->daemoncred, request_cred) == 0)) {
+                fuse_internal_print_vnodes(mp);
                 error = 0;
             }
             kauth_cred_unref(&request_cred);
