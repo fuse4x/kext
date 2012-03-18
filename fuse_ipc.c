@@ -802,6 +802,10 @@ fuse_body_audit(struct fuse_ticket *ticket, size_t blen)
         /* TBD */
         break;
 
+    case FUSE_IOCTL:
+        /* TBD */
+        break;
+
     case FUSE_DESTROY:
         err = (blen == 0) ? 0 : EINVAL;
         break;

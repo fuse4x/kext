@@ -3569,6 +3569,83 @@ fuse_vnop_write(struct vnop_write_args *ap)
     return error;
 }
 
+/*
+    struct vnop_ioctl_args {
+        struct vnodeop_desc *a_desc;
+        vnode_t a_vp;
+        u_long a_command;
+        caddr_t a_data;
+        int a_fflag;
+        vfs_context_t a_context;
+    };
+ */
+FUSE_VNOP_EXPORT
+int
+fuse_vnop_ioctl(struct vnop_ioctl_args *ap)
+{
+    vnode_t vp            = ap->a_vp;
+    vfs_context_t context = ap->a_context;
+
+    struct fuse_dispatcher fdi;
+    struct fuse_ioctl_in *fioi;
+    struct fuse_data *data;
+    mount_t mp;
+
+    fuse_trace_printf_vnop_novp();
+
+    if (fuse_isdeadfs_fs(vp)) {
+        return EBADF;
+    }
+
+    CHECK_BLANKET_DENIAL(vp, context, EPERM);
+
+    mp = vnode_mount(vp);
+    data = fuse_get_mpdata(mp);
+
+    if (!fuse_implemented(data, FSESS_NOIMPLBIT(IOCTL))) {
+        return ENOTSUP;
+    }
+
+    fufh_type_t fufh_type = fuse_filehandle_xlate_from_fflags(ap->a_fflag);
+    struct fuse_filehandle *fufh = &(VTOFUD(vp)->fufh[fufh_type]);
+
+    if (!FUFH_IS_VALID(fufh)) {
+        return EIO;
+    }
+
+    const int iodata_size = (int)IOCPARM_LEN(ap->a_command);
+    fuse_dispatcher_init(&fdi, sizeof(*fioi) + iodata_size);
+    fuse_dispatcher_make_vp(&fdi, FUSE_IOCTL, vp, context);
+
+    fioi = fdi.indata;
+    fioi->fh = fufh->fh_id;
+    fioi->cmd = (uint32_t)ap->a_command;
+    if (ap->a_command | IOC_IN) {
+        fioi->in_size = iodata_size;
+        memcpy((char *)fdi.indata + sizeof(*fioi), ap->a_data, iodata_size);
+    }
+    if (ap->a_command | IOC_OUT) {
+        fioi->out_size = iodata_size;
+    }
+
+    int err = fuse_dispatcher_wait_answer(&fdi);
+
+    if (!err) {
+        if (ap->a_command | IOC_OUT) {
+            memcpy(ap->a_data, (char *)fdi.answer + sizeof(struct fuse_ioctl_out), iodata_size);
+        }
+        fuse_ticket_drop(fdi.ticket);
+    } else {
+        if (err == ENOSYS) {
+            fuse_clear_implemented(data, FSESS_NOIMPLBIT(IOCTL));
+            err = 0;
+        }
+    }
+
+    return err;
+}
+
+
 struct vnodeopv_entry_desc fuse_vnode_operation_entries[] = {
     { &vnop_access_desc,        (fuse_vnode_op_t) fuse_vnop_access        },
     { &vnop_advlock_desc,       (fuse_vnode_op_t) err_advlock             },
@@ -3588,7 +3665,7 @@ struct vnodeopv_entry_desc fuse_vnode_operation_entries[] = {
     { &vnop_getxattr_desc,      (fuse_vnode_op_t) fuse_vnop_getxattr      },
 #endif /* FUSE4X_ENABLE_XATTR */
     { &vnop_inactive_desc,      (fuse_vnode_op_t) fuse_vnop_inactive      },
-//    { &vnop_ioctl_desc,         (fuse_vnode_op_t) fuse_vnop_ioctl         },
+    { &vnop_ioctl_desc,         (fuse_vnode_op_t) fuse_vnop_ioctl         },
     { &vnop_link_desc,          (fuse_vnode_op_t) fuse_vnop_link          },
 #ifdef FUSE4X_ENABLE_XATTR
     { &vnop_listxattr_desc,     (fuse_vnode_op_t) fuse_vnop_listxattr     },
