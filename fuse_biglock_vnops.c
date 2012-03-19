@@ -171,7 +171,6 @@ fuse_biglock_vnop_getattr(struct vnop_getattr_args *ap)
 	nodelocked_vnop(ap->a_vp, fuse_vnop_getattr, ap);
 }
 
-#ifdef FUSE4X_ENABLE_XATTR
 /*
  struct vnop_getxattr_args {
  struct vnodeop_desc *a_desc;
@@ -189,7 +188,6 @@ fuse_biglock_vnop_getxattr(struct vnop_getxattr_args *ap)
 {
 	nodelocked_vnop(ap->a_vp, fuse_vnop_getxattr, ap);
 }
-#endif /* FUSE4X_ENABLE_XATTR */
 
 /*
  struct vnop_inactive_args {
@@ -258,7 +256,6 @@ fuse_biglock_vnop_link(struct vnop_link_args *ap)
 	nodelocked_vnop(ap->a_vp, fuse_vnop_link, ap);
 }
 
-#ifdef FUSE4X_ENABLE_XATTR
 /*
  struct vnop_listxattr_args {
  struct vnodeop_desc *a_desc;
@@ -275,7 +272,6 @@ fuse_biglock_vnop_listxattr(struct vnop_listxattr_args *ap)
 {
 	nodelocked_vnop(ap->a_vp, fuse_vnop_listxattr, ap);
 }
-#endif /* FUSE4X_ENABLE_XATTR */
 
 /*
  struct vnop_lookup_args {
@@ -528,7 +524,6 @@ fuse_biglock_vnop_remove(struct vnop_remove_args *ap)
 	nodelocked_vnop(ap->a_vp, fuse_vnop_remove, ap);
 }
 
-#ifdef FUSE4X_ENABLE_XATTR
 /*
  struct vnop_removexattr_args {
  struct vnodeop_desc *a_desc;
@@ -544,7 +539,6 @@ fuse_biglock_vnop_removexattr(struct vnop_removexattr_args *ap)
 {
 	nodelocked_vnop(ap->a_vp, fuse_vnop_removexattr, ap);
 }
-#endif /* FUSE4X_ENABLE_XATTR */
 
 /*
  struct vnop_rename_args {
@@ -637,7 +631,6 @@ fuse_biglock_vnop_setattr(struct vnop_setattr_args *ap)
 	nodelocked_vnop(ap->a_vp, fuse_vnop_setattr, ap);
 }
 
-#ifdef FUSE4X_ENABLE_XATTR
 /*
  struct vnop_setxattr_args {
  struct vnodeop_desc *a_desc;
@@ -654,7 +647,6 @@ fuse_biglock_vnop_setxattr(struct vnop_setxattr_args *ap)
 {
 	nodelocked_vnop(ap->a_vp, fuse_vnop_setxattr, ap);
 }
-#endif /* FUSE4X_ENABLE_XATTR */
 
 /*
  struct vnop_strategy_args {
@@ -746,15 +738,11 @@ struct vnodeopv_entry_desc fuse_biglock_vnode_operation_entries[] = {
     { &vnop_fsync_desc,         (fuse_vnode_op_t) fuse_biglock_vnop_fsync         },
     { &vnop_getattr_desc,       (fuse_vnode_op_t) fuse_biglock_vnop_getattr       },
     //  { &vnop_getattrlist_desc,   (fuse_vnode_op_t) fuse_biglock_vnop_getattrlist   },
-#ifdef FUSE4X_ENABLE_XATTR
     { &vnop_getxattr_desc,      (fuse_vnode_op_t) fuse_biglock_vnop_getxattr      },
-#endif /* FUSE4X_ENABLE_XATTR */
     { &vnop_inactive_desc,      (fuse_vnode_op_t) fuse_biglock_vnop_inactive      },
     { &vnop_ioctl_desc,         (fuse_vnode_op_t) fuse_biglock_vnop_ioctl         },
     { &vnop_link_desc,          (fuse_vnode_op_t) fuse_biglock_vnop_link          },
-#ifdef FUSE4X_ENABLE_XATTR
     { &vnop_listxattr_desc,     (fuse_vnode_op_t) fuse_biglock_vnop_listxattr     },
-#endif /* FUSE4X_ENABLE_XATTR */
     { &vnop_lookup_desc,        (fuse_vnode_op_t) fuse_biglock_vnop_lookup        },
 #ifdef FUSE4X_ENABLE_KQUEUE
     { &vnop_kqfilt_add_desc,    (fuse_vnode_op_t) fuse_biglock_vnop_kqfilt_add    },
@@ -775,9 +763,7 @@ struct vnodeopv_entry_desc fuse_biglock_vnode_operation_entries[] = {
     { &vnop_readlink_desc,      (fuse_vnode_op_t) fuse_biglock_vnop_readlink      },
     { &vnop_reclaim_desc,       (fuse_vnode_op_t) fuse_biglock_vnop_reclaim       },
     { &vnop_remove_desc,        (fuse_vnode_op_t) fuse_biglock_vnop_remove        },
-#ifdef FUSE4X_ENABLE_XATTR
     { &vnop_removexattr_desc,   (fuse_vnode_op_t) fuse_biglock_vnop_removexattr   },
-#endif /* FUSE4X_ENABLE_XATTR */
     { &vnop_rename_desc,        (fuse_vnode_op_t) fuse_biglock_vnop_rename        },
     { &vnop_revoke_desc,        (fuse_vnode_op_t) fuse_biglock_vnop_revoke        },
     { &vnop_rmdir_desc,         (fuse_vnode_op_t) fuse_biglock_vnop_rmdir         },
@@ -785,9 +771,7 @@ struct vnodeopv_entry_desc fuse_biglock_vnode_operation_entries[] = {
     { &vnop_select_desc,        (fuse_vnode_op_t) fuse_biglock_vnop_select        },
     { &vnop_setattr_desc,       (fuse_vnode_op_t) fuse_biglock_vnop_setattr       },
     //  { &vnop_setattrlist_desc,   (fuse_vnode_op_t) fuse_biglock_vnop_setattrlist   },
-#ifdef FUSE4X_ENABLE_XATTR
     { &vnop_setxattr_desc,      (fuse_vnode_op_t) fuse_biglock_vnop_setxattr      },
-#endif /* FUSE4X_ENABLE_XATTR */
     { &vnop_strategy_desc,      (fuse_vnode_op_t) fuse_biglock_vnop_strategy      },
     { &vnop_symlink_desc,       (fuse_vnode_op_t) fuse_biglock_vnop_symlink       },
     //  { &vnop_whiteout_desc,      (fuse_vnode_op_t) fuse_biglock_vnop_whiteout      },

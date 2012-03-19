@@ -42,9 +42,7 @@ FUSE_VNOP_EXPORT int fuse_vnop_getattr(struct vnop_getattr_args *ap);
 
 // FUSE_VNOP_EXPORT int fuse_vnop_getnamedstream(struct vnop_getnamedstream_args *ap);
 
-#ifdef FUSE4X_ENABLE_XATTR
 FUSE_VNOP_EXPORT int fuse_vnop_getxattr(struct vnop_getxattr_args *ap);
-#endif
 
 FUSE_VNOP_EXPORT int fuse_vnop_inactive(struct vnop_inactive_args *ap);
 
@@ -58,9 +56,7 @@ FUSE_VNOP_EXPORT int fuse_vnop_kqfilt_remove(struct vnop_kqfilt_remove_args *ap)
 
 FUSE_VNOP_EXPORT int fuse_vnop_link(struct vnop_link_args *ap);
 
-#ifdef FUSE4X_ENABLE_XATTR
 FUSE_VNOP_EXPORT int fuse_vnop_listxattr(struct vnop_listxattr_args *ap);
-#endif
 
 FUSE_VNOP_EXPORT int fuse_vnop_lookup(struct vnop_lookup_args *ap);
 
@@ -98,9 +94,7 @@ FUSE_VNOP_EXPORT int fuse_vnop_remove(struct vnop_remove_args *ap);
 
 // FUSE_VNOP_EXPORT int fuse_vnop_readnamedstream(struct vnop_readnamedstream_args *ap);
 
-#ifdef FUSE4X_ENABLE_XATTR
 FUSE_VNOP_EXPORT int fuse_vnop_removexattr(struct vnop_removexattr_args *ap);
-#endif
 
 FUSE_VNOP_EXPORT int fuse_vnop_rename(struct vnop_rename_args *ap);
 
@@ -118,9 +112,7 @@ FUSE_VNOP_EXPORT int fuse_vnop_setattr(struct vnop_setattr_args *ap);
 
 // FUSE_VNOP_EXPORT int fuse_vnop_setattrlist (struct vnop_setattrlist_args *ap);
 
-#ifdef FUSE4X_ENABLE_XATTR
 FUSE_VNOP_EXPORT int fuse_vnop_setxattr(struct vnop_setxattr_args *ap);
-#endif
 
 FUSE_VNOP_EXPORT int fuse_vnop_strategy(struct vnop_strategy_args *ap);
 
