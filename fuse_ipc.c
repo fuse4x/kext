@@ -112,8 +112,7 @@ void
 fiov_adjust(struct fuse_iov *fiov, size_t size)
 {
     if (fiov->allocated_size < size ||
-        (fuse_iov_permanent_bufsize >= 0 &&
-         fiov->allocated_size - size > fuse_iov_permanent_bufsize &&
+        (fiov->allocated_size - size > fuse_iov_permanent_bufsize &&
              --fiov->credit < 0)) {
 
         fiov->base = FUSE_OSRealloc_nocopy(fiov->base, fiov->allocated_size,
@@ -133,8 +132,7 @@ int
 fiov_adjust_canfail(struct fuse_iov *fiov, size_t size)
 {
     if (fiov->allocated_size < size ||
-        (fuse_iov_permanent_bufsize >= 0 &&
-         fiov->allocated_size - size > fuse_iov_permanent_bufsize &&
+        (fiov->allocated_size - size > fuse_iov_permanent_bufsize &&
              --fiov->credit < 0)) {
 
         void *tmpbase = NULL;
@@ -561,8 +559,7 @@ fuse_ticket_drop(struct fuse_ticket *ticket)
 
     fuse_lck_mtx_lock(data->ticket_mtx);
 
-    if ((fuse_max_freetickets >= 0 &&
-        fuse_max_freetickets <= data->freeticket_counter) ||
+    if ((fuse_max_freetickets <= data->freeticket_counter) ||
         ticket->killed) {
         fuse_remove_allticks(ticket);
         fuse_lck_mtx_unlock(data->ticket_mtx);

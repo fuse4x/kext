@@ -47,13 +47,12 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
 
     enum vtype vtyp = IFTOVT(feo->attr.mode);
 
-    if ((vtyp >= VBAD) || (vtyp < 0) || (vtyp == VNON)) {
+    if ((vtyp >= VBAD) || (vtyp == VNON)) {
         return EINVAL;
     }
 
     int      markroot   = (flags & FN_IS_ROOT) ? 1 : 0;
     uint64_t size       = (flags & FN_IS_ROOT) ? 0 : feo->attr.size;
-    uint32_t rdev       = (flags & FN_IS_ROOT) ? 0 : feo->attr.rdev;
     uint64_t generation = feo->generation;
 
     mntdata = fuse_get_mpdata(mp);
