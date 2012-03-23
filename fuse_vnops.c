@@ -1643,7 +1643,6 @@ fuse_vnop_mmap(struct vnop_mmap_args *ap)
 
     struct fuse_vnode_data *fvdat = VTOFUD(vp);
     struct fuse_filehandle *fufh = NULL;
-    fufh_type_t fufh_type = fuse_filehandle_xlate_from_mmap(fflags);
 
     int err = 0;
     int deleted = 0;
@@ -1666,11 +1665,12 @@ fuse_vnop_mmap(struct vnop_mmap_args *ap)
 
     CHECK_BLANKET_DENIAL(vp, context, ENOENT);
 
-    if (fufh_type == FUFH_INVALID) { /* nothing to do */
+    if (fflags & (PROT_READ | PROT_WRITE | PROT_EXEC)) { /* nothing to do */
         return 0;
     }
 
     /* XXX: For PROT_WRITE, we should only care if file is mapped MAP_SHARED. */
+    fufh_type_t fufh_type = fuse_filehandle_xlate_from_mmap(fflags);
 
 retry:
     fufh = &(fvdat->fufh[fufh_type]);

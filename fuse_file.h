@@ -15,7 +15,6 @@
 #include <sys/vnode.h>
 
 typedef enum fufh_type {
-    FUFH_INVALID = -1,
     FUFH_RDONLY  = 0,
     FUFH_WRONLY  = 1,
     FUFH_RDWR    = 2,
@@ -24,10 +23,10 @@ typedef enum fufh_type {
 
 struct fuse_filehandle {
     uint64_t fh_id;
-    int32_t  open_count;
+    int32_t  open_count; // usage_count is a better name?
     int32_t  open_flags;
     int32_t  fuse_open_flags;
-    int32_t  aux_count;
+    int32_t  aux_count; // is it really needed?
 };
 typedef struct fuse_filehandle * fuse_filehandle_t;
 
@@ -49,10 +48,10 @@ fuse_filehandle_xlate_from_mmap(int fflags)
         }
     } else if (fflags & (PROT_READ | PROT_EXEC)) {
         return FUFH_RDONLY;
-    } else {
-        log("fuse4x: mmap being attempted with no region accessibility\n");
-        return FUFH_INVALID;
     }
+
+    panic("fuse4x: mmap being attempted with no region accessibility (flags=%x)\n", fflags);
+    return 0; // fake value
 }
 
 static __inline__
@@ -61,11 +60,11 @@ fuse_filehandle_xlate_from_fflags(int fflags)
 {
     if ((fflags & FREAD) && (fflags & FWRITE)) {
         return FUFH_RDWR;
-    } else if (fflags & (FWRITE)) {
+    } else if (fflags & FWRITE) {
         return FUFH_WRONLY;
-    } else if (fflags & (FREAD)) {
+    } else if (fflags & FREAD) {
         return FUFH_RDONLY;
-    } else {
+    } else if (fflags == 0) {
         /*
          * Looks like there might be a code path in Apple's
          * IOHDIXController/AppleDiskImagesFileBackingStore
@@ -75,14 +74,11 @@ fuse_filehandle_xlate_from_fflags(int fflags)
          * calls to VNOP_OPEN and VNOP_CLOSE do match up
          * even with this fudging.
          */
-        if (fflags == 0) {
-            return FUFH_RDONLY;
-        } else {
-            panic("fuse4x: What kind of a flag is this (%x)?", fflags);
-        }
+        return FUFH_RDONLY;
     }
 
-    return FUFH_INVALID;
+    panic("fuse4x: What kind of a flag is this (%x)?", fflags);
+    return 0; // fake value
 }
 
 static __inline__
