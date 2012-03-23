@@ -114,10 +114,6 @@ struct fuse_data {
     bool                       destroyed: 1;
     bool                       dead: 1;
 
-#ifdef FUSE4X_ENABLE_DSELECT
-    struct fuse_selinfo        d_rsel;
-#endif /* FUSE4X_ENABLE_DSELECT */
-
     lck_mtx_t                 *ms_mtx;
     STAILQ_HEAD(, fuse_ticket) ms_head;
 

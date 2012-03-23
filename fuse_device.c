@@ -78,14 +78,6 @@ d_close_t  fuse_device_close;
 d_read_t   fuse_device_read;
 d_write_t  fuse_device_write;
 
-#ifdef FUSE4X_ENABLE_DSELECT
-
-d_select_t fuse_device_select;
-
-#else
-#define fuse_device_select (d_select_t*)enodev
-#endif /* FUSE4X_ENABLE_DSELECT */
-
 static struct cdevsw fuse_device_cdevsw = {
     /* open     */ fuse_device_open,
     /* close    */ fuse_device_close,
@@ -95,7 +87,7 @@ static struct cdevsw fuse_device_cdevsw = {
     /* stop     */ eno_stop,
     /* reset    */ eno_reset,
     /* ttys     */ NULL,
-    /* select   */ fuse_device_select,
+    /* select   */ eno_select,
     /* mmap     */ eno_mmap,
     /* strategy */ eno_strat,
     /* getc     */ eno_getc,
@@ -208,10 +200,6 @@ fuse_device_close(dev_t dev, __unused int flags, __unused int devtype,
     data->opened = false;
 
     fuse_reject_answers(data);
-
-#ifdef FUSE4X_ENABLE_DSELECT
-    selwakeup((struct selinfo*)&data->d_rsel);
-#endif /* FUSE4X_ENABLE_DSELECT */
 
     if (!data->mounted) {
         /* We're not mounted. Can destroy mpdata. */
@@ -529,52 +517,6 @@ fuse_devices_stop(void)
 
     return KERN_SUCCESS;
 }
-
-
-#ifdef FUSE4X_ENABLE_DSELECT
-
-int
-fuse_device_select(dev_t dev, int events, void *wql, struct proc *p)
-{
-    int unit, revents = 0;
-    struct fuse_device *fdev;
-    struct fuse_data  *data;
-
-    fuse_trace_printf_func();
-
-    unit = minor(dev);
-    if (unit >= FUSE4X_NDEVICES) {
-        return ENOENT;
-    }
-
-    fdev = FUSE_DEVICE_FROM_UNIT_FAST(unit);
-    if (!fdev) {
-        return ENXIO;
-    }
-
-    data = fdev->data;
-    if (!data) {
-        panic("fuse4x: no device private data in device_select");
-    }
-
-    if (events & (POLLIN | POLLRDNORM)) {
-        fuse_lck_mtx_lock(data->ms_mtx);
-        if (data->dead || !STAILQ_EMPTY(&data->ms_head)) {
-            revents |= (events & (POLLIN | POLLRDNORM));
-        } else {
-            selrecord((proc_t)p, (struct selinfo*)&data->d_rsel, wql);
-        }
-        fuse_lck_mtx_unlock(data->ms_mtx);
-    }
-
-    if (events & (POLLOUT | POLLWRNORM)) {
-        revents |= (events & (POLLOUT | POLLWRNORM));
-    }
-
-    return revents;
-}
-
-#endif /* FUSE4X_ENABLE_DSELECT */
 
 int
 fuse_device_kill(int unit, struct proc *p)

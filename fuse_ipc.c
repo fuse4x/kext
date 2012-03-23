@@ -442,9 +442,6 @@ fuse_data_kill(struct fuse_data *data)
 
     data->dead = true;
     fuse_wakeup_one((caddr_t)data);
-#ifdef FUSE4X_ENABLE_DSELECT
-    selwakeup((struct selinfo*)&data->d_rsel);
-#endif /* FUSE4X_ENABLE_DSELECT */
     fuse_lck_mtx_unlock(data->ms_mtx);
 
     fuse_lck_mtx_lock(data->ticket_mtx);
@@ -625,9 +622,6 @@ fuse_insert_message(struct fuse_ticket *ticket)
     fuse_lck_mtx_lock(data->ms_mtx);
     STAILQ_INSERT_TAIL(&data->ms_head, ticket, ms_link);
     fuse_wakeup_one((caddr_t)data);
-#ifdef FUSE4X_ENABLE_DSELECT
-    selwakeup((struct selinfo*)&data->d_rsel);
-#endif /* FUSE4X_ENABLE_DSELECT */
     fuse_lck_mtx_unlock(data->ms_mtx);
 }
 
