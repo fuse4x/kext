@@ -9,7 +9,6 @@
 #include "fuse_ipc.h"
 #include "fuse_locking.h"
 #include "fuse_node.h"
-#include "fuse_nodehash.h"
 #include "fuse_sysctl.h"
 #include <fuse_mount.h>
 
@@ -122,12 +121,6 @@ fusefs_start(__unused kmod_info_t *ki, __unused void *d)
         return KERN_FAILURE;
     }
 
-    ret = HNodeInit(fuse_lock_group, fuse_lock_attr, fuse_malloc_tag,
-                    sizeof(struct fuse_vnode_data));
-    if (ret != KERN_SUCCESS) {
-        goto error;
-    }
-
     ret = vfs_fsadd(&fuse_vfs_entry, &fuse_vfs_table_ref);
     if (ret != 0) {
         fuse_vfs_table_ref = NULL;
@@ -149,7 +142,6 @@ error:
     if (fuse_vfs_table_ref) {
         (void)vfs_fsremove(fuse_vfs_table_ref);
     }
-    HNodeTerm();
     fini_stuff();
 
     return KERN_FAILURE;
@@ -170,7 +162,6 @@ fusefs_stop(__unused kmod_info_t *ki, __unused void *d)
         return KERN_FAILURE;
     }
 
-    HNodeTerm();
     fini_stuff();
 
     fuse_sysctl_stop();

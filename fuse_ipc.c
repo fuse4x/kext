@@ -10,6 +10,7 @@
 #include "fuse_locking.h"
 #include "fuse_node.h"
 #include "fuse_sysctl.h"
+#include "compat/tree.h"
 
 #include <sys/types.h>
 #include <sys/malloc.h>
@@ -383,11 +384,13 @@ fuse_data_alloc(struct proc *p)
     data->ms_mtx        = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
     data->aw_mtx        = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
     data->ticket_mtx    = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
+    data->node_mtx      = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr); // TODO: it is better to use spin lock here, they are cheaper
 
     STAILQ_INIT(&data->ms_head);
     TAILQ_INIT(&data->aw_head);
     STAILQ_INIT(&data->freetickets_head);
     TAILQ_INIT(&data->alltickets_head);
+    RB_INIT(&data->nodes_head);
 
     data->freeticket_counter = 0;
     data->deadticket_counter = 0;
@@ -414,6 +417,9 @@ fuse_data_destroy(struct fuse_data *data)
     lck_mtx_free(data->ticket_mtx, fuse_lock_group);
     data->ticket_mtx = NULL;
 
+    lck_mtx_free(data->node_mtx, fuse_lock_group);
+    data->node_mtx = NULL;
+
 #ifdef FUSE4X_ENABLE_BIGLOCK
     lck_mtx_free(data->biglock, fuse_lock_group);
     data->biglock = NULL;
@@ -421,6 +427,10 @@ fuse_data_destroy(struct fuse_data *data)
 
     while ((ticket = fuse_pop_allticks(data))) {
         fuse_ticket_destroy(ticket);
+    }
+
+    if (!RB_EMPTY(&data->nodes_head)) {
+        log("fuse4x: nodes rbtree (%p) still contains vnodes\n", &data->nodes_head);
     }
 
     kauth_cred_unref(&(data->daemoncred));

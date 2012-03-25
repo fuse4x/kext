@@ -11,10 +11,10 @@
 #include "fuse_kludges.h"
 #include "fuse_locking.h"
 #include "fuse_node.h"
-#include "fuse_nodehash.h"
 #include <fuse_param.h>
 #include "fuse_sysctl.h"
 #include "fuse_vnops.h"
+#include "compat/tree.h"
 
 #ifdef FUSE4X_ENABLE_BIGLOCK
 #include "fuse_biglock_vnops.h"
@@ -2437,9 +2437,9 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
 
     struct fuse_vnode_data *fvdat = VTOFUD(vp);
     struct fuse_filehandle *fufh = NULL;
+    struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
 
     int type;
-    HNodeRef hn;
 
     fuse_trace_printf_vnop();
 
@@ -2521,12 +2521,13 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
 
     fuse_vncache_purge(vp);
 
-    hn = vnode_fsnode(vp);
-    if (HNodeDetachVNode(hn, vp)) {
-        FSNodeScrub(fvdat);
-        HNodeScrubDone(hn);
-        OSDecrementAtomic((SInt32 *)&fuse_vnodes_current);
-    }
+    fuse_lck_mtx_lock(data->node_mtx);
+    RB_REMOVE(fuse_data_nodes, &data->nodes_head, fvdat);
+    fuse_lck_mtx_unlock(data->node_mtx);
+
+    FSNodeScrub(fvdat);
+    FUSE_OSFree(fvdat, sizeof(*fvdat), fuse_malloc_tag);
+    OSDecrementAtomic((SInt32 *)&fuse_vnodes_current);
 
     return 0;
 }
