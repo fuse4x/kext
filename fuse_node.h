@@ -7,9 +7,11 @@
 
 #include "fuse.h"
 #include "fuse_file.h"
-#include "fuse_nodehash.h"
+#include "fuse_ipc.h"
 #include "fuse_kernel.h"
+#include "compat/tree.h"
 #include <fuse_param.h>
+
 #include <stdbool.h>
 
 extern errno_t (**fuse_vnode_operations)(void *);
@@ -47,12 +49,12 @@ enum {
 
 struct fuse_vnode_data {
 
-    bool       fInitialised;
-
     /** self **/
     vnode_t    vp;
     uint64_t   nodeid;
+    uint32_t   vid; // id from vnode_vid()
     uint64_t   generation;
+    RB_ENTRY(fuse_vnode_data)  nodes_link;
 
     /** parent **/
     vnode_t    parentvp;
@@ -97,8 +99,11 @@ struct fuse_vnode_data {
 };
 typedef struct fuse_vnode_data * fusenode_t;
 
+struct fuse_data_nodes;
+RB_PROTOTYPE(fuse_data_nodes, fuse_vnode_data, nodes_link, x);
+
 #define VTOFUD(vp) \
-    ((struct fuse_vnode_data *)FSNodeGenericFromHNode(vnode_fsnode(vp)))
+    ((struct fuse_vnode_data *)vnode_fsnode(vp))
 #define VTOI(vp)    (VTOFUD(vp)->nodeid)
 #define VTOVA(vp)   (&(VTOFUD(vp)->cached_attr))
 #define VTOILLU(vp) ((uint64_t)(VTOFUD(vp) ? VTOI(vp) : 0))

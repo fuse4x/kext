@@ -11,7 +11,6 @@
 #include "fuse_locking.h"
 #include "fuse_node.h"
 #include "fuse_file.h"
-#include "fuse_nodehash.h"
 #include "fuse_sysctl.h"
 #include "fuse_kludges.h"
 
