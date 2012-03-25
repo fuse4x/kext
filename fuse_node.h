@@ -99,6 +99,8 @@ struct fuse_vnode_data {
 };
 typedef struct fuse_vnode_data * fusenode_t;
 
+void fuse_vnode_data_destroy(struct fuse_vnode_data *fvdat);
+
 struct fuse_data_nodes;
 RB_PROTOTYPE(fuse_data_nodes, fuse_vnode_data, nodes_link, x);
 
@@ -133,8 +135,6 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vpp,
                                vnode_t                dvp,
                                vfs_context_t          context,
                                uint32_t              *oflags);
-
-void FSNodeScrub(struct fuse_vnode_data *fvdat);
 
 int
 fuse_vget_i(vnode_t               *vpp,
