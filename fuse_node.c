@@ -32,13 +32,15 @@ static int fuse_vnode_compare(struct fuse_vnode_data *d1, struct fuse_vnode_data
 RB_GENERATE(fuse_data_nodes, fuse_vnode_data, nodes_link, fuse_vnode_compare);
 
 void
-FSNodeScrub(struct fuse_vnode_data *fvdat)
+fuse_vnode_data_destroy(struct fuse_vnode_data *fvdat)
 {
     lck_mtx_free(fvdat->createlock, fuse_lock_group);
 #ifdef FUSE4X_ENABLE_TSLOCKING
     lck_rw_free(fvdat->nodelock, fuse_lock_group);
     lck_rw_free(fvdat->truncatelock, fuse_lock_group);
 #endif
+
+    FUSE_OSFree(fvdat, sizeof(*fvdat), fuse_malloc_tag);
 }
 
 errno_t
@@ -204,8 +206,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
             OSIncrementAtomic((SInt32 *)&fuse_vnodes_current);
         } else {
             log("fuse4x: vnode (ino=%llu) cannot be created, err=%d\n", feo->nodeid, err);
-            FSNodeScrub(fvdat);
-            FUSE_OSFree(fvdat, sizeof(*fvdat), fuse_malloc_tag);
+            fuse_vnode_data_destroy(fvdat);
         }
     }
 

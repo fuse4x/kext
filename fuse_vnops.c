@@ -2525,8 +2525,7 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
     RB_REMOVE(fuse_data_nodes, &data->nodes_head, fvdat);
     fuse_lck_mtx_unlock(data->node_mtx);
 
-    FSNodeScrub(fvdat);
-    FUSE_OSFree(fvdat, sizeof(*fvdat), fuse_malloc_tag);
+    fuse_vnode_data_destroy(fvdat);
     OSDecrementAtomic((SInt32 *)&fuse_vnodes_current);
 
     return 0;
