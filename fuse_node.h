@@ -21,8 +21,7 @@ enum {
     kFSNodeBadMagic = 'FU**',
 };
 
-#define FN_ACCESS_NOOP       0x00000001
-#define FN_CREATING          0x00000002
+#define FN_ACCESS_NOOP       0x00000001 // todo remove it
 #define FN_DIRECT_IO         0x00000004
 #define FN_HAS_ACL           0x00000008
 #define FN_IS_ROOT           0x00000010
@@ -62,6 +61,7 @@ struct fuse_vnode_data {
 
     /** I/O **/
     struct     fuse_filehandle fufh[FUFH_MAXTYPE];
+    lck_mtx_t                 *fufh_mtx;
 
     /** flags **/
     uint32_t   flag;
@@ -75,27 +75,6 @@ struct fuse_vnode_data {
     off_t             filesize;
     uint64_t          nlookup;
     enum vtype        vtype;
-
-    /** locking **/
-
-    lck_mtx_t *createlock;
-    void      *creator;
-
-#ifdef FUSE4X_ENABLE_TSLOCKING
-    /*
-     * The nodelock must be held when data in the FUSE node is accessed or
-     * modified. Typically, we would take this lock at the beginning of a
-     * vnop and drop it at the end of the vnop.
-     */
-    lck_rw_t  *nodelock;
-    void      *nodelockowner;
-
-    /*
-     * The truncatelock guards against the EOF changing on us (that is, a
-     * file resize) unexpectedly.
-     */
-    lck_rw_t  *truncatelock;
-#endif
 };
 typedef struct fuse_vnode_data * fusenode_t;
 

@@ -6,17 +6,11 @@
 #include "fuse.h"
 #include "fuse_internal.h"
 #include "fuse_ipc.h"
-#include "fuse_locking.h"
 #include "fuse_node.h"
 #include "fuse_sysctl.h"
 #include "compat/tree.h"
 
 #include <stdbool.h>
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-#include "fuse_biglock_vnops.h"
-#endif
-
 
 static int fuse_vnode_compare(struct fuse_vnode_data *d1, struct fuse_vnode_data *d2)
 {
@@ -34,11 +28,7 @@ RB_GENERATE(fuse_data_nodes, fuse_vnode_data, nodes_link, fuse_vnode_compare);
 void
 fuse_vnode_data_destroy(struct fuse_vnode_data *fvdat)
 {
-    lck_mtx_free(fvdat->createlock, fuse_lock_group);
-#ifdef FUSE4X_ENABLE_TSLOCKING
-    lck_rw_free(fvdat->nodelock, fuse_lock_group);
-    lck_rw_free(fvdat->truncatelock, fuse_lock_group);
-#endif
+    lck_mtx_free(fvdat->fufh_mtx, fuse_lock_group);
 
     FUSE_OSFree(fvdat, sizeof(*fvdat), fuse_malloc_tag);
 }
@@ -126,6 +116,8 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
         for (int k = 0; k < FUFH_MAXTYPE; k++) {
             FUFH_USE_RESET(&(fvdat->fufh[k]));
         }
+        fvdat->fufh_mtx = lck_mtx_alloc_init(fuse_lock_group,
+                                             fuse_lock_attr);
 
         /* flags */
         fvdat->flag         = flags;
@@ -152,18 +144,6 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
         fvdat->nlookup             = 0;
         fvdat->vtype               = vtyp;
 
-        /* locking */
-        fvdat->createlock = lck_mtx_alloc_init(fuse_lock_group,
-                                                   fuse_lock_attr);
-        fvdat->creator = current_thread();
-#ifdef FUSE4X_ENABLE_TSLOCKING
-        fvdat->nodelock = lck_rw_alloc_init(fuse_lock_group,
-                                            fuse_lock_attr);
-        fvdat->nodelockowner = NULL;
-        fvdat->truncatelock  = lck_rw_alloc_init(fuse_lock_group,
-                                                     fuse_lock_attr);
-#endif
-
         params.vnfs_mp     = mp;
         params.vnfs_vtype  = vtyp;
         params.vnfs_str    = NULL;
@@ -176,15 +156,8 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
         params.vnfs_flags      = VNFS_NOCACHE | VNFS_CANTCACHE;
         params.vnfs_filesize   = size;
         params.vnfs_markroot   = markroot;
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_unlock(mntdata->biglock);
-#endif
         err = vnode_create(VNCREATE_FLAVOR, (uint32_t)sizeof(params),
                                &params, &vn);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_lock(mntdata->biglock);
-#endif
 
         if (err == 0) {
             if (markroot) {
@@ -214,24 +187,12 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
         if (vnode_vtype(vn) != vtyp) {
             log("fuse4x: vnode changed type behind us (old=%d, new=%d)\n",
                   vnode_vtype(vn), vtyp);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-            fuse_biglock_unlock(mntdata->biglock);
-#endif
             fuse_internal_vnode_disappear(vn, context, REVOKE_SOFT);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-            fuse_biglock_lock(mntdata->biglock);
-#endif
             vnode_put(vn);
             err = EIO;
         } else if (VTOFUD(vn)->generation != generation) {
             log("fuse4x: vnode changed generation\n");
-#ifdef FUSE4X_ENABLE_BIGLOCK
-            fuse_biglock_unlock(mntdata->biglock);
-#endif
             fuse_internal_vnode_disappear(vn, context, REVOKE_SOFT);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-            fuse_biglock_lock(mntdata->biglock);
-#endif
             vnode_put(vn);
             err = ESTALE;
         }

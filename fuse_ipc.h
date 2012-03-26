@@ -11,7 +11,6 @@
 #include "fuse_kernel.h"
 #include "fuse_device.h"
 #include "fuse_kludges.h"
-#include "fuse_locking.h"
 #include "compat/tree.h"
 
 #include <kern/assert.h>
@@ -138,9 +137,6 @@ struct fuse_data {
 
     struct timespec            daemon_timeout;
     struct timespec           *daemon_timeout_p;
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    lck_mtx_t                 *biglock;
-#endif
 
     lck_mtx_t                                *node_mtx;
     RB_HEAD(fuse_data_nodes, fuse_vnode_data) nodes_head; // map ino->vnode_data

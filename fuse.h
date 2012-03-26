@@ -30,21 +30,6 @@
 
 #define FUSE4X_ENABLE_INTERRUPT
 #define FUSE4X_ENABLE_EXCHANGE
-// #define FUSE4X_ENABLE_SIMPLE_LOCK
-
-#ifndef FUSE4X_ENABLE_SIMPLE_LOCK
-#define FUSE4X_ENABLE_TSLOCKING
-#if __LP64__
-#define FUSE4X_ENABLE_BIGLOCK
-#endif /* __LP64__ */
-#endif
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-#define FUSE_VNOP_EXPORT __private_extern__
-#else
-#define FUSE_VNOP_EXPORT static
-#endif /* FUSE4X_ENABLE_BIGLOCK */
-
 
 #ifdef FUSE4X_SERIALIZE_LOGGING
 extern lck_mtx_t *fuse_log_lock;
@@ -110,6 +95,30 @@ extern lck_mtx_t *fuse_log_lock;
 #define fuse_wakeup_one(chan)                  wakeup_one((chan))
 #endif
 
+
+#ifdef FUSE4X_TRACE_LK
+
+#define fuse_lck_mtx_lock(m)                                                                 \
+{                                                                                            \
+    log("0: lck_mtx_lock(%p): %s@%d by %d\n", (m), __FUNCTION__, __LINE__, proc_selfpid());  \
+    lck_mtx_lock((m));                                                                       \
+    log("1: lck_mtx_lock(%p): %s@%d by %d\n", (m), __FUNCTION__, __LINE__, proc_selfpid());  \
+}
+#define fuse_lck_mtx_unlock(m)                                                                 \
+{                                                                                              \
+    log("0: lck_mtx_unlock(%p): %s@%d by %d\n", (m), __FUNCTION__, __LINE__, proc_selfpid());  \
+    lck_mtx_unlock((m));                                                                       \
+    log("1: lck_mtx_unlock(%p): %s@%d by %d\n", (m), __FUNCTION__, __LINE__, proc_selfpid());  \
+}
+
+#else /* !FUSE4X_TRACE_LK */
+
+#define fuse_lck_mtx_lock(m)            lck_mtx_lock((m))
+#define fuse_lck_mtx_unlock(m)          lck_mtx_unlock((m))
+
+#endif /* FUSE4X_TRACE_LK */
+
+
 #define fuse_round_page_32(x) \
     (((uint32_t)(x) + 0x1000 - 1) & ~(0x1000 - 1))
 
@@ -117,6 +126,12 @@ extern lck_mtx_t *fuse_log_lock;
 #define FUSE_ROOT_SIZE 0xFFFFFFFFFFFFFFFFULL
 
 extern OSMallocTag fuse_malloc_tag;
+
+extern lck_attr_t     *fuse_lock_attr;
+extern lck_grp_attr_t *fuse_group_attr;
+extern lck_grp_t      *fuse_lock_group;
+extern lck_mtx_t      *fuse_device_mutex;
+
 
 #ifdef FUSE4X_COUNT_MEMORY
 

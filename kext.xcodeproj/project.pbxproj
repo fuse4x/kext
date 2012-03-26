@@ -16,8 +16,6 @@
 		DE3C8BF0151D368F0038F90D /* README in Resources */ = {isa = PBXBuildFile; fileRef = DE3C8BEE151D368F0038F90D /* README */; };
 		DE3C8BF1151D368F0038F90D /* tree.h in Headers */ = {isa = PBXBuildFile; fileRef = DE3C8BEF151D368F0038F90D /* tree.h */; };
 		DEBF0B1313886AAC00A1755B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = DEBF0B1113886AAC00A1755B /* InfoPlist.strings */; };
-		DEE25D27138874AF009DC919 /* fuse_biglock_vnops.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D0A138874AF009DC919 /* fuse_biglock_vnops.c */; };
-		DEE25D28138874AF009DC919 /* fuse_biglock_vnops.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D0B138874AF009DC919 /* fuse_biglock_vnops.h */; };
 		DEE25D29138874AF009DC919 /* fuse_device.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D0C138874AF009DC919 /* fuse_device.c */; };
 		DEE25D2A138874AF009DC919 /* fuse_device.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D0D138874AF009DC919 /* fuse_device.h */; };
 		DEE25D2B138874AF009DC919 /* fuse_file.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D0E138874AF009DC919 /* fuse_file.c */; };
@@ -29,8 +27,6 @@
 		DEE25D31138874AF009DC919 /* fuse_kernel.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D14138874AF009DC919 /* fuse_kernel.h */; };
 		DEE25D32138874AF009DC919 /* fuse_kludges.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D15138874AF009DC919 /* fuse_kludges.c */; };
 		DEE25D33138874AF009DC919 /* fuse_kludges.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D16138874AF009DC919 /* fuse_kludges.h */; };
-		DEE25D36138874AF009DC919 /* fuse_locking.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D19138874AF009DC919 /* fuse_locking.c */; };
-		DEE25D37138874AF009DC919 /* fuse_locking.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D1A138874AF009DC919 /* fuse_locking.h */; };
 		DEE25D38138874AF009DC919 /* fuse_main.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D1B138874AF009DC919 /* fuse_main.c */; };
 		DEE25D39138874AF009DC919 /* fuse_node.c in Sources */ = {isa = PBXBuildFile; fileRef = DEE25D1C138874AF009DC919 /* fuse_node.c */; };
 		DEE25D3A138874AF009DC919 /* fuse_node.h in Headers */ = {isa = PBXBuildFile; fileRef = DEE25D1D138874AF009DC919 /* fuse_node.h */; };
@@ -71,8 +67,6 @@
 		DEBF0B1013886AAC00A1755B /* kext-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "kext-Info.plist"; sourceTree = "<group>"; };
 		DEBF0B1213886AAC00A1755B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		DEBF0B1413886AAC00A1755B /* kext-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "kext-Prefix.pch"; sourceTree = "<group>"; };
-		DEE25D0A138874AF009DC919 /* fuse_biglock_vnops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_biglock_vnops.c; sourceTree = "<group>"; };
-		DEE25D0B138874AF009DC919 /* fuse_biglock_vnops.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_biglock_vnops.h; sourceTree = "<group>"; };
 		DEE25D0C138874AF009DC919 /* fuse_device.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_device.c; sourceTree = "<group>"; };
 		DEE25D0D138874AF009DC919 /* fuse_device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_device.h; sourceTree = "<group>"; };
 		DEE25D0E138874AF009DC919 /* fuse_file.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_file.c; sourceTree = "<group>"; };
@@ -84,8 +78,6 @@
 		DEE25D14138874AF009DC919 /* fuse_kernel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_kernel.h; sourceTree = "<group>"; };
 		DEE25D15138874AF009DC919 /* fuse_kludges.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_kludges.c; sourceTree = "<group>"; };
 		DEE25D16138874AF009DC919 /* fuse_kludges.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_kludges.h; sourceTree = "<group>"; };
-		DEE25D19138874AF009DC919 /* fuse_locking.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_locking.c; sourceTree = "<group>"; };
-		DEE25D1A138874AF009DC919 /* fuse_locking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_locking.h; sourceTree = "<group>"; };
 		DEE25D1B138874AF009DC919 /* fuse_main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_main.c; sourceTree = "<group>"; };
 		DEE25D1C138874AF009DC919 /* fuse_node.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuse_node.c; sourceTree = "<group>"; };
 		DEE25D1D138874AF009DC919 /* fuse_node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuse_node.h; sourceTree = "<group>"; };
@@ -145,8 +137,6 @@
 				DE3C8BEB151D36260038F90D /* compat */,
 				DE134AE513BD556500113A90 /* load_fuse4x */,
 				DEE25D14138874AF009DC919 /* fuse_kernel.h */,
-				DEE25D0A138874AF009DC919 /* fuse_biglock_vnops.c */,
-				DEE25D0B138874AF009DC919 /* fuse_biglock_vnops.h */,
 				DEE25D0C138874AF009DC919 /* fuse_device.c */,
 				DEE25D0D138874AF009DC919 /* fuse_device.h */,
 				DEE25D0E138874AF009DC919 /* fuse_file.c */,
@@ -157,8 +147,6 @@
 				DEE25D13138874AF009DC919 /* fuse_ipc.h */,
 				DEE25D15138874AF009DC919 /* fuse_kludges.c */,
 				DEE25D16138874AF009DC919 /* fuse_kludges.h */,
-				DEE25D19138874AF009DC919 /* fuse_locking.c */,
-				DEE25D1A138874AF009DC919 /* fuse_locking.h */,
 				DEE25D1B138874AF009DC919 /* fuse_main.c */,
 				DEE25D1C138874AF009DC919 /* fuse_node.c */,
 				DEE25D1D138874AF009DC919 /* fuse_node.h */,
@@ -232,14 +220,12 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DEE25D28138874AF009DC919 /* fuse_biglock_vnops.h in Headers */,
 				DEE25D2A138874AF009DC919 /* fuse_device.h in Headers */,
 				DEE25D2C138874AF009DC919 /* fuse_file.h in Headers */,
 				DEE25D2E138874AF009DC919 /* fuse_internal.h in Headers */,
 				DEE25D30138874AF009DC919 /* fuse_ipc.h in Headers */,
 				DEE25D31138874AF009DC919 /* fuse_kernel.h in Headers */,
 				DEE25D33138874AF009DC919 /* fuse_kludges.h in Headers */,
-				DEE25D37138874AF009DC919 /* fuse_locking.h in Headers */,
 				DEE25D3A138874AF009DC919 /* fuse_node.h in Headers */,
 				DEE25D3E138874AF009DC919 /* fuse_sysctl.h in Headers */,
 				DEE25D40138874AF009DC919 /* fuse_vfsops.h in Headers */,
@@ -350,13 +336,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DEE25D27138874AF009DC919 /* fuse_biglock_vnops.c in Sources */,
 				DEE25D29138874AF009DC919 /* fuse_device.c in Sources */,
 				DEE25D2B138874AF009DC919 /* fuse_file.c in Sources */,
 				DEE25D2D138874AF009DC919 /* fuse_internal.c in Sources */,
 				DEE25D2F138874AF009DC919 /* fuse_ipc.c in Sources */,
 				DEE25D32138874AF009DC919 /* fuse_kludges.c in Sources */,
-				DEE25D36138874AF009DC919 /* fuse_locking.c in Sources */,
 				DEE25D38138874AF009DC919 /* fuse_main.c in Sources */,
 				DEE25D39138874AF009DC919 /* fuse_node.c in Sources */,
 				DEE25D3D138874AF009DC919 /* fuse_sysctl.c in Sources */,

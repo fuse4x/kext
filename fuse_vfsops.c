@@ -9,16 +9,11 @@
 #include "fuse_internal.h"
 #include "fuse_ipc.h"
 #include "fuse_kludges.h"
-#include "fuse_locking.h"
 #include "fuse_node.h"
 #include "fuse_sysctl.h"
 #include "fuse_vfsops.h"
 
 #include <fuse_mount.h>
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-#include <fuse_biglock_vnops.h>
-#endif
 
 #define FUSE_MAKEDEV(x, y)     ((dev_t)(((x) << 24) | (y)))
 #define FUSEFS_SIGNATURE       0x55464553 // 'FUSE'
@@ -34,11 +29,7 @@ errno_t (**fuse_vnode_operations)(void *);
 
 static struct vnodeopv_desc fuse_vnode_operation_vector_desc = {
     &fuse_vnode_operations,              // opv_desc_vector_p
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_vnode_operation_entries // opv_desc_ops
-#else
     fuse_vnode_operation_entries         // opv_desc_ops
-#endif /* FUSE4X_ENABLE_BIGLOCK */
 };
 
 static struct vnodeopv_desc *fuse_vnode_operation_vector_desc_list[] =
@@ -46,38 +37,7 @@ static struct vnodeopv_desc *fuse_vnode_operation_vector_desc_list[] =
     &fuse_vnode_operation_vector_desc,
 };
 
-#ifdef FUSE4X_ENABLE_BIGLOCK
-
-static errno_t
-fuse_vfsop_biglock_root(mount_t mp, struct vnode **vpp, vfs_context_t context);
-
-static errno_t
-fuse_vfsop_biglock_getattr(mount_t mp, struct vfs_attr *attr, vfs_context_t context);
-
-static errno_t
-fuse_vfsop_biglock_sync(mount_t mp, int waitfor, vfs_context_t context);
-
-static errno_t
-fuse_vfsop_biglock_setattr(mount_t mp, struct vfs_attr *fsap, vfs_context_t context);
-
-#endif
-
 static struct vfsops fuse_vfs_ops = {
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_vfsop_mount,           // vfs_mount
-    NULL,                       // vfs_start
-    fuse_vfsop_unmount,         // vfs_unmount
-    fuse_vfsop_biglock_root,    // vfs_root
-    NULL,                       // vfs_quotactl
-    fuse_vfsop_biglock_getattr, // vfs_getattr
-    fuse_vfsop_biglock_sync,    // vfs_sync
-    NULL,                       // vfs_vget
-    NULL,                       // vfs_fhtovp
-    NULL,                       // vfs_vptofh
-    NULL,                       // vfs_init
-    NULL,                       // vfs_sysctl
-    fuse_vfsop_biglock_setattr, // vfs_setattr
-#else
     fuse_vfsop_mount,   // vfs_mount
     NULL,               // vfs_start
     fuse_vfsop_unmount, // vfs_unmount
@@ -91,7 +51,6 @@ static struct vfsops fuse_vfs_ops = {
     NULL,               // vfs_init
     NULL,               // vfs_sysctl
     fuse_vfsop_setattr, // vfs_setattr
-#endif
     { NULL, NULL, NULL, NULL, NULL, NULL, NULL } // vfs_reserved[]
 };
 
@@ -114,10 +73,7 @@ struct vfs_fsentry fuse_vfs_entry = {
     FUSE4X_FS_TYPE,
 
     // Flags specifying file system capabilities
-#if defined(FUSE4X_ENABLE_BIGLOCK) || defined(FUSE4X_ENABLE_SIMPLE_LOCK)
-    VFS_TBLTHREADSAFE |
-#endif
-    VFS_TBL64BITREADY | VFS_TBLNOTYPENUM,
+    VFS_TBLTHREADSAFE | VFS_TBL64BITREADY | VFS_TBLNOTYPENUM,
 
     // Reserved for future use
     { NULL, NULL }
@@ -139,10 +95,6 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
     struct fuse_data  *data = NULL;
     fuse_mount_args    fusefs_args;
     struct vfsstatfs  *vfsstatfsp = vfs_statfs(mp);
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    lck_mtx_t         *biglock;
-#endif
 
     fuse_trace_printf_vfsop();
 
@@ -374,15 +326,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         return ENXIO;
     }
 
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    biglock = data->biglock;
-    fuse_biglock_lock(biglock);
-#endif
-
     if (data->mounted) {
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_unlock(biglock);
-#endif
         fuse_lck_mtx_unlock(fdev->mtx);
         return EALREADY;
     }
@@ -505,10 +449,6 @@ out:
         if (data) {
             data->mounted = false;
             if (!data->opened) {
-#ifdef FUSE4X_ENABLE_BIGLOCK
-                assert(biglock == data->biglock);
-                fuse_biglock_unlock(biglock);
-#endif
                 fuse_device_close_final(fdev);
                 /* data is gone now */
             }
@@ -536,16 +476,6 @@ out:
         }
     }
 
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_lck_mtx_lock(fdev->mtx);
-    data = fdev->data; /* ...and again */
-    if(data) {
-        assert(data->biglock == biglock);
-        fuse_biglock_unlock(biglock);
-    }
-    fuse_lck_mtx_unlock(fdev->mtx);
-#endif
-
     return err;
 }
 
@@ -571,10 +501,6 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
     if (!data) {
         panic("fuse4x: no mount private data in vfs_unmount");
     }
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_lock(data->biglock);
-#endif
 
     fdev = data->fdev;
 
@@ -608,25 +534,13 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
     fuse_rootvp = data->rootvp;
 
     fuse_trace_printf("%s: Calling vflush(mp, fuse_rootvp, flags=0x%X);\n", __FUNCTION__, force ? FORCECLOSE : 0);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_unlock(data->biglock);
-#endif
     err = vflush(mp, fuse_rootvp, force ? FORCECLOSE : 0);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_lock(data->biglock);
-#endif
     fuse_trace_printf("%s:   Done.\n", __FUNCTION__);
     if (err) {
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_unlock(data->biglock);
-#endif
         return err;
     }
 
     if (vnode_isinuse(fuse_rootvp, 1) && !force) {
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_unlock(data->biglock);
-#endif
         return EBUSY;
     }
 
@@ -649,25 +563,13 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
 alreadydead:
 
     fuse_trace_printf("%s: Calling vnode_rele(fuse_rootp);\n", __FUNCTION__);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_unlock(data->biglock);
-#endif
     vnode_rele(fuse_rootvp); /* We got this reference in fuse_vfsop_mount(). */
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_lock(data->biglock);
-#endif
     fuse_trace_printf("%s:   Done.\n", __FUNCTION__);
 
     data->rootvp = NULLVP;
 
     fuse_trace_printf("%s: Calling vflush(mp, NULLVP, FORCECLOSE);\n", __FUNCTION__);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_unlock(data->biglock);
-#endif
     (void)vflush(mp, NULLVP, FORCECLOSE);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_lock(data->biglock);
-#endif
     fuse_trace_printf("%s:   Done.\n", __FUNCTION__);
 
     fuse_lck_mtx_lock(fdev->mtx);
@@ -675,10 +577,6 @@ alreadydead:
     vfs_setfsprivate(mp, NULL);
     data->mounted = false;
     OSDecrementAtomic((SInt32 *)&fuse_mount_count);
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_unlock(data->biglock);
-#endif
 
     if (!data->opened) {
 
@@ -1221,14 +1119,7 @@ fuse_vfsop_sync(mount_t mp, int waitfor, vfs_context_t context)
     args.waitfor = waitfor;
     args.error = 0;
 
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    struct fuse_data *data = fuse_get_mpdata(mp);
-    fuse_biglock_unlock(data->biglock);
-#endif
     vnode_iterate(mp, 0, fuse_sync_callback, (void *)&args);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_lock(data->biglock);
-#endif
 
     if (args.error) {
         allerror = args.error;
@@ -1315,30 +1206,3 @@ fuse_vfsop_setattr(mount_t mp, struct vfs_attr *fsap, vfs_context_t context)
 out:
     return error;
 }
-#ifdef FUSE4X_ENABLE_BIGLOCK
-
-static errno_t
-fuse_vfsop_biglock_root(mount_t mp, struct vnode **vpp, vfs_context_t context)
-{
-    locked_vfsop(mp, fuse_vfsop_root, vpp, context);
-}
-
-static errno_t
-fuse_vfsop_biglock_getattr(mount_t mp, struct vfs_attr *attr, vfs_context_t context)
-{
-    locked_vfsop(mp, fuse_vfsop_getattr, attr, context);
-}
-
-static errno_t
-fuse_vfsop_biglock_sync(mount_t mp, int waitfor, vfs_context_t context)
-{
-    locked_vfsop(mp, fuse_vfsop_sync, waitfor, context);
-}
-
-static errno_t
-fuse_vfsop_biglock_setattr(mount_t mp, struct vfs_attr *fsap, vfs_context_t context)
-{
-    locked_vfsop(mp, fuse_vfsop_setattr, fsap, context);
-}
-
-#endif

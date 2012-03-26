@@ -9,16 +9,11 @@
 #include "fuse_internal.h"
 #include "fuse_ipc.h"
 #include "fuse_kludges.h"
-#include "fuse_locking.h"
 #include "fuse_node.h"
 #include <fuse_param.h>
 #include "fuse_sysctl.h"
 #include "fuse_vnops.h"
 #include "compat/tree.h"
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-#include "fuse_biglock_vnops.h"
-#endif
 
 #include <kern/assert.h>
 #include <libkern/libkern.h>
@@ -66,7 +61,7 @@ fuse_skip_apple_xattr_mp(mount_t mp, const char *name)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_access(struct vnop_access_args *ap)
 {
@@ -122,7 +117,7 @@ fuse_vnop_access(struct vnop_access_args *ap)
         off_t               *a_offset;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_blktooff(struct vnop_blktooff_args *ap)
 {
@@ -158,7 +153,7 @@ fuse_vnop_blktooff(struct vnop_blktooff_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_blockmap(struct vnop_blockmap_args *ap)
 {
@@ -231,7 +226,7 @@ fuse_vnop_blockmap(struct vnop_blockmap_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_close(struct vnop_close_args *ap)
 {
@@ -320,12 +315,14 @@ fuse_vnop_close(struct vnop_close_args *ap)
 
 skipdir:
 
+    fuse_lck_mtx_lock(fvdat->fufh_mtx);
     /* This must be done after we have flushed any pending I/O. */
     FUFH_USE_DEC(fufh);
 
     if (!FUFH_IS_VALID(fufh)) {
         (void)fuse_filehandle_put(vp, context, fufh_type);
     }
+    fuse_lck_mtx_unlock(fvdat->fufh_mtx);
 
     return err;
 }
@@ -340,7 +337,7 @@ skipdir:
         vfs_context_t         a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_create(struct vnop_create_args *ap)
 {
@@ -395,7 +392,7 @@ fuse_vnop_create(struct vnop_create_args *ap)
     fci = dispatcher->indata;
     fci->mode = mode;
 
-    /* XXX: We /always/ creat() like this. Wish we were on Linux. */
+    /* create() in XNU does not pass open flags, so we use RDRW here. */
     fci->flags = O_CREAT | O_RDWR;
 
     memcpy((char *)dispatcher->indata + sizeof(*fci), cnp->cn_nameptr,
@@ -434,9 +431,7 @@ bringup:
         goto undo;
     }
 
-    err = FSNodeGetOrCreateFileVNodeByID(
-              vpp, (gone_good_old) ? 0 : FN_CREATING,
-              feo, mp, dvp, context, NULL /* oflags */);
+    err = FSNodeGetOrCreateFileVNodeByID(vpp, 0, feo, mp, dvp, context, NULL /* oflags */);
     if (err) {
        if (gone_good_old) {
            fuse_internal_forget_send(mp, context, feo->nodeid, 1, dispatcher);
@@ -459,21 +454,18 @@ bringup:
     dispatcher->answer = gone_good_old ? NULL : feo + 1;
 
     if (!gone_good_old) {
+        struct  fuse_open_out *foo = (struct fuse_open_out *)(feo + 1);
 
-        uint64_t x_fh_id = ((struct fuse_open_out *)(feo + 1))->fh;
-        uint32_t x_open_flags = ((struct fuse_open_out *)(feo + 1))->open_flags;
         struct fuse_vnode_data *fvdat = VTOFUD(*vpp);
+
+        fuse_lck_mtx_lock(fvdat->fufh_mtx);
+        // TODO: check that nobody uses this fufh
+        // We created it a moment ago, but what if other thread already sneaked into?
         struct fuse_filehandle *fufh = &(fvdat->fufh[FUFH_RDWR]);
-
-        fufh->fh_id = x_fh_id;
-        fufh->open_flags = x_open_flags;
-
-        /*
-         * We're stashing this to be picked up by open. Meanwhile, we set
-         * the use count to 1 because that's what it is. The use count will
-         * later transfer to the slot that this handle ends up falling in.
-         */
-        fufh->open_count = 1;
+        fufh->fh_id = foo->fh;
+        fufh->open_flags = foo->open_flags;
+        FUFH_USE_INC(fufh);
+        fuse_lck_mtx_unlock(fvdat->fufh_mtx);
 
         OSIncrementAtomic((SInt32 *)&fuse_fh_current);
     }
@@ -497,7 +489,7 @@ undo:
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_exchange(struct vnop_exchange_args *ap)
 {
@@ -615,7 +607,7 @@ out:
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_fsync(struct vnop_fsync_args *ap)
 {
@@ -690,7 +682,7 @@ out:
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_getattr(struct vnop_getattr_args *ap)
 {
@@ -750,13 +742,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
             goto fake;
         }
         if (err == ENOENT) {
-#ifdef FUSE4X_ENABLE_BIGLOCK
-            fuse_biglock_unlock(data->biglock);
-#endif
             fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-            fuse_biglock_lock(data->biglock);
-#endif
         }
         return err;
     }
@@ -810,13 +796,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
              * revocation.
              */
 
-#ifdef FUSE4X_ENABLE_BIGLOCK
-            fuse_biglock_unlock(data->biglock);
-#endif
             fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-            fuse_biglock_lock(data->biglock);
-#endif
             return EIO;
         }
     }
@@ -844,7 +824,7 @@ fake:
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_getxattr(struct vnop_getxattr_args *ap)
 {
@@ -943,7 +923,7 @@ fuse_vnop_getxattr(struct vnop_getxattr_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_inactive(struct vnop_inactive_args *ap)
 {
@@ -961,6 +941,7 @@ fuse_vnop_inactive(struct vnop_inactive_args *ap)
      * Cannot do early bail out on a dead file system in this case.
      */
 
+    fuse_lck_mtx_lock(fvdat->fufh_mtx);
     for (fufh_type = 0; fufh_type < FUFH_MAXTYPE; fufh_type++) {
 
         fufh = &(fvdat->fufh[fufh_type]);
@@ -970,6 +951,7 @@ fuse_vnop_inactive(struct vnop_inactive_args *ap)
             (void)fuse_filehandle_put(vp, context, fufh_type);
         }
     }
+    fuse_lck_mtx_unlock(fvdat->fufh_mtx);
 
     return 0;
 }
@@ -983,7 +965,7 @@ fuse_vnop_inactive(struct vnop_inactive_args *ap)
         vfs_context_t         a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_link(struct vnop_link_args *ap)
 {
@@ -1050,7 +1032,7 @@ fuse_vnop_link(struct vnop_link_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_listxattr(struct vnop_listxattr_args *ap)
 {
@@ -1127,7 +1109,7 @@ fuse_vnop_listxattr(struct vnop_listxattr_args *ap)
         vfs_context_t         a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_lookup(struct vnop_lookup_args *ap)
 {
@@ -1201,14 +1183,8 @@ fuse_vnop_lookup(struct vnop_lookup_args *ap)
         op = FUSE_GETATTR;
         goto calldaemon;
     } else {
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        struct fuse_data *data = fuse_get_mpdata(mp);
-        fuse_biglock_unlock(data->biglock);
-#endif
         err = fuse_vncache_lookup(dvp, vpp, cnp);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_lock(data->biglock);
-#endif
+
         switch (err) {
 
         case -1: /* positive match */
@@ -1454,7 +1430,7 @@ out:
         vfs_context_t         a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_mkdir(struct vnop_mkdir_args *ap)
 {
@@ -1498,7 +1474,7 @@ fuse_vnop_mkdir(struct vnop_mkdir_args *ap)
         vfs_context_t         a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_mknod(struct vnop_mknod_args *ap)
 {
@@ -1541,7 +1517,7 @@ fuse_vnop_mknod(struct vnop_mknod_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_mmap(struct vnop_mmap_args *ap)
 {
@@ -1581,24 +1557,21 @@ fuse_vnop_mmap(struct vnop_mmap_args *ap)
     fufh_type_t fufh_type = fuse_filehandle_xlate_from_mmap(fflags);
 
 retry:
+    fuse_lck_mtx_lock(fvdat->fufh_mtx);
     fufh = &(fvdat->fufh[fufh_type]);
 
     if (FUFH_IS_VALID(fufh)) {
         FUFH_USE_INC(fufh);
+        fuse_lck_mtx_unlock(fvdat->fufh_mtx);
         OSIncrementAtomic((SInt32 *)&fuse_fh_reuse_count);
         goto out;
+    } else {
+        fuse_lck_mtx_unlock(fvdat->fufh_mtx);
     }
 
     if (!deleted) {
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
-        fuse_biglock_unlock(data->biglock);
-#endif
         err = fuse_filehandle_preflight_status(vp, fvdat->parentvp,
                                                context, fufh_type);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_lock(data->biglock);
-#endif
         if (err == ENOENT) {
             deleted = 1;
             err = 0;
@@ -1645,7 +1618,7 @@ out:
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_mnomap(struct vnop_mnomap_args *ap)
 {
@@ -1706,7 +1679,7 @@ fuse_vnop_mnomap(struct vnop_mnomap_args *ap)
         daddr64_t           *a_lblkno;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_offtoblk(struct vnop_offtoblk_args *ap)
 {
@@ -1737,7 +1710,7 @@ fuse_vnop_offtoblk(struct vnop_offtoblk_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_open(struct vnop_open_args *ap)
 {
@@ -1748,9 +1721,9 @@ fuse_vnop_open(struct vnop_open_args *ap)
     fufh_type_t             fufh_type;
     struct fuse_vnode_data *fvdat;
     struct fuse_filehandle *fufh = NULL;
-    struct fuse_filehandle *fufh_rw = NULL;
 
-    int error, isdir = 0;
+    int error = 0;
+    bool isdir = false;
     long hint = 0;
 
     fuse_trace_printf_vnop();
@@ -1768,7 +1741,7 @@ fuse_vnop_open(struct vnop_open_args *ap)
     fvdat = VTOFUD(vp);
 
     if (vnode_isdir(vp)) {
-        isdir = 1;
+        isdir = true;
     }
 
     if (isdir) {
@@ -1777,88 +1750,22 @@ fuse_vnop_open(struct vnop_open_args *ap)
         fufh_type = fuse_filehandle_xlate_from_fflags(mode);
     }
 
+    fuse_lck_mtx_lock(fvdat->fufh_mtx);
     fufh = &(fvdat->fufh[fufh_type]);
-
-    if (!isdir && (fvdat->flag & FN_CREATING)) {
-
-        fuse_lck_mtx_lock(fvdat->createlock);
-
-        if (fvdat->flag & FN_CREATING) { // check again
-            if (fvdat->creator == current_thread()) {
-
-                /*
-                 * For testing the race condition we want to prevent here,
-                 * try something like the following:
-                 *
-                 *     int dummyctr = 0;
-                 *
-                 *     for (; dummyctr < 2048000000; dummyctr++);
-                 */
-
-                fufh_rw = &(fvdat->fufh[FUFH_RDWR]);
-
-                fufh->open_flags = fufh_rw->open_flags;
-                fufh->fh_id = fufh_rw->fh_id;
-
-                /* Note that fufh_rw can be the same as fufh! Order is key. */
-                fufh_rw->open_count = 0;
-                fufh->open_count = 1;
-
-                /*
-                 * Creator has picked up stashed handle and moved it to the
-                 * fufh_type slot.
-                 */
-
-                fvdat->flag &= ~FN_CREATING;
-
-                fuse_lck_mtx_unlock(fvdat->createlock);
-                fuse_wakeup((caddr_t)fvdat->creator); // wake up all
-                goto ok; /* return 0 */
-            } else {
-
-                /* Contender is going to sleep now. */
-
-                error = fuse_msleep(fvdat->creator, fvdat->createlock,
-                                    PDROP | PINOD | PCATCH, "fuse_open", NULL);
-                /*
-                 * msleep will drop the mutex. since we have PDROP specified,
-                 * it will NOT regrab the mutex when it returns.
-                 */
-
-                /* Contender is awake now. */
-
-                if (error) {
-                    /*
-                     * Since we specified PCATCH above, we'll be woken up in
-                     * case a signal arrives. The value of error could be
-                     * EINTR or ERESTART.
-                     */
-                    return error;
-                }
-            }
-        } else {
-            fuse_lck_mtx_unlock(fvdat->createlock);
-            /* Can proceed from here. */
-        }
-    }
-
     if (FUFH_IS_VALID(fufh)) {
         FUFH_USE_INC(fufh);
         OSIncrementAtomic((SInt32 *)&fuse_fh_reuse_count);
-        goto ok; /* return 0 */
-    }
-
-    error = fuse_filehandle_get(vp, context, fufh_type, mode);
-    if (error) {
-        log("fuse4x: filehandle_get failed in open (type=%d, err=%d)\n",
-              fufh_type, error);
+    } else {
+        error = fuse_filehandle_get(vp, context, fufh_type, mode);
         if (error == ENOENT) {
             cache_purge(vp);
         }
+    }
+    fuse_lck_mtx_unlock(fvdat->fufh_mtx);
+    if (error) {
         return error;
     }
 
-ok:
     /*
      * Doing this here because when a vnode goes inactive, things like
      * no-cache and no-readahead are cleared by the kernel.
@@ -1885,7 +1792,6 @@ ok:
         fufh->fuse_open_flags &= ~FOPEN_PURGE_UBC;
         hint |= NOTE_WRITE;
         if (fufh->fuse_open_flags & FOPEN_PURGE_ATTR) {
-            int serr = 0;
             struct fuse_dispatcher fdi;
             fuse_invalidate_attr(vp);
             hint |= NOTE_ATTRIB;
@@ -1894,7 +1800,7 @@ ok:
             fuse_dispatcher_make_vp(&fdi, FUSE_GETATTR, vp, context);
             bzero(fdi.indata, sizeof(struct fuse_getattr_in));
 
-            serr = fuse_dispatcher_wait_answer(&fdi);
+            int serr = fuse_dispatcher_wait_answer(&fdi);
             if (!serr) {
                 /* XXX: Could check the sanity/volatility of va_mode here. */
                 if ((((struct fuse_attr_out*)fdi.answer)->attr.mode & S_IFMT)) {
@@ -1937,7 +1843,7 @@ out:
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_pagein(struct vnop_pagein_args *ap)
 {
@@ -1950,10 +1856,6 @@ fuse_vnop_pagein(struct vnop_pagein_args *ap)
 
     struct fuse_vnode_data *fvdat;
     int err;
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
-#endif
 
     fuse_trace_printf_vnop();
 
@@ -1973,14 +1875,8 @@ fuse_vnop_pagein(struct vnop_pagein_args *ap)
         return EIO;
     }
 
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_unlock(data->biglock);
-#endif
     err = cluster_pagein(vp, pl, (upl_offset_t)pl_offset, f_offset, (int)size,
                          fvdat->filesize, flags);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-   fuse_biglock_lock(data->biglock);
-#endif
 
     return err;
 }
@@ -1997,7 +1893,7 @@ fuse_vnop_pagein(struct vnop_pagein_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_pageout(struct vnop_pageout_args *ap)
 {
@@ -2010,10 +1906,6 @@ fuse_vnop_pageout(struct vnop_pageout_args *ap)
 
     struct fuse_vnode_data *fvdat = VTOFUD(vp);
     int error;
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
-#endif
 
     fuse_trace_printf_vnop();
 
@@ -2028,14 +1920,8 @@ fuse_vnop_pageout(struct vnop_pageout_args *ap)
         return ENOTSUP;
     }
 
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_unlock(data->biglock);
-#endif
     error = cluster_pageout(vp, pl, (upl_offset_t)pl_offset, f_offset,
                             (int)size, (off_t)fvdat->filesize, flags);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-   fuse_biglock_lock(data->biglock);
-#endif
 
     return error;
 }
@@ -2049,7 +1935,7 @@ fuse_vnop_pageout(struct vnop_pageout_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_pathconf(struct vnop_pathconf_args *ap)
 {
@@ -2125,7 +2011,7 @@ fuse_vnop_pathconf(struct vnop_pathconf_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_read(struct vnop_read_args *ap)
 {
@@ -2202,13 +2088,7 @@ fuse_vnop_read(struct vnop_read_args *ap)
             /* In case we get here through a short cut (e.g. no open). */
             ioflag |= IO_NOCACHE;
         }
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_unlock(data->biglock);
-#endif
         res = cluster_read(vp, uio, fvdat->filesize, ioflag);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_lock(data->biglock);
-#endif
         return res;
     }
 
@@ -2252,13 +2132,7 @@ fuse_vnop_read(struct vnop_read_args *ap)
                 return err;
             }
 
-#ifdef FUSE4X_ENABLE_BIGLOCK
-            fuse_biglock_unlock(data->biglock);
-#endif
             err = uiomove(fdi.answer, (int)min(fri->size, fdi.iosize), uio);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-            fuse_biglock_lock(data->biglock);
-#endif
             if (err) {
                 break;
             }
@@ -2287,7 +2161,7 @@ fuse_vnop_read(struct vnop_read_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_readdir(struct vnop_readdir_args *ap)
 {
@@ -2303,7 +2177,6 @@ fuse_vnop_readdir(struct vnop_readdir_args *ap)
     struct fuse_iov         cookediov;
 
     int err = 0;
-    int freefufh = 0;
 
     fuse_trace_printf_vnop();
 
@@ -2329,17 +2202,20 @@ fuse_vnop_readdir(struct vnop_readdir_args *ap)
 
     fvdat = VTOFUD(vp);
 
+    fuse_lck_mtx_lock(fvdat->fufh_mtx);
     fufh = &(fvdat->fufh[FUFH_RDONLY]);
 
-    if (!FUFH_IS_VALID(fufh)) {
+    if (FUFH_IS_VALID(fufh)) {
+        FUFH_USE_INC(fufh);
+        fuse_lck_mtx_unlock(fvdat->fufh_mtx);
+        OSIncrementAtomic((SInt32 *)&fuse_fh_reuse_count);
+    } else {
         err = fuse_filehandle_get(vp, context, FUFH_RDONLY, 0 /* mode */);
         if (err) {
+            fuse_lck_mtx_unlock(fvdat->fufh_mtx);
             log("fuse4x: filehandle_get failed in readdir (err=%d)\n", err);
             return err;
         }
-        freefufh = 1;
-    } else {
-        OSIncrementAtomic((SInt32 *)&fuse_fh_reuse_count);
     }
 
     size_t dircookedsize = FUSE_DIRENT_ALIGN(FUSE_NAME_OFFSET + MAXNAMLEN + 1);
@@ -2350,10 +2226,12 @@ fuse_vnop_readdir(struct vnop_readdir_args *ap)
 
     fiov_teardown(&cookediov);
 
-    if (freefufh) {
-        FUFH_USE_DEC(fufh);
+    fuse_lck_mtx_lock(fvdat->fufh_mtx);
+    FUFH_USE_DEC(fufh);
+    if (!FUFH_IS_VALID(fufh)) {
         (void)fuse_filehandle_put(vp, context, FUFH_RDONLY);
     }
+    fuse_lck_mtx_unlock(fvdat->fufh_mtx);
 
     fuse_invalidate_attr(vp);
 
@@ -2368,7 +2246,7 @@ fuse_vnop_readdir(struct vnop_readdir_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_readlink(struct vnop_readlink_args *ap)
 {
@@ -2378,10 +2256,6 @@ fuse_vnop_readlink(struct vnop_readlink_args *ap)
 
     struct fuse_dispatcher fdi;
     int err;
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
-#endif
 
     fuse_trace_printf_vnop();
 
@@ -2406,13 +2280,7 @@ fuse_vnop_readlink(struct vnop_readlink_args *ap)
     }
 
     if (!err) {
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_unlock(data->biglock);
-#endif
         err = uiomove(fdi.answer, (int)fdi.iosize, uio);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_lock(data->biglock);
-#endif
     }
 
     fuse_ticket_drop(fdi.ticket);
@@ -2428,7 +2296,7 @@ fuse_vnop_readlink(struct vnop_readlink_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
 {
@@ -2452,6 +2320,7 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
      */
 
     for (type = 0; type < FUFH_MAXTYPE; type++) {
+        // no need to lock fufh_mtx as vnode reclaim cannot be called with any other vnode operation
         fufh = &(fvdat->fufh[type]);
         if (FUFH_IS_VALID(fufh)) {
             int open_count = fufh->open_count;
@@ -2467,7 +2336,7 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
                  *
                  * One reason is that we are dead.
                  *
-                 * Another reason is an unmount-time vlush race with ongoing
+                 * Another reason is an unmount-time vflush race with ongoing
                  * vnops. Typically happens for a VDIR here.
                  *
                  * More often, the following happened:
@@ -2541,7 +2410,7 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
         vfs_context_t         a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_remove(struct vnop_remove_args *ap)
 {
@@ -2597,7 +2466,7 @@ fuse_vnop_remove(struct vnop_remove_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_removexattr(struct vnop_removexattr_args *ap)
 {
@@ -2675,7 +2544,7 @@ fuse_vnop_removexattr(struct vnop_removexattr_args *ap)
         vfs_context_t         a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_rename(struct vnop_rename_args *ap)
 {
@@ -2747,7 +2616,7 @@ fuse_vnop_rename(struct vnop_rename_args *ap)
  *      vfs_context_t         a_context;
  *  };
  */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_revoke(struct vnop_revoke_args *ap)
 {
@@ -2770,7 +2639,7 @@ fuse_vnop_revoke(struct vnop_revoke_args *ap)
         vfs_context_t         a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_rmdir(struct vnop_rmdir_args *ap)
 {
@@ -2814,7 +2683,7 @@ struct vnop_select_args {
     vfs_context_t        a_context;
 };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_select(struct vnop_select_args *ap)
 {
@@ -2831,7 +2700,7 @@ fuse_vnop_select(struct vnop_select_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_setattr(struct vnop_setattr_args *ap)
 {
@@ -2846,10 +2715,6 @@ fuse_vnop_setattr(struct vnop_setattr_args *ap)
     enum vtype vtyp;
     int sizechanged = 0;
     uint64_t newsize = 0;
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
-#endif
 
     fuse_trace_printf_vnop();
 
@@ -2920,13 +2785,7 @@ fuse_vnop_setattr(struct vnop_setattr_args *ap)
              * revocation and tell the caller to try again, if interested.
              */
 
-#ifdef FUSE4X_ENABLE_BIGLOCK
-            fuse_biglock_unlock(data->biglock);
-#endif
             fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-            fuse_biglock_lock(data->biglock);
-#endif
 
             err = EAGAIN;
         }
@@ -2963,7 +2822,7 @@ out:
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_setxattr(struct vnop_setxattr_args *ap)
 {
@@ -3058,14 +2917,8 @@ fuse_vnop_setxattr(struct vnop_setxattr_args *ap)
     memcpy((char *)fdi.indata + sizeof(*fsxi), name, namelen);
     ((char *)fdi.indata)[sizeof(*fsxi) + namelen] = '\0';
 
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_unlock(data->biglock);
-#endif
     err = uiomove((char *)fdi.indata + sizeof(*fsxi) + namelen + 1,
                   (int)attrsize, uio);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_lock(data->biglock);
-#endif
     if (!err) {
         err = fuse_dispatcher_wait_answer(&fdi);
     }
@@ -3109,7 +2962,7 @@ fuse_vnop_setxattr(struct vnop_setxattr_args *ap)
         struct buf          *a_bp;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_strategy(struct vnop_strategy_args *ap)
 {
@@ -3138,7 +2991,7 @@ fuse_vnop_strategy(struct vnop_strategy_args *ap)
         vfs_context_t         a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_symlink(struct vnop_symlink_args *ap)
 {
@@ -3189,7 +3042,7 @@ fuse_vnop_symlink(struct vnop_symlink_args *ap)
         vfs_context_t        a_context;
     };
 */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_write(struct vnop_write_args *ap)
 {
@@ -3381,15 +3234,8 @@ fuse_vnop_write(struct vnop_write_args *ap)
         zero_off = 0;
     }
 
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
-    fuse_biglock_unlock(data->biglock);
-#endif
     error = cluster_write(vp, uio, (off_t)original_size, (off_t)filesize,
                           (off_t)zero_off, (off_t)0, lflag);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_lock(data->biglock);
-#endif
 
     if (!error) {
         if (uio_offset(uio) > original_size) {
@@ -3455,7 +3301,7 @@ fuse_vnop_write(struct vnop_write_args *ap)
         vfs_context_t a_context;
     };
  */
-FUSE_VNOP_EXPORT
+static
 int
 fuse_vnop_ioctl(struct vnop_ioctl_args *ap)
 {
@@ -3521,6 +3367,7 @@ fuse_vnop_ioctl(struct vnop_ioctl_args *ap)
     return err;
 }
 
+typedef int (*fuse_vnode_op_t)(void *);
 
 struct vnodeopv_entry_desc fuse_vnode_operation_entries[] = {
     { &vnop_access_desc,        (fuse_vnode_op_t) fuse_vnop_access        },

@@ -7,7 +7,6 @@
 #include "fuse.h"
 #include "fuse_internal.h"
 #include "fuse_ipc.h"
-#include "fuse_locking.h"
 #include "fuse_node.h"
 #include "fuse_sysctl.h"
 #include "compat/tree.h"
@@ -15,10 +14,6 @@
 #include <sys/types.h>
 #include <sys/malloc.h>
 #include <sys/queue.h>
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-#include "fuse_biglock_vnops.h"
-#endif
 
 static struct fuse_ticket *fuse_ticket_alloc(struct fuse_data *data);
 static void                fuse_ticket_refresh(struct fuse_ticket *ticket);
@@ -250,20 +245,7 @@ fuse_ticket_wait_answer(struct fuse_ticket *ticket)
     if (fuse_ticket_opcode(ticket) == FUSE_DESTROY)
         data->destroyed = true;
 
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    // release biglock before going to sleep:
-    // 1) it reduces biglock contention - we really have no reason to keep the lock and prevent other requests from
-    //    processing, the biglock protects vnode operations only.
-    // 2) in case if a fuse daemon performs some non-fuse filesystem operations it may lead to fsync on the *fuse*
-    //    filesystem. And this leads to deadlock. See https://trac.macports.org/ticket/30129 (the second, deadlock issue).
-    fuse_biglock_unlock(data->biglock);
-#endif
-
     err = fuse_msleep(ticket, ticket->aw_mtx, PCATCH, "fu_ans", data->daemon_timeout_p);
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_lock(data->biglock);
-#endif
 
     if (err == EAGAIN) { /* same as EWOULDBLOCK */
         if (fuse_data_kill(data)) {
@@ -396,10 +378,6 @@ fuse_data_alloc(struct proc *p)
     data->deadticket_counter = 0;
     data->ticketer           = 0;
 
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    data->biglock        = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
-#endif
-
     return data;
 }
 
@@ -419,11 +397,6 @@ fuse_data_destroy(struct fuse_data *data)
 
     lck_mtx_free(data->node_mtx, fuse_lock_group);
     data->node_mtx = NULL;
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-    lck_mtx_free(data->biglock, fuse_lock_group);
-    data->biglock = NULL;
-#endif
 
     while ((ticket = fuse_pop_allticks(data))) {
         fuse_ticket_destroy(ticket);

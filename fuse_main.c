@@ -7,7 +7,6 @@
 #include "fuse.h"
 #include "fuse_device.h"
 #include "fuse_ipc.h"
-#include "fuse_locking.h"
 #include "fuse_node.h"
 #include "fuse_sysctl.h"
 #include <fuse_mount.h>
@@ -22,6 +21,12 @@
 #include <sys/conf.h>
 
 OSMallocTag  fuse_malloc_tag = NULL;
+lck_attr_t     *fuse_lock_attr    = NULL;
+lck_grp_attr_t *fuse_group_attr   = NULL;
+lck_grp_t      *fuse_lock_group   = NULL;
+lck_mtx_t      *fuse_device_mutex = NULL;
+
+lck_mtx_t *fuse_log_lock = NULL;
 
 extern struct vfs_fsentry fuse_vfs_entry;
 extern vfstable_t         fuse_vfs_table_ref;

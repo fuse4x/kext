@@ -10,7 +10,6 @@
 #include "fuse_internal.h"
 #include "fuse_kernel.h"
 #include "fuse_kludges.h"
-#include "fuse_locking.h"
 #include "fuse_sysctl.h"
 
 #include <libkern/libkern.h>

@@ -8,7 +8,6 @@
 #include "fuse_file.h"
 #include "fuse_internal.h"
 #include "fuse_ipc.h"
-#include "fuse_locking.h"
 #include "fuse_node.h"
 #include "fuse_file.h"
 #include "fuse_sysctl.h"
@@ -37,10 +36,6 @@
 #include <sys/namei.h>
 #include <sys/mman.h>
 #include <sys/param.h>
-
-#ifdef FUSE4X_ENABLE_BIGLOCK
-#include "fuse_biglock_vnops.h"
-#endif
 
 /* access */
 
@@ -153,13 +148,7 @@ fuse_internal_access(vnode_t                   vp,
             vnode_putname(vname);
         }
 
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_unlock(data->biglock);
-#endif
         fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_lock(data->biglock);
-#endif
     }
 
     return err;
@@ -811,15 +800,8 @@ fuse_internal_remove(vnode_t               dvp,
      */
     if (need_invalidate && !err) {
         if (!vfs_busy(mp, LK_NOWAIT)) {
-#ifdef FUSE4X_ENABLE_BIGLOCK
-            struct fuse_data *data = fuse_get_mpdata(mp);
-            fuse_biglock_unlock(data->biglock);
-#endif
             vnode_iterate(mp, 0, fuse_internal_remove_callback,
                           (void *)&target_nlink);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-            fuse_biglock_lock(data->biglock);
-#endif
             vfs_unbusy(mp);
         } else {
             log("fuse4x: skipping link count fixup upon remove\n");
@@ -935,17 +917,7 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
         fufh_type = FUFH_WRONLY; /* FUFH_RDWR will also do */
     }
 
-    if (fvdat->flag & FN_CREATING) {
-        fuse_lck_mtx_lock(fvdat->createlock);
-        if (fvdat->flag & FN_CREATING) {
-            (void)fuse_msleep(fvdat->creator, fvdat->createlock,
-                              PDROP | PINOD | PCATCH, "fuse_internal_strategy",
-                              NULL);
-        } else {
-            fuse_lck_mtx_unlock(fvdat->createlock);
-        }
-    }
-
+    fuse_lck_mtx_lock(fvdat->fufh_mtx);
     fufh = &(fvdat->fufh[fufh_type]);
 
     if (!FUFH_IS_VALID(fufh)) {
@@ -984,6 +956,7 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
 
         /* We're using an existing fufh of type fufh_type. */
     }
+    fuse_lck_mtx_unlock(fvdat->fufh_mtx);
 
     if (err) {
 
