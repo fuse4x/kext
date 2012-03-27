@@ -11,7 +11,6 @@
 #include "fuse_node.h"
 #include "fuse_file.h"
 #include "fuse_sysctl.h"
-#include "fuse_kludges.h"
 
 #include <AvailabilityMacros.h>
 #include <kern/assert.h>
@@ -36,6 +35,10 @@
 #include <sys/namei.h>
 #include <sys/mman.h>
 #include <sys/param.h>
+
+#ifdef FUSE4X_ENABLE_EXCHANGE
+#  include "compat/exchange.h"
+#endif
 
 /* access */
 
@@ -223,7 +226,7 @@ fuse_internal_exchange(vnode_t       fvp,
         ubc_setsize(fvp, (off_t)ffud->filesize);
         ubc_setsize(tvp, (off_t)tfud->filesize);
 
-        fuse_kludge_exchange(fvp, tvp);
+        fuse_compat_exchange(fvp, tvp);
 
         /*
          * Another approach (will need additional kernel support to work):

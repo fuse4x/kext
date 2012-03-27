@@ -10,7 +10,6 @@
 #include "fuse.h"
 #include "fuse_kernel.h"
 #include "fuse_device.h"
-#include "fuse_kludges.h"
 #include "compat/tree.h"
 
 #include <kern/assert.h>
