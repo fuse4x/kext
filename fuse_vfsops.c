@@ -12,18 +12,34 @@
 #include "fuse_node.h"
 #include "fuse_sysctl.h"
 #include "fuse_vfsops.h"
-
+#include "fuse_vnops.h"
 #include <fuse_mount.h>
+
+#include <libkern/version.h>
 
 #define FUSE_MAKEDEV(x, y)     ((dev_t)(((x) << 24) | (y)))
 #define FUSEFS_SIGNATURE       0x55464553 // 'FUSE'
 #define FUSE_CUSTOM_FSID_VAL1  FUSEFS_SIGNATURE
 
-#include <libkern/version.h>
+static errno_t
+fuse_vfsop_mount(mount_t mp, vnode_t devvp, user_addr_t data, vfs_context_t context);
+
+static errno_t
+fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context);
+
+static errno_t
+fuse_vfsop_root(mount_t mp, vnode_t *vpp, vfs_context_t context);
+
+static errno_t
+fuse_vfsop_getattr(mount_t mp, struct vfs_attr *attr, vfs_context_t context);
+
+static errno_t
+fuse_vfsop_sync(mount_t mp, int waitfor, vfs_context_t context);
+
+static errno_t
+fuse_vfsop_setattr(mount_t mp, struct vfs_attr *fsap, vfs_context_t context);
 
 static const struct timespec kZeroTime = { 0, 0 };
-
-vfstable_t fuse_vfs_table_ref = NULL;
 
 errno_t (**fuse_vnode_operations)(void *);
 

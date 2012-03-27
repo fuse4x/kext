@@ -9,6 +9,7 @@
 #include "fuse_ipc.h"
 #include "fuse_node.h"
 #include "fuse_sysctl.h"
+#include "fuse_vfsops.h"
 #include <fuse_mount.h>
 
 #include <libkern/libkern.h>
@@ -27,6 +28,7 @@ lck_grp_t      *fuse_lock_group   = NULL;
 lck_mtx_t      *fuse_device_mutex = NULL;
 
 lck_mtx_t *fuse_log_lock = NULL;
+vfstable_t fuse_vfs_table_ref = NULL;
 
 extern struct vfs_fsentry fuse_vfs_entry;
 extern vfstable_t         fuse_vfs_table_ref;
