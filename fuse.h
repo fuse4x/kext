@@ -20,7 +20,6 @@
 
 // #define FUSE4X_COUNT_MEMORY
 // #define FUSE4X_DEBUG
-// #define FUSE4X_TRACE
 // #define FUSE4X_TRACE_LK
 // #define FUSE4X_TRACE_MSLEEP
 // #define FUSE4X_TRACE_OP
@@ -64,22 +63,22 @@ extern lck_mtx_t *fuse_log_lock;
 #define log(fmt, args...) IOLog(fmt, ##args)
 #endif /* FUSE4X_SERIALIZE_LOGGING */
 
-#ifdef FUSE4X_TRACE
+#ifdef FUSE4X_DEBUG
 #define fuse_trace_printf(fmt, ...) log(fmt, ## __VA_ARGS__)
-#define fuse_trace_printf_func()    log("%s by %d\n", __FUNCTION__, proc_selfpid())
 #else
 #define fuse_trace_printf(fmt, ...) {}
-#define fuse_trace_printf_func()    {}
 #endif
 
 #ifdef FUSE4X_TRACE_OP
 #define fuse_trace_printf_vfsop()     log("%s by %d\n", __FUNCTION__, proc_selfpid())
 #define fuse_trace_printf_vnop_novp() log("%s by %d\n", __FUNCTION__, proc_selfpid())
 #define fuse_trace_printf_vnop()      log("%s vp=%p by %d\n", __FUNCTION__, vp, proc_selfpid())
+#define fuse_trace_printf_func()      log("%s by %d\n", __FUNCTION__, proc_selfpid())
 #else
 #define fuse_trace_printf_vfsop()     {}
 #define fuse_trace_printf_vnop()      {}
 #define fuse_trace_printf_vnop_novp() {}
+#define fuse_trace_printf_func()      {}
 #endif
 
 #ifdef FUSE4X_TRACE_MSLEEP
