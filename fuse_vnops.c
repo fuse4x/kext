@@ -3517,6 +3517,7 @@ fuse_vnop_ioctl(struct vnop_ioctl_args *ap)
 
 struct vnodeopv_entry_desc fuse_vnode_operation_entries[] = {
     { &vnop_access_desc,        (fuse_vnode_op_t) fuse_vnop_access        },
+    { &vnop_allocate_desc,      (fuse_vnode_op_t) nop_allocate            }, // vnop stub until FUSE_FALLOCATE is implemented
     { &vnop_blktooff_desc,      (fuse_vnode_op_t) fuse_vnop_blktooff      },
     { &vnop_blockmap_desc,      (fuse_vnode_op_t) fuse_vnop_blockmap      },
     { &vnop_close_desc,         (fuse_vnode_op_t) fuse_vnop_close         },
