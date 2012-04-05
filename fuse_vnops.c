@@ -82,7 +82,6 @@ static int fuse_vnop_strategy(struct vnop_strategy_args *ap);
 static int fuse_vnop_symlink(struct vnop_symlink_args *ap);
 static int fuse_vnop_write(struct vnop_write_args *ap);
 
-
 /* xattr */
 static __inline__
 bool
@@ -3412,6 +3411,7 @@ typedef int (*fuse_vnode_op_t)(void *);
 
 struct vnodeopv_entry_desc fuse_vnode_operation_entries[] = {
     { &vnop_access_desc,        (fuse_vnode_op_t) fuse_vnop_access        },
+    { &vnop_allocate_desc,      (fuse_vnode_op_t) nop_allocate            }, // vnop stub until FUSE_FALLOCATE is implemented
     { &vnop_blktooff_desc,      (fuse_vnode_op_t) fuse_vnop_blktooff      },
     { &vnop_blockmap_desc,      (fuse_vnode_op_t) fuse_vnop_blockmap      },
     { &vnop_close_desc,         (fuse_vnode_op_t) fuse_vnop_close         },
