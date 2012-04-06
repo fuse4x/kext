@@ -782,7 +782,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
             goto fake;
         }
         if (err == ENOENT) {
-            fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
+            fuse_internal_vnode_disappear(vp, context);
         }
         return err;
     }
@@ -836,7 +836,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
              * revocation.
              */
 
-            fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
+            fuse_internal_vnode_disappear(vp, context);
             return EIO;
         }
     }
@@ -2647,7 +2647,7 @@ fuse_vnop_revoke(struct vnop_revoke_args *ap)
 
     CHECK_BLANKET_DENIAL(vp, context, ENOENT);
 
-    return fuse_internal_revoke(ap->a_vp, ap->a_flags, ap->a_context, 1);
+    return vn_revoke(ap->a_vp, ap->a_flags, ap->a_context);
 }
 
 /*
@@ -2805,7 +2805,7 @@ fuse_vnop_setattr(struct vnop_setattr_args *ap)
              * revocation and tell the caller to try again, if interested.
              */
 
-            fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
+            fuse_internal_vnode_disappear(vp, context);
 
             err = EAGAIN;
         }

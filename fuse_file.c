@@ -87,7 +87,7 @@ fuse_filehandle_get(vnode_t       vp,
             vnode_putname(vname);
         }
         if (err == ENOENT) {
-            fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
+            fuse_internal_vnode_disappear(vp, context);
         }
         return err;
     }

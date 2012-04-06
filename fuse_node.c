@@ -187,12 +187,12 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
         if (vnode_vtype(vn) != vtyp) {
             log("fuse4x: vnode changed type behind us (old=%d, new=%d)\n",
                   vnode_vtype(vn), vtyp);
-            fuse_internal_vnode_disappear(vn, context, REVOKE_SOFT);
+            fuse_internal_vnode_disappear(vn, context);
             vnode_put(vn);
             err = EIO;
         } else if (VTOFUD(vn)->generation != generation) {
             log("fuse4x: vnode changed generation\n");
-            fuse_internal_vnode_disappear(vn, context, REVOKE_SOFT);
+            fuse_internal_vnode_disappear(vn, context);
             vnode_put(vn);
             err = ESTALE;
         }
