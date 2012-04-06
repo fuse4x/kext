@@ -104,8 +104,6 @@ fuse_vnop_access(struct vnop_access_args *ap)
 
     bzero(&facp, sizeof(facp));
 
-    facp.facc_flags |= FACCESS_DO_ACCESS;
-
     return fuse_internal_access(vp, action, context, &facp);
 }
 
