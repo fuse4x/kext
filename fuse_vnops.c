@@ -366,7 +366,7 @@ fuse_vnop_create(struct vnop_create_args *ap)
 
     fuse_trace_printf_vnop_novp();
 
-    if (fuse_isdeadfs_fs(dvp)) {
+    if (fuse_isdeadfs(dvp)) {
         return ENXIO;
     }
 
@@ -541,7 +541,7 @@ fuse_vnop_exchange(struct vnop_exchange_args *ap)
         return EINVAL;
     }
 
-    if (fuse_isdeadfs_fs(fvp)) {
+    if (fuse_isdeadfs(fvp)) {
         return ENXIO;
     }
 
@@ -1001,7 +1001,7 @@ fuse_vnop_link(struct vnop_link_args *ap)
 
     fuse_trace_printf_vnop();
 
-    if (fuse_isdeadfs_fs(vp)) {
+    if (fuse_isdeadfs(vp)) {
         return ENXIO;
     }
 
@@ -1469,7 +1469,7 @@ fuse_vnop_mkdir(struct vnop_mkdir_args *ap)
 
     fuse_trace_printf_vnop_novp();
 
-    if (fuse_isdeadfs_fs(dvp)) {
+    if (fuse_isdeadfs(dvp)) {
         return ENXIO;
     }
 
@@ -1513,7 +1513,7 @@ fuse_vnop_mknod(struct vnop_mknod_args *ap)
 
     fuse_trace_printf_vnop_novp();
 
-    if (fuse_isdeadfs_fs(dvp)) {
+    if (fuse_isdeadfs(dvp)) {
         return ENXIO;
     }
 
@@ -1557,7 +1557,7 @@ fuse_vnop_mmap(struct vnop_mmap_args *ap)
 
     fuse_trace_printf_vnop();
 
-    if (fuse_isdeadfs_fs(vp)) {
+    if (fuse_isdeadfs(vp)) {
         return ENXIO;
     }
 
@@ -2528,7 +2528,7 @@ fuse_vnop_remove(struct vnop_remove_args *ap)
 
     fuse_trace_printf_vnop();
 
-    if (fuse_isdeadfs_fs(vp)) {
+    if (fuse_isdeadfs(vp)) {
         return ENXIO;
     }
 
@@ -2664,7 +2664,7 @@ fuse_vnop_rename(struct vnop_rename_args *ap)
 
     fuse_trace_printf_vnop_novp();
 
-    if (fuse_isdeadfs_fs(fdvp)) {
+    if (fuse_isdeadfs(fdvp)) {
         return ENXIO;
     }
 
@@ -2734,7 +2734,7 @@ fuse_vnop_rmdir(struct vnop_rmdir_args *ap)
 
     fuse_trace_printf_vnop();
 
-    if (fuse_isdeadfs_fs(vp)) {
+    if (fuse_isdeadfs(vp)) {
         return ENXIO;
     }
 
@@ -3106,7 +3106,7 @@ fuse_vnop_symlink(struct vnop_symlink_args *ap)
 
     fuse_trace_printf_vnop_novp();
 
-    if (fuse_isdeadfs_fs(dvp)) {
+    if (fuse_isdeadfs(dvp)) {
         return ENXIO;
     }
 
@@ -3420,7 +3420,7 @@ fuse_vnop_ioctl(struct vnop_ioctl_args *ap)
 
     fuse_trace_printf_vnop_novp();
 
-    if (fuse_isdeadfs_fs(vp)) {
+    if (fuse_isdeadfs(vp)) {
         return ENXIO;
     }
 
