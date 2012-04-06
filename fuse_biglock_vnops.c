@@ -203,41 +203,6 @@ fuse_biglock_vnop_inactive(struct vnop_inactive_args *ap)
 	nodelocked_vnop(ap->a_vp, fuse_vnop_inactive, ap);
 }
 
-#ifdef FUSE4X_ENABLE_KQUEUE
-
-/*
- struct vnop_kqfilt_add_args {
- struct vnodeop_desc  *a_desc;
- vnode_t               a_vp;
- struct knote         *a_kn;
- struct proc          *p;
- vfs_context_t         a_context;
- };
- */
-FUSE_VNOP_EXPORT
-int
-fuse_biglock_vnop_kqfilt_add(struct vnop_kqfilt_add_args *ap)
-{
-	nodelocked_vnop(ap->a_vp, fuse_vnop_kqfilt_add, ap);
-}
-
-/*
- struct vnop_kqfilt_remove_args {
- struct vnodeop_desc  *a_desc;
- vnode_t               a_vp;
- uintptr_t             ident;
- vfs_context_t         a_context;
- };
- */
-FUSE_VNOP_EXPORT
-int
-fuse_biglock_vnop_kqfilt_remove(struct vnop_kqfilt_remove_args *ap)
-{
-	nodelocked_vnop(ap->a_vp, fuse_vnop_kqfilt_remove, ap);
-}
-
-#endif /* FUSE4X_ENABLE_KQUEUE */
-
 /*
  struct vnop_link_args {
  struct vnodeop_desc  *a_desc;
@@ -744,10 +709,6 @@ struct vnodeopv_entry_desc fuse_biglock_vnode_operation_entries[] = {
     { &vnop_link_desc,          (fuse_vnode_op_t) fuse_biglock_vnop_link          },
     { &vnop_listxattr_desc,     (fuse_vnode_op_t) fuse_biglock_vnop_listxattr     },
     { &vnop_lookup_desc,        (fuse_vnode_op_t) fuse_biglock_vnop_lookup        },
-#ifdef FUSE4X_ENABLE_KQUEUE
-    { &vnop_kqfilt_add_desc,    (fuse_vnode_op_t) fuse_biglock_vnop_kqfilt_add    },
-    { &vnop_kqfilt_remove_desc, (fuse_vnode_op_t) fuse_biglock_vnop_kqfilt_remove },
-#endif /* FUSE4X_ENABLE_KQUEUE */
     { &vnop_mkdir_desc,         (fuse_vnode_op_t) fuse_biglock_vnop_mkdir         },
     { &vnop_mknod_desc,         (fuse_vnode_op_t) fuse_biglock_vnop_mknod         },
     { &vnop_mmap_desc,          (fuse_vnode_op_t) fuse_biglock_vnop_mmap          },

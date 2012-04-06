@@ -9,7 +9,6 @@
 #include "fuse_internal.h"
 #include "fuse_ipc.h"
 #include "fuse_kludges.h"
-#include "fuse_knote.h"
 #include "fuse_locking.h"
 #include "fuse_node.h"
 #include "fuse_nodehash.h"
@@ -483,8 +482,6 @@ bringup:
 
     fuse_ticket_drop(dispatcher->ticket);
 
-    FUSE_KNOTE(dvp, NOTE_WRITE);
-
     return 0;
 
 undo:
@@ -585,11 +582,6 @@ out:
 
     vnode_putname(fname);
     vnode_putname(tname);
-
-    if (err == 0) {
-        FUSE_KNOTE(fvp, NOTE_ATTRIB);
-        FUSE_KNOTE(tvp, NOTE_ATTRIB);
-    }
 
     return err;
 
@@ -982,86 +974,6 @@ fuse_vnop_inactive(struct vnop_inactive_args *ap)
     return 0;
 }
 
-#ifdef FUSE4X_ENABLE_KQUEUE
-
-#include "fuse_knote.h"
-
-/*
-    struct vnop_kqfilt_add_args {
-        struct vnodeop_desc  *a_desc;
-        vnode_t               a_vp;
-        struct knote         *a_kn;
-        struct proc          *p;
-        vfs_context_t         a_context;
-    };
- */
-FUSE_VNOP_EXPORT
-int
-fuse_vnop_kqfilt_add(struct vnop_kqfilt_add_args *ap)
-{
-    vnode_t       vp = ap->a_vp;
-    struct knote *kn = ap->a_kn;
-
-    fuse_trace_printf_vnop();
-
-    if (fuse_isdeadfs(vp)) {
-        return ENXIO;
-    }
-
-    switch (kn->kn_filter) {
-    case EVFILT_READ:
-        if (vnode_isreg(vp)) {
-            kn->kn_fop = &fuseread_filtops;
-        } else {
-            return EINVAL;
-        }
-        break;
-
-    case EVFILT_WRITE:
-        if (vnode_isreg(vp)) {
-            kn->kn_fop = &fusewrite_filtops;
-        } else {
-            return EINVAL;
-        }
-        break;
-
-    case EVFILT_VNODE:
-        kn->kn_fop = &fusevnode_filtops;
-        break;
-
-    default:
-        return 1;
-    }
-
-    kn->kn_hook = (caddr_t)vp;
-    kn->kn_hookid = vnode_vid(vp);
-
-    /* lock */
-    KNOTE_ATTACH(&VTOFUD(vp)->c_knotes, kn);
-    /* unlock */
-
-    return 0;
-}
-
-/*
-    struct vnop_kqfilt_remove_args {
-        struct vnodeop_desc  *a_desc;
-        vnode_t               a_vp;
-        uintptr_t             ident;
-        vfs_context_t         a_context;
-    };
-*/
-FUSE_VNOP_EXPORT
-int
-fuse_vnop_kqfilt_remove(__unused struct vnop_kqfilt_remove_args *ap)
-{
-    fuse_trace_printf_vnop_novp();
-
-    return ENOTSUP;
-}
-
-#endif /* FUSE4X_ENABLE_KQUEUE */
-
 /*
     struct vnop_link_args {
         struct vnodeop_desc  *a_desc;
@@ -1122,8 +1034,6 @@ fuse_vnop_link(struct vnop_link_args *ap)
     fuse_invalidate_attr(vp);
 
     if (err == 0) {
-        FUSE_KNOTE(vp, NOTE_LINK);
-        FUSE_KNOTE(tdvp, NOTE_WRITE);
         VTOFUD(vp)->nlookup++;
     }
 
@@ -1573,7 +1483,6 @@ fuse_vnop_mkdir(struct vnop_mkdir_args *ap)
 
     if (err == 0) {
         fuse_invalidate_attr(dvp);
-        FUSE_KNOTE(dvp, NOTE_WRITE | NOTE_LINK);
     }
 
     return err;
@@ -1619,7 +1528,6 @@ fuse_vnop_mknod(struct vnop_mknod_args *ap)
 
     if (err== 0) {
         fuse_invalidate_attr(dvp);
-        FUSE_KNOTE(dvp, NOTE_WRITE);
     }
 
     return err;
@@ -2003,10 +1911,6 @@ ok:
             }
             fufh->fuse_open_flags &= ~FOPEN_PURGE_ATTR;
         }
-    }
-
-    if (hint) {
-        FUSE_KNOTE(vp, hint);
     }
 
     if (fuse_isnoreadahead(vp)) {
@@ -2671,8 +2575,6 @@ fuse_vnop_remove(struct vnop_remove_args *ap)
     err = fuse_internal_remove(dvp, vp, cnp, FUSE_UNLINK, context);
 
     if (err == 0) {
-        FUSE_KNOTE(vp, NOTE_DELETE);
-        FUSE_KNOTE(dvp, NOTE_WRITE);
         fuse_vncache_purge(vp);
         fuse_invalidate_attr(dvp);
         /*
@@ -2751,7 +2653,6 @@ fuse_vnop_removexattr(struct vnop_removexattr_args *ap)
         fuse_ticket_drop(fdi.ticket);
         VTOFUD(vp)->c_flag |= C_TOUCH_CHGTIME;
         fuse_invalidate_attr(vp);
-        FUSE_KNOTE(vp, NOTE_ATTRIB);
     } else {
         if (err == ENOSYS) {
             fuse_clear_implemented(data, FSESS_NOIMPLBIT(REMOVEXATTR));
@@ -2801,18 +2702,15 @@ fuse_vnop_rename(struct vnop_rename_args *ap)
     err = fuse_internal_rename(fdvp, fvp, fcnp, tdvp, tvp, tcnp, ap->a_context);
 
     if (err == 0) {
-        FUSE_KNOTE(fdvp, NOTE_WRITE);
         fuse_invalidate_attr(fdvp);
         if (tdvp != fdvp) {
             fuse_invalidate_attr(tdvp);
-            FUSE_KNOTE(tdvp, NOTE_WRITE);
         }
     }
 
     if (tvp != NULLVP) {
         if (tvp != fvp) {
             fuse_vncache_purge(tvp);
-            FUSE_KNOTE(tvp, NOTE_DELETE);
         }
         if (err == 0) {
 
@@ -2836,10 +2734,6 @@ fuse_vnop_rename(struct vnop_rename_args *ap)
             fuse_vncache_purge(tdvp);
         }
         fuse_vncache_purge(fdvp);
-    }
-
-    if (err == 0) {
-        FUSE_KNOTE(fvp, NOTE_RENAME);
     }
 
     return err;
@@ -2905,8 +2799,6 @@ fuse_vnop_rmdir(struct vnop_rmdir_args *ap)
 
     if (err == 0) {
         fuse_invalidate_attr(dvp);
-        FUSE_KNOTE(dvp, NOTE_WRITE | NOTE_LINK);
-        FUSE_KNOTE(vp, NOTE_DELETE);
     }
 
     return err;
@@ -3058,10 +2950,6 @@ out:
         ubc_setsize(vp, (off_t)newsize);
     }
 
-    if (err == 0) {
-        FUSE_KNOTE(vp, NOTE_ATTRIB);
-    }
-
     return err;
 }
 
@@ -3185,7 +3073,6 @@ fuse_vnop_setxattr(struct vnop_setxattr_args *ap)
     if (!err) {
         fuse_ticket_drop(fdi.ticket);
         fuse_invalidate_attr(vp);
-        FUSE_KNOTE(vp, NOTE_ATTRIB);
         VTOFUD(vp)->c_flag |= C_TOUCH_CHGTIME;
     } else {
         if ((err == ENOSYS) || (err == ENOTSUP)) {
@@ -3288,7 +3175,6 @@ fuse_vnop_symlink(struct vnop_symlink_args *ap)
 
     if (err == 0) {
         fuse_invalidate_attr(dvp);
-        FUSE_KNOTE(dvp, NOTE_WRITE);
     }
 
     return err;
@@ -3510,10 +3396,8 @@ fuse_vnop_write(struct vnop_write_args *ap)
             /* Updating to new size. */
             fvdat->filesize = uio_offset(uio);
             ubc_setsize(vp, (off_t)fvdat->filesize);
-            FUSE_KNOTE(vp, NOTE_WRITE | NOTE_EXTEND);
         } else {
             fvdat->filesize = original_size;
-            FUSE_KNOTE(vp, NOTE_WRITE);
         }
         fuse_invalidate_attr(vp);
     }
@@ -3659,10 +3543,6 @@ struct vnodeopv_entry_desc fuse_vnode_operation_entries[] = {
     { &vnop_link_desc,          (fuse_vnode_op_t) fuse_vnop_link          },
     { &vnop_listxattr_desc,     (fuse_vnode_op_t) fuse_vnop_listxattr     },
     { &vnop_lookup_desc,        (fuse_vnode_op_t) fuse_vnop_lookup        },
-#ifdef FUSE4X_ENABLE_KQUEUE
-    { &vnop_kqfilt_add_desc,    (fuse_vnode_op_t) fuse_vnop_kqfilt_add    },
-    { &vnop_kqfilt_remove_desc, (fuse_vnode_op_t) fuse_vnop_kqfilt_remove },
-#endif /* FUSE4X_ENABLE_KQUEUE */
     { &vnop_mkdir_desc,         (fuse_vnode_op_t) fuse_vnop_mkdir         },
     { &vnop_mknod_desc,         (fuse_vnode_op_t) fuse_vnop_mknod         },
     { &vnop_mmap_desc,          (fuse_vnode_op_t) fuse_vnop_mmap          },

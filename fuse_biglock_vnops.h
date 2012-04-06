@@ -193,12 +193,6 @@ FUSE_VNOP_EXPORT int fuse_biglock_vnop_inactive(struct vnop_inactive_args *ap);
 
 // FUSE_VNOP_EXPORT int fuse_biglock_vnop_ioctl(struct vnop_ioctl_args *ap);
 
-#ifdef FUSE4X_ENABLE_KQUEUE
-FUSE_VNOP_EXPORT int fuse_biglock_vnop_kqfilt_add(struct vnop_kqfilt_add_args *ap);
-
-FUSE_VNOP_EXPORT int fuse_biglock_vnop_kqfilt_remove(struct vnop_kqfilt_remove_args *ap);
-#endif
-
 FUSE_VNOP_EXPORT int fuse_biglock_vnop_link(struct vnop_link_args *ap);
 
 FUSE_VNOP_EXPORT int fuse_biglock_vnop_listxattr(struct vnop_listxattr_args *ap);

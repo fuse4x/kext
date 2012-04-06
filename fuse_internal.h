@@ -646,10 +646,6 @@ fuse_internal_attr_loadvap(vnode_t vp, struct vnode_attr *out_vap,
          !VATTR_IS_SUPPORTED(out_vap, va_create_time))) {
         (void)fuse_internal_loadxtimes(vp, out_vap, context);
     }
-
-    if (hint) {
-        FUSE_KNOTE(vp, hint);
-    }
 }
 
 #define cache_attrs(vp, fuse_out) do {                               \
