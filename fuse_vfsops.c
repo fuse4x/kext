@@ -629,24 +629,6 @@ fuse_vfsop_unmount(mount_t mp, int mntflags, vfs_context_t context)
         return EBUSY;
     }
 
-    if (data->dead) {
-        goto alreadydead;
-    }
-
-    fuse_dispatcher_init(&fdi, 0 /* no data to send along */);
-    fuse_dispatcher_make(&fdi, FUSE_DESTROY, mp, FUSE_ROOT_ID, context);
-
-    fuse_trace_printf("%s: Waiting for reply from FUSE_DESTROY.\n", __FUNCTION__);
-    err = fuse_dispatcher_wait_answer(&fdi);
-    fuse_trace_printf("%s:   Reply received.\n", __FUNCTION__);
-    if (!err) {
-        fuse_ticket_drop(fdi.ticket);
-    }
-
-    fuse_data_kill(data);
-
-alreadydead:
-
     fuse_trace_printf("%s: Calling vnode_rele(fuse_rootp);\n", __FUNCTION__);
 #ifdef FUSE4X_ENABLE_BIGLOCK
     fuse_biglock_unlock(data->biglock);
@@ -668,6 +650,20 @@ alreadydead:
     fuse_biglock_lock(data->biglock);
 #endif
     fuse_trace_printf("%s:   Done.\n", __FUNCTION__);
+
+    if (!data->dead) {
+        fuse_dispatcher_init(&fdi, 0 /* no data to send along */);
+        fuse_dispatcher_make(&fdi, FUSE_DESTROY, mp, FUSE_ROOT_ID, context);
+
+        fuse_trace_printf("%s: Waiting for reply from FUSE_DESTROY.\n", __FUNCTION__);
+        err = fuse_dispatcher_wait_answer(&fdi);
+        fuse_trace_printf("%s:   Reply received.\n", __FUNCTION__);
+        if (!err) {
+            fuse_ticket_drop(fdi.ticket);
+        }
+    }
+
+    fuse_data_kill(data);
 
     fuse_lck_mtx_lock(fdev->mtx);
 
