@@ -470,7 +470,7 @@ bringup:
         goto undo;
     }
 
-    err = FSNodeGetOrCreateFileVNodeByID(vpp, 0, feo, mp, dvp, context, NULL /* oflags */);
+    err = FSNodeGetOrCreateFileVNodeByID(vpp, false, feo, mp, dvp, context, NULL /* oflags */);
     if (err) {
        if (gone_good_old) {
            fuse_internal_forget_send(mp, context, feo->nodeid, 1, dispatcher);
@@ -1348,7 +1348,7 @@ calldaemon:
                 goto out;
             }
 
-            if ((err  = fuse_vget_i(&vp, 0 /* flags */, feo, cnp, dvp,
+            if ((err  = fuse_vget_i(&vp, feo, cnp, dvp,
                                     mp, context))) {
                 goto out;
             }
@@ -1366,7 +1366,7 @@ calldaemon:
                 goto out;
             }
 
-            if ((err  = fuse_vget_i(&vp, 0 /* flags */, feo, cnp, dvp,
+            if ((err  = fuse_vget_i(&vp, feo, cnp, dvp,
                                     mp, context))) {
                 goto out;
             }
@@ -1387,7 +1387,7 @@ calldaemon:
                 *vpp = dvp;
             }
         } else {
-            if ((err  = fuse_vget_i(&vp, 0 /* flags */, feo, cnp, dvp,
+            if ((err  = fuse_vget_i(&vp, feo, cnp, dvp,
                                     mp, context))) {
                 goto out;
             }

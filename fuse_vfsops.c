@@ -625,7 +625,7 @@ fuse_vfsop_root(mount_t mp, struct vnode **vpp, vfs_context_t context)
     feo_root.attr.size   = FUSE_ROOT_SIZE;
     feo_root.attr.mode   = VTTOIF(VDIR);
 
-    err = FSNodeGetOrCreateFileVNodeByID(&vp, FN_IS_ROOT, &feo_root, mp,
+    err = FSNodeGetOrCreateFileVNodeByID(&vp, true, &feo_root, mp,
                                          NULLVP /* dvp */, context,
                                          NULL /* oflags */);
     *vpp = vp;

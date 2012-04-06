@@ -24,7 +24,6 @@ enum {
 #define FN_ACCESS_NOOP       0x00000001 // todo remove it
 #define FN_DIRECT_IO         0x00000004
 #define FN_HAS_ACL           0x00000008
-#define FN_IS_ROOT           0x00000010
 
 #define C_NEED_RVNODE_PUT    0x000000001
 #define C_NEED_DVNODE_PUT    0x000000002
@@ -107,7 +106,7 @@ void fuse_vnode_teardown(vnode_t vp, vfs_context_t context, enum vtype vtyp);
 
 errno_t
 FSNodeGetOrCreateFileVNodeByID(vnode_t               *vpp,
-                               uint32_t               flags,
+                               bool                   is_root,
                                struct fuse_entry_out *feo,
                                mount_t                mp,
                                vnode_t                dvp,
@@ -116,7 +115,6 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vpp,
 
 int
 fuse_vget_i(vnode_t               *vpp,
-            uint32_t               flags,
             struct fuse_entry_out *feo,
             struct componentname  *cnp,
             vnode_t                dvp,
