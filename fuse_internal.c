@@ -1303,7 +1303,7 @@ fuse_internal_newentry_core(vnode_t                 dvp,
         goto out;
     }
 
-    err = fuse_vget_i(vpp, 0 /* flags */, feo, cnp, dvp, mp, context);
+    err = fuse_vget_i(vpp, feo, cnp, dvp, mp, context);
     if (err) {
         fuse_internal_forget_send(mp, context, feo->nodeid, 1, dispatcher);
         return err;

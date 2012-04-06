@@ -45,7 +45,7 @@ fuse_vnode_data_destroy(struct fuse_vnode_data *fvdat)
 
 errno_t
 FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
-                               uint32_t               flags,
+                               bool                   is_root,
                                struct fuse_entry_out *feo,
                                mount_t                mp,
                                vnode_t                dvp,
@@ -63,8 +63,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
         return EINVAL;
     }
 
-    int      markroot   = (flags & FN_IS_ROOT) ? 1 : 0;
-    uint64_t size       = (flags & FN_IS_ROOT) ? 0 : feo->attr.size;
+    uint64_t size       = is_root ? 0 : feo->attr.size;
     uint64_t generation = feo->generation;
 
     mntdata = fuse_get_mpdata(mp);
@@ -128,7 +127,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
         }
 
         /* flags */
-        fvdat->flag         = flags;
+        fvdat->flag         = 0;
         fvdat->c_flag       = 0;
 
         /* meta */
@@ -175,7 +174,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
         params.vnfs_cnp        = NULL;
         params.vnfs_flags      = VNFS_NOCACHE | VNFS_CANTCACHE;
         params.vnfs_filesize   = size;
-        params.vnfs_markroot   = markroot;
+        params.vnfs_markroot   = is_root ? 1 : 0;
 
 #ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_unlock(mntdata->biglock);
@@ -187,7 +186,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
 #endif
 
         if (err == 0) {
-            if (markroot) {
+            if (is_root) {
                 fvdat->parentvp = vn;
             } else {
                 fvdat->parentvp = dvp;
@@ -248,7 +247,6 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
 
 int
 fuse_vget_i(vnode_t               *vpp,
-            uint32_t               flags,
             struct fuse_entry_out *feo,
             struct componentname  *cnp,
             vnode_t                dvp,
@@ -261,7 +259,7 @@ fuse_vget_i(vnode_t               *vpp,
         return EINVAL;
     }
 
-    err = FSNodeGetOrCreateFileVNodeByID(vpp, flags, feo, mp, dvp,
+    err = FSNodeGetOrCreateFileVNodeByID(vpp, false, feo, mp, dvp,
                                          context, NULL);
     if (err) {
         return err;
