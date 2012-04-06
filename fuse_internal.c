@@ -949,7 +949,6 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
 
         if (!err) {
             fufh = &(fvdat->fufh[fufh_type]);
-            FUFH_AUX_INC(fufh);
             /* We've created a NEW fufh of type fufh_type. open_count is 1. */
         }
 

@@ -2367,8 +2367,6 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
         // no need to lock fufh_mtx as vnode reclaim cannot be called with any other vnode operation
         fufh = &(fvdat->fufh[type]);
         if (FUFH_IS_VALID(fufh)) {
-            int open_count = fufh->open_count;
-            int aux_count = fufh->aux_count;
             FUFH_USE_RESET(fufh);
             if (vfs_isforce(vnode_mount(vp))) {
                 (void)fuse_filehandle_put(vp, context, type);
@@ -2393,29 +2391,6 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
                  */
 
                 if (!fuse_isdeadfs(vp)) {
-
-                    /*
-                     * Miselading symptoms (can be seen at unmount time):
-                     *
-                     * open
-                     * close
-                     * inactive
-                     * open
-                     * reclaim <--
-                     *
-                     */
-
-                    if (open_count != aux_count) {
-                        const char *vname = vnode_getname(vp);
-                        log("fuse4x: vnode reclaimed with valid fufh "
-                              "(%s type=%d, vtype=%d, open_count=%d, busy=%d, "
-                              "aux_count=%d)\n",
-                              (vname) ? vname : "?", type, vnode_vtype(vp),
-                              open_count, vnode_isinuse(vp, 0), aux_count);
-                        if (vname) {
-                            vnode_putname(vname);
-                        }
-                    } /* if counts did not match (both=1 for match currently) */
                     OSIncrementAtomic((SInt32 *)&fuse_fh_zombies);
                 } /* !deadfs */
 
