@@ -2436,6 +2436,10 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
 
     fuse_trace_printf_vnop();
 
+    if (fuse_isdeadfs(vp)) {
+        goto out;
+    }
+
     if (!fvdat) {
         panic("fuse4x: no vnode data during recycling");
     }
@@ -2505,13 +2509,14 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
         } /* valid fufh */
     } /* fufh loop */
 
-    if ((!fuse_isdeadfs(vp)) && (fvdat->nlookup)) {
+    if (fvdat->nlookup) {
         struct fuse_dispatcher fdi;
         fdi.ticket = NULL;
         fuse_internal_forget_send(vnode_mount(vp), context, VTOI(vp),
                                   fvdat->nlookup, &fdi);
     }
 
+out:
     fuse_vncache_purge(vp);
 
     fuse_lck_mtx_lock(data->node_mtx);
