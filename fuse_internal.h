@@ -556,7 +556,6 @@ fuse_internal_attr_loadvap(vnode_t vp, struct vnode_attr *out_vap,
     struct vnode_attr *in_vap = VTOVA(vp);
     struct fuse_vnode_data *fvdat = VTOFUD(vp);
     int purged = 0;
-    long hint = 0;
 
     if (in_vap == out_vap) {
         return;
@@ -587,14 +586,10 @@ fuse_internal_attr_loadvap(vnode_t vp, struct vnode_attr *out_vap,
     } else {
         /* The size might have changed remotely. */
         if (fvdat->filesize != (off_t)in_vap->va_data_size) {
-            hint |= NOTE_WRITE;
             /* Remote size overrides what we have. */
             (void)ubc_msync(vp, (off_t)0, fvdat->filesize, NULL,
                             UBC_PUSHALL | UBC_INVALIDATE | UBC_SYNC);
             purged = 1;
-            if (fvdat->filesize > (off_t)in_vap->va_data_size) {
-                hint |= NOTE_EXTEND;
-            }
             fvdat->filesize = in_vap->va_data_size;
             ubc_setsize(vp, fvdat->filesize);
         }
@@ -634,7 +629,6 @@ fuse_internal_attr_loadvap(vnode_t vp, struct vnode_attr *out_vap,
         (fvdat->modify_time.tv_nsec != in_vap->va_modify_time.tv_nsec)) {
         fvdat->modify_time.tv_sec = in_vap->va_modify_time.tv_sec;
         fvdat->modify_time.tv_nsec = in_vap->va_modify_time.tv_nsec;
-        hint |= NOTE_ATTRIB;
         if (fuse_isautocache_mp(mp) && !purged) {
             (void)ubc_msync(vp, (off_t)0, fvdat->filesize, NULL,
                             UBC_PUSHALL | UBC_INVALIDATE | UBC_SYNC);
@@ -645,10 +639,6 @@ fuse_internal_attr_loadvap(vnode_t vp, struct vnode_attr *out_vap,
         (VATTR_IS_ACTIVE(out_vap, va_create_time) &&
          !VATTR_IS_SUPPORTED(out_vap, va_create_time))) {
         (void)fuse_internal_loadxtimes(vp, out_vap, context);
-    }
-
-    if (hint) {
-        FUSE_KNOTE(vp, hint);
     }
 }
 

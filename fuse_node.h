@@ -7,7 +7,6 @@
 
 #include "fuse.h"
 #include "fuse_file.h"
-#include "fuse_knote.h"
 #include "fuse_nodehash.h"
 #include "fuse_kernel.h"
 #include <fuse_param.h>
@@ -95,12 +94,6 @@ struct fuse_vnode_data {
      */
     lck_rw_t  *truncatelock;
 #endif
-
-    /** miscellaneous **/
-
-#ifdef FUSE4X_ENABLE_KQUEUE
-    struct klist c_knotes;
-#endif /* FUSE4X_ENABLE_KQUEUE */
 };
 typedef struct fuse_vnode_data * fusenode_t;
 
