@@ -430,7 +430,6 @@ fuse_blanket_deny(vnode_t vp, vfs_context_t context)
 
 /* access */
 
-#define FACCESS_DO_ACCESS  0x00000002
 #define FACCESS_NOCHECKSPY 0x00000004
 
 struct fuse_access_param {
