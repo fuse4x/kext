@@ -115,10 +115,6 @@ static __inline__
 bool
 fuse_isdeadfs(vnode_t vp)
 {
-    if (VTOFUD(vp)->flag & FN_REVOKED) {
-        return true;
-    }
-
     return fuse_isdeadfs_mp(vnode_mount(vp));
 }
 
@@ -725,13 +721,8 @@ fuse_internal_rename(vnode_t               fdvp,
                      struct componentname *tcnp,
                      vfs_context_t         context);
 
-/* revoke */
-
-int
-fuse_internal_revoke(vnode_t vp, int flags, vfs_context_t context, int how);
-
 void
-fuse_internal_vnode_disappear(vnode_t vp, vfs_context_t context, int how);
+fuse_internal_vnode_disappear(vnode_t vp, vfs_context_t context);
 
 /* strategy */
 
@@ -805,12 +796,6 @@ fuse_internal_forget_send(mount_t                 mp,
 
 void
 fuse_internal_interrupt_send(struct fuse_ticket *ticket);
-
-enum {
-    REVOKE_NONE = 0,
-    REVOKE_SOFT = 1,
-    REVOKE_HARD = 2,
-};
 
 /* fuse start/stop */
 

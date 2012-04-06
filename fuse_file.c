@@ -93,7 +93,7 @@ fuse_filehandle_get(vnode_t       vp,
             struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
             fuse_biglock_unlock(data->biglock);
 #endif
-            fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
+            fuse_internal_vnode_disappear(vp, context);
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif

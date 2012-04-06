@@ -159,7 +159,7 @@ fuse_internal_access(vnode_t                   vp,
 #ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_unlock(data->biglock);
 #endif
-        fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
+        fuse_internal_vnode_disappear(vp, context);
 #ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_lock(data->biglock);
 #endif
@@ -875,24 +875,6 @@ fuse_internal_rename(vnode_t               fdvp,
     return err;
 }
 
-/* revoke */
-
-__private_extern__
-int
-fuse_internal_revoke(vnode_t vp, int flags, vfs_context_t context, int how)
-{
-    int ret = 0;
-    struct fuse_vnode_data *fvdat = VTOFUD(vp);
-
-    fvdat->flag |= FN_REVOKED;
-
-    if (how == REVOKE_HARD) {
-        ret = vn_revoke(vp, flags, context);
-    }
-
-    return ret;
-}
-
 /* strategy */
 
 __private_extern__
@@ -1422,39 +1404,15 @@ fuse_internal_interrupt_send(struct fuse_ticket *ticket)
 
 __private_extern__
 void
-fuse_internal_vnode_disappear(vnode_t vp, vfs_context_t context, int how)
+fuse_internal_vnode_disappear(vnode_t vp, vfs_context_t context)
 {
     int err = 0;
 
     fuse_vncache_purge(vp);
 
-    if (how != REVOKE_NONE) {
-        err = fuse_internal_revoke(vp, REVOKEALL, context, how);
-        if (err) {
-            log("fuse4x: disappearing act: revoke failed (%d)\n", err);
-        }
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-        /* Checking whether the vnode is in the process of being recycled
-         * to avoid the 'vnode reclaim in progress' kernel panic.
-         *
-         * Obviously this is a quick fix done without much understanding of
-         * the code flow of a recycle operation, but it seems that we
-         * shouldn't call this again if a recycle operation was the reason
-         * that we got here.
-         */
-        if(!vnode_isrecycled(vp)) {
-#endif
-            err = vnode_recycle(vp);
-            if (err) {
-                log("fuse4x: disappearing act: recycle failed (%d)\n", err);
-            }
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-        } else {
-                log("fuse4x: Avoided 'vnode reclaim in progress' kernel "
-                        "panic. What now?\n");
-        }
-#endif
+    err = vn_revoke(vp, REVOKEALL, context);
+    if (err) {
+        log("fuse4x: disappearing act: revoke failed (%d)\n", err);
     }
 }
 

@@ -752,7 +752,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(data->biglock);
 #endif
-            fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
+            fuse_internal_vnode_disappear(vp, context);
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif
@@ -812,7 +812,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(data->biglock);
 #endif
-            fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
+            fuse_internal_vnode_disappear(vp, context);
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif
@@ -2731,7 +2731,7 @@ fuse_vnop_revoke(struct vnop_revoke_args *ap)
 
     CHECK_BLANKET_DENIAL(vp, context, ENOENT);
 
-    return fuse_internal_revoke(ap->a_vp, ap->a_flags, ap->a_context, 1);
+    return vn_revoke(ap->a_vp, ap->a_flags, ap->a_context);
 }
 
 /*
@@ -2896,7 +2896,7 @@ fuse_vnop_setattr(struct vnop_setattr_args *ap)
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(data->biglock);
 #endif
-            fuse_internal_vnode_disappear(vp, context, REVOKE_SOFT);
+            fuse_internal_vnode_disappear(vp, context);
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif
