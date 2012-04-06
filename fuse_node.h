@@ -21,9 +21,7 @@ enum {
     kFSNodeBadMagic = 'FU**',
 };
 
-#define FN_ACCESS_NOOP       0x00000001 // todo remove it
 #define FN_DIRECT_IO         0x00000004
-#define FN_HAS_ACL           0x00000008
 
 #define C_NEED_RVNODE_PUT    0x000000001
 #define C_NEED_DVNODE_PUT    0x000000002
