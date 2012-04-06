@@ -108,7 +108,6 @@ fuse_filehandle_get(vnode_t       vp,
     fufh->open_count = 1;
     fufh->open_flags = oflags;
     fufh->fuse_open_flags = foo->open_flags;
-    fufh->aux_count = 0;
 
     fuse_ticket_drop(fdi.ticket);
 
