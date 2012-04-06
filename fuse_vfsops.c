@@ -1065,7 +1065,7 @@ fuse_sync_callback(vnode_t vp, void *cargs)
 
     mp = vnode_mount(vp);
 
-    if (fuse_isdeadfs_mp(mp)) {
+    if (fuse_isdeadfs(vp)) {
         return VNODE_RETURNED_DONE;
     }
 

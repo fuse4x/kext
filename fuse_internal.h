@@ -107,19 +107,13 @@ static __inline__
 bool
 fuse_isdeadfs_mp(mount_t mp)
 {
-    return fuse_get_mpdata(mp)->dead;
+    struct fuse_data *data = fuse_get_mpdata(mp);
+    return !data || data->dead;
 }
 
 static __inline__
 bool
 fuse_isdeadfs(vnode_t vp)
-{
-    return fuse_isdeadfs_mp(vnode_mount(vp));
-}
-
-static __inline__
-bool
-fuse_isdeadfs_fs(vnode_t vp)
 {
     return fuse_isdeadfs_mp(vnode_mount(vp));
 }
