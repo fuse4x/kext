@@ -73,7 +73,6 @@ static int fuse_vnop_reclaim(struct vnop_reclaim_args *ap);
 static int fuse_vnop_remove(struct vnop_remove_args *ap);
 static int fuse_vnop_removexattr(struct vnop_removexattr_args *ap);
 static int fuse_vnop_rename(struct vnop_rename_args *ap);
-static int fuse_vnop_revoke(struct vnop_revoke_args *ap);
 static int fuse_vnop_rmdir(struct vnop_rmdir_args *ap);
 static int fuse_vnop_select(struct vnop_select_args *ap);
 static int fuse_vnop_setattr(struct vnop_setattr_args *ap);
@@ -2629,28 +2628,6 @@ fuse_vnop_rename(struct vnop_rename_args *ap)
 }
 
 /*
- *  struct vnop_revoke_args {
- *      struct vnodeop_desc  *a_desc;
- *      vnode_t               a_vp;
- *      int                   a_flags;
- *      vfs_context_t         a_context;
- *  };
- */
-static
-int
-fuse_vnop_revoke(struct vnop_revoke_args *ap)
-{
-    vnode_t       vp      = ap->a_vp;
-    vfs_context_t context = ap->a_context;
-
-    fuse_trace_printf_vnop();
-
-    CHECK_BLANKET_DENIAL(vp, context, ENOENT);
-
-    return vn_revoke(ap->a_vp, ap->a_flags, ap->a_context);
-}
-
-/*
     struct vnop_rmdir_args {
         struct vnodeop_desc  *a_desc;
         vnode_t               a_dvp;
@@ -3421,7 +3398,7 @@ struct vnodeopv_entry_desc fuse_vnode_operation_entries[] = {
     { &vnop_remove_desc,        (fuse_vnode_op_t) fuse_vnop_remove        },
     { &vnop_removexattr_desc,   (fuse_vnode_op_t) fuse_vnop_removexattr   },
     { &vnop_rename_desc,        (fuse_vnode_op_t) fuse_vnop_rename        },
-    { &vnop_revoke_desc,        (fuse_vnode_op_t) fuse_vnop_revoke        },
+    { &vnop_revoke_desc,        (fuse_vnode_op_t) nop_revoke              },
     { &vnop_rmdir_desc,         (fuse_vnode_op_t) fuse_vnop_rmdir         },
     { &vnop_select_desc,        (fuse_vnode_op_t) fuse_vnop_select        },
     { &vnop_setattr_desc,       (fuse_vnode_op_t) fuse_vnop_setattr       },
