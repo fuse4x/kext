@@ -529,21 +529,6 @@ fuse_biglock_vnop_rename(struct vnop_rename_args *ap)
 }
 
 /*
- *  struct vnop_revoke_args {
- *      struct vnodeop_desc  *a_desc;
- *      vnode_t               a_vp;
- *      int                   a_flags;
- *      vfs_context_t         a_context;
- *  };
- */
-FUSE_VNOP_EXPORT
-int
-fuse_biglock_vnop_revoke(struct vnop_revoke_args *ap)
-{
-	locked_vnop(ap->a_vp, fuse_vnop_revoke, ap);
-}
-
-/*
  struct vnop_rmdir_args {
  struct vnodeop_desc  *a_desc;
  vnode_t               a_dvp;
@@ -725,7 +710,7 @@ struct vnodeopv_entry_desc fuse_biglock_vnode_operation_entries[] = {
     { &vnop_remove_desc,        (fuse_vnode_op_t) fuse_biglock_vnop_remove        },
     { &vnop_removexattr_desc,   (fuse_vnode_op_t) fuse_biglock_vnop_removexattr   },
     { &vnop_rename_desc,        (fuse_vnode_op_t) fuse_biglock_vnop_rename        },
-    { &vnop_revoke_desc,        (fuse_vnode_op_t) fuse_biglock_vnop_revoke        },
+    { &vnop_revoke_desc,        (fuse_vnode_op_t) nop_revoke                      },
     { &vnop_rmdir_desc,         (fuse_vnode_op_t) fuse_biglock_vnop_rmdir         },
     //  { &vnop_searchfs_desc,      (fuse_vnode_op_t) fuse_biglock_vnop_searchfs      },
     { &vnop_select_desc,        (fuse_vnode_op_t) fuse_biglock_vnop_select        },

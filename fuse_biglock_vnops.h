@@ -237,8 +237,6 @@ FUSE_VNOP_EXPORT int fuse_biglock_vnop_removexattr(struct vnop_removexattr_args 
 
 FUSE_VNOP_EXPORT int fuse_biglock_vnop_rename(struct vnop_rename_args *ap);
 
-FUSE_VNOP_EXPORT int fuse_biglock_vnop_revoke(struct vnop_revoke_args *ap);
-
 FUSE_VNOP_EXPORT int fuse_biglock_vnop_rmdir(struct vnop_rmdir_args *ap);
 
 // FUSE_VNOP_EXPORT int fuse_biglock_vnop_searchfs(struct vnop_searchfs_args *ap);
