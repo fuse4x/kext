@@ -2357,35 +2357,8 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
         fufh = &(fvdat->fufh[type]);
         if (FUFH_IS_VALID(fufh)) {
             FUFH_USE_RESET(fufh);
-            if (vfs_isforce(vnode_mount(vp))) {
-                (void)fuse_filehandle_put(vp, context, type);
-            } else {
-
-                /*
-                 * This is not a forced unmount. So why is the vnode being
-                 * reclaimed if a fufh is valid? Well...
-                 *
-                 * One reason is that we are dead.
-                 *
-                 * Another reason is an unmount-time vflush race with ongoing
-                 * vnops. Typically happens for a VDIR here.
-                 *
-                 * More often, the following happened:
-                 *
-                 *     open()
-                 *     mmap()
-                 *     close()
-                 *     pagein... read... strategy
-                 *     done... reclaim
-                 */
-
-                if (!fuse_isdeadfs(vp)) {
-                    OSIncrementAtomic((SInt32 *)&fuse_fh_zombies);
-                } /* !deadfs */
-
-                (void)fuse_filehandle_put(vp, context, type);
-
-            } /* !forced unmount */
+            (void)fuse_filehandle_put(vp, context, type);
+            OSIncrementAtomic((SInt32 *)&fuse_fh_zombies);
         } /* valid fufh */
     } /* fufh loop */
 
