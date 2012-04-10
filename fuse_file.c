@@ -126,8 +126,6 @@ fuse_filehandle_put(vnode_t vp, vfs_context_t context, fufh_type_t fufh_type)
     int isdir = 0;
     int op    = FUSE_RELEASE;
 
-    const bool wait_for_completion = true;
-
     fuse_trace_printf("fuse_filehandle_put(vp=%p, fufh_type=%d)\n",
                       vp, fufh_type);
 
@@ -154,15 +152,9 @@ fuse_filehandle_put(vnode_t vp, vfs_context_t context, fufh_type_t fufh_type)
     fri->fh = fufh->fh_id;
     fri->flags = fufh->open_flags;
 
-    if (wait_for_completion) {
-        if ((err = fuse_dispatcher_wait_answer(&fdi))) {
-            goto out;
-        } else {
-            fuse_ticket_drop(fdi.ticket);
-        }
-    } else {
-        fuse_insert_callback(fdi.ticket, NULL);
-        fuse_insert_message(fdi.ticket);
+    err = fuse_dispatcher_wait_answer(&fdi);
+    if (!err) {
+        fuse_ticket_drop(fdi.ticket);
     }
 
 out:
