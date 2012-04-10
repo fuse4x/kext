@@ -24,6 +24,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AvailabilityMacros.h>
+
+#ifdef MAC_OS_X_VERSION_10_7
+#  include <libkern/tree.h>
+#else
+
 #ifndef	_SYS_TREE_H_
 #define	_SYS_TREE_H_
 
@@ -746,3 +752,4 @@ name##_RB_MINMAX(struct name *head, int val)				\
 	     (x) = (y))
 
 #endif	/* _SYS_TREE_H_ */
+#endif  /* MAC_OS_X_VERSION_10_7 */
