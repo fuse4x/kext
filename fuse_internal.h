@@ -701,8 +701,6 @@ fuse_internal_rename(vnode_t               fdvp,
                      struct componentname *tcnp,
                      vfs_context_t         context);
 
-void
-fuse_internal_vnode_disappear(vnode_t vp, vfs_context_t context);
 
 /* strategy */
 

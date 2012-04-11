@@ -771,7 +771,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
             goto fake;
         }
         if (err == ENOENT) {
-            fuse_internal_vnode_disappear(vp, context);
+            fuse_vncache_purge(vp);
         }
         return err;
     }
@@ -825,7 +825,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
              * revocation.
              */
 
-            fuse_internal_vnode_disappear(vp, context);
+            fuse_vncache_purge(vp);
             return EIO;
         }
     }
@@ -2745,7 +2745,7 @@ fuse_vnop_setattr(struct vnop_setattr_args *ap)
              * revocation and tell the caller to try again, if interested.
              */
 
-            fuse_internal_vnode_disappear(vp, context);
+            fuse_vncache_purge(vp);
 
             err = EAGAIN;
         }

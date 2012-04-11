@@ -85,7 +85,7 @@ fuse_filehandle_get(vnode_t       vp,
             vnode_putname(vname);
         }
         if (err == ENOENT) {
-            fuse_internal_vnode_disappear(vp, context);
+            fuse_vncache_purge(vp);
         }
         return err;
     }
