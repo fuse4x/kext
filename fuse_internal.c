@@ -152,7 +152,7 @@ fuse_internal_access(vnode_t                   vp,
 #ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_unlock(data->biglock);
 #endif
-        fuse_internal_vnode_disappear(vp, context);
+       fuse_vncache_purge(vp); 
 #ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_lock(data->biglock);
 #endif
@@ -1393,13 +1393,6 @@ fuse_internal_interrupt_send(struct fuse_ticket *ticket)
     fii->unique = ticket->unique;
     fdi.ticket->invalid = true;
     fuse_insert_message(fdi.ticket);
-}
-
-__private_extern__
-void
-fuse_internal_vnode_disappear(vnode_t vp, vfs_context_t context)
-{
-    fuse_vncache_purge(vp);
 }
 
 /* fuse start/stop */

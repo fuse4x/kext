@@ -740,7 +740,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(data->biglock);
 #endif
-            fuse_internal_vnode_disappear(vp, context);
+            fuse_vncache_purge(vp); 
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif
@@ -800,7 +800,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(data->biglock);
 #endif
-            fuse_internal_vnode_disappear(vp, context);
+           fuse_vncache_purge(vp); 
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif
@@ -2862,7 +2862,7 @@ fuse_vnop_setattr(struct vnop_setattr_args *ap)
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(data->biglock);
 #endif
-            fuse_internal_vnode_disappear(vp, context);
+            fuse_vncache_purge(vp); 
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif

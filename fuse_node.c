@@ -216,7 +216,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(mntdata->biglock);
 #endif
-            fuse_internal_vnode_disappear(vn, context);
+           fuse_vncache_purge(vn); 
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(mntdata->biglock);
 #endif
@@ -227,7 +227,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_unlock(mntdata->biglock);
 #endif
-            fuse_internal_vnode_disappear(vn, context);
+           fuse_vncache_purge(vn); 
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(mntdata->biglock);
 #endif
