@@ -1372,14 +1372,7 @@ __private_extern__
 void
 fuse_internal_vnode_disappear(vnode_t vp, vfs_context_t context)
 {
-    int err = 0;
-
     fuse_vncache_purge(vp);
-
-    err = vn_revoke(vp, REVOKEALL, context);
-    if (err) {
-        log("fuse4x: disappearing act: revoke failed (%d)\n", err);
-    }
 }
 
 /* fuse start/stop */
