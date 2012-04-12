@@ -655,10 +655,6 @@ fuse_internal_fsync_callback(struct fuse_ticket *ticket, uio_t uio);
 
 /* readdir */
 
-struct pseudo_dirent {
-    uint32_t d_namlen;
-};
-
 int
 fuse_internal_readdir(vnode_t                 vp,
                       uio_t                   uio,
