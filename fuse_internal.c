@@ -698,7 +698,7 @@ fuse_internal_readdir_processdata(vnode_t          vp,
         /* Filter out any ._* files if the mount is configured as such. */
         if (fuse_skip_apple_double_mp(vnode_mount(vp),
                                       fudge->name, fudge->namelen)) {
-            de->d_fileno = 0;
+            de->d_ino = 0;
             de->d_type = DT_WHT;
         }
 
