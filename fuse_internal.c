@@ -674,11 +674,8 @@ fuse_internal_readdir_processdata(vnode_t          vp,
             break;
         }
 
-#define GENERIC_DIRSIZ(dp) \
-  ((sizeof(struct dirent) - (FUSE_MAXNAMLEN + 1)) + \
-   (((dp)->d_namlen + 1 + 3) & ~3))
-
-        bytesavail = GENERIC_DIRSIZ((struct pseudo_dirent *)&fudge->namelen);
+        bytesavail = (sizeof(struct dirent) - (FUSE_MAXNAMLEN + 1)) +
+            ((fudge->namelen + 1 + 3) & ~3);
 
         if (bytesavail > (size_t)uio_resid(uio)) {
             err = -1;
