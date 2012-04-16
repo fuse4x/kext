@@ -525,7 +525,7 @@ fuse_internal_attr_loadvap(vnode_t vp, struct vnode_attr *out_vap,
     mount_t mp = vnode_mount(vp);
     struct vnode_attr *in_vap = VTOVA(vp);
     struct fuse_vnode_data *fvdat = VTOFUD(vp);
-    int purged = 0;
+    bool purged = false;
 
     if (in_vap == out_vap) {
         return;
@@ -559,7 +559,7 @@ fuse_internal_attr_loadvap(vnode_t vp, struct vnode_attr *out_vap,
             /* Remote size overrides what we have. */
             (void)ubc_msync(vp, (off_t)0, fvdat->filesize, NULL,
                             UBC_PUSHALL | UBC_INVALIDATE | UBC_SYNC);
-            purged = 1;
+            purged = true;
             fvdat->filesize = in_vap->va_data_size;
             ubc_setsize(vp, fvdat->filesize);
         }

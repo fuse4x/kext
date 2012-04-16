@@ -720,8 +720,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
     if (!data->inited) {
         if (!vnode_isvroot(vp)) {
             fuse_data_kill(data);
-            err = ENOTCONN;
-            return err;
+            return ENOTCONN;
         } else {
             goto fake;
         }
@@ -773,9 +772,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
          *
          */
 
-        struct fuse_vnode_data *fvdat = VTOFUD(vp);
-        off_t new_filesize = ((struct fuse_attr_out *)fdi.answer)->attr.size;
-        fvdat->filesize = new_filesize;
+        VTOFUD(vp)->filesize = ((struct fuse_attr_out *)fdi.answer)->attr.size;
     }
 
     fuse_ticket_drop(fdi.ticket);
@@ -1737,7 +1734,8 @@ fuse_vnop_open(struct vnop_open_args *ap)
     struct fuse_filehandle *fufh = NULL;
     struct fuse_filehandle *fufh_rw = NULL;
 
-    int error, isdir = 0;
+    int error = 0;
+    bool isdir = false;
 
     fuse_trace_printf_vnop();
 

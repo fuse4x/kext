@@ -471,14 +471,12 @@ fuse_internal_attr_vat2fsai(mount_t                 mp,
 
         if (vp) {
             struct fuse_filehandle *fufh = NULL;
-            fufh_type_t fufh_type = FUFH_WRONLY;
             struct fuse_vnode_data *fvdat = VTOFUD(vp);
 
-            fufh = &(fvdat->fufh[fufh_type]);
+            fufh = &(fvdat->fufh[FUFH_WRONLY]);
 
             if (!FUFH_IS_VALID(fufh)) {
-                fufh_type = FUFH_RDWR;
-                fufh = &(fvdat->fufh[fufh_type]);
+                fufh = &(fvdat->fufh[FUFH_RDWR]);
                 if (!FUFH_IS_VALID(fufh)) {
                     fufh = NULL;
                 }
