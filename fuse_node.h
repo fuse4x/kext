@@ -118,11 +118,6 @@ fuse_invalidate_attr(vnode_t vp)
     }
 }
 
-void fuse_vnode_init(vnode_t vp, struct fuse_vnode_data *fvdat,
-                     uint64_t nodeid, enum vtype vtyp, uint64_t parentid);
-void fuse_vnode_ditch(vnode_t vp, vfs_context_t context);
-void fuse_vnode_teardown(vnode_t vp, vfs_context_t context, enum vtype vtyp);
-
 errno_t
 FSNodeGetOrCreateFileVNodeByID(vnode_t               *vpp,
                                bool                   is_root,
