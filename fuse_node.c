@@ -40,6 +40,7 @@ fuse_vnode_data_destroy(struct fuse_vnode_data *fvdat)
     lck_rw_free(fvdat->truncatelock, fuse_lock_group);
 #endif
 
+    bzero(fvdat, sizeof(*fvdat));
     FUSE_OSFree(fvdat, sizeof(*fvdat), fuse_malloc_tag);
 }
 
@@ -201,6 +202,7 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
             fuse_lck_mtx_lock(mntdata->node_mtx);
             RB_INSERT(fuse_data_nodes, &mntdata->nodes_head, fvdat);
             fuse_lck_mtx_unlock(mntdata->node_mtx);
+            vnode_addfsref(vn);
 
             OSIncrementAtomic((SInt32 *)&fuse_vnodes_current);
         } else {

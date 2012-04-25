@@ -2483,8 +2483,10 @@ out:
     fuse_lck_mtx_lock(data->node_mtx);
     RB_REMOVE(fuse_data_nodes, &data->nodes_head, fvdat);
     fuse_lck_mtx_unlock(data->node_mtx);
+    vnode_removefsref(vp);
 
     fuse_vnode_data_destroy(fvdat);
+    vnode_clearfsnode(vp);
     OSDecrementAtomic((SInt32 *)&fuse_vnodes_current);
 
     return 0;
