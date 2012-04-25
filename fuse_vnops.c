@@ -747,13 +747,14 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
         return err;
     }
 
+    struct fuse_attr_out *attr_out = fdi.answer;
     /* XXX: Could check the sanity/volatility of va_mode here. */
 
-    if ((((struct fuse_attr_out *)fdi.answer)->attr.mode & S_IFMT) == 0) {
+    if ((attr_out->attr.mode & S_IFMT) == 0) {
         return EIO;
     }
 
-    cache_attrs(vp, (struct fuse_attr_out *)fdi.answer);
+    cache_attrs(vp, attr_out);
 
     VTOFUD(vp)->c_flag &= ~C_XTIMES_VALID;
 
@@ -772,7 +773,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
          *
          */
 
-        VTOFUD(vp)->filesize = ((struct fuse_attr_out *)fdi.answer)->attr.size;
+        VTOFUD(vp)->filesize = attr_out->attr.size;
     }
 
     fuse_ticket_drop(fdi.ticket);
