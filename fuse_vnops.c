@@ -8,7 +8,6 @@
 #include "fuse_file.h"
 #include "fuse_internal.h"
 #include "fuse_ipc.h"
-#include "fuse_kludges.h"
 #include "fuse_locking.h"
 #include "fuse_node.h"
 #include <fuse_param.h>

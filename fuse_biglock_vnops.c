@@ -5,7 +5,6 @@
  */
 
 #include "fuse.h"
-#include "fuse_kludges.h"
 #include "fuse_locking.h"
 #include "fuse_node.h"
 #include "fuse_biglock_vnops.h"
