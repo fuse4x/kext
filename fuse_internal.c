@@ -1442,6 +1442,10 @@ fuse_internal_init_callback(struct fuse_ticket *ticket, __unused uio_t uio)
         data->dataflags |= FSESS_XTIMES;
     }
 
+    if (fiio->flags & FUSE_ATOMIC_O_TRUNC) {
+        data->dataflags |= FSESS_ATOMIC_O_TRUNC;
+    }
+
 out:
     fuse_ticket_drop(ticket);
 

@@ -67,6 +67,11 @@ fuse_filehandle_get(vnode_t       vp,
         oflags |= O_SYMLINK;
     }
 
+    struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
+    if ((mode & O_TRUNC) && (data->dataflags & FSESS_ATOMIC_O_TRUNC)) {
+        oflags |= O_TRUNC;
+    }
+
     foi = fdi.indata;
     foi->flags = oflags;
 

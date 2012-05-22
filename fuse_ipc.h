@@ -173,7 +173,8 @@ enum {
     FSESS_XTIMES              = 1 << 19,
     FSESS_AUTO_CACHE          = 1 << 20,
     FSESS_NATIVE_XATTR        = 1 << 21,
-    FSESS_SPARSE              = 1 << 22
+    FSESS_SPARSE              = 1 << 22,
+    FSESS_ATOMIC_O_TRUNC      = 1 << 23
 };
 
 static __inline__
