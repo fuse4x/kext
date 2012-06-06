@@ -254,7 +254,7 @@ again:
     if ((ticket = STAILQ_FIRST(&data->ms_head))) {
         STAILQ_REMOVE_HEAD(&data->ms_head, ms_link);
     } else {
-        if (ioflag & FNONBLOCK) {
+        if (ioflag & IO_NDELAY) {
             fuse_lck_mtx_unlock(data->ms_mtx);
             return EAGAIN;
         }
