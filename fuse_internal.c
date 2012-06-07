@@ -1113,6 +1113,9 @@ fuse_internal_strategy(vnode_t vp, buf_t bp)
 
             fuse_dispatcher_make_vp(&fdi, op, vp, NULL);
             chunksize = min((size_t)left, data->iosize);
+            
+            /* Take the size of the write buffer into account */
+            fdi.finh->len += (typeof(fdi.finh->len))chunksize;
 
             fwi = fdi.indata;
             fwi->fh = fufh->fh_id;
