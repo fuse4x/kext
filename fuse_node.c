@@ -34,7 +34,6 @@ RB_GENERATE(fuse_data_nodes, fuse_vnode_data, nodes_link, fuse_vnode_compare);
 void
 fuse_vnode_data_destroy(struct fuse_vnode_data *fvdat)
 {
-    lck_mtx_free(fvdat->createlock, fuse_lock_group);
 #ifdef FUSE4X_ENABLE_TSLOCKING
     lck_rw_free(fvdat->nodelock, fuse_lock_group);
     lck_rw_free(fvdat->truncatelock, fuse_lock_group);
@@ -151,11 +150,6 @@ FSNodeGetOrCreateFileVNodeByID(vnode_t               *vnPtr,
         fvdat->filesize            = size;
         fvdat->nlookup             = 0;
         fvdat->vtype               = vtyp;
-
-        /* locking */
-        fvdat->createlock = lck_mtx_alloc_init(fuse_lock_group,
-                                                   fuse_lock_attr);
-        fvdat->creator = current_thread();
 #ifdef FUSE4X_ENABLE_TSLOCKING
         fvdat->nodelock = lck_rw_alloc_init(fuse_lock_group,
                                             fuse_lock_attr);

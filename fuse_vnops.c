@@ -1764,69 +1764,6 @@ fuse_vnop_open(struct vnop_open_args *ap)
 
     fufh = &(fvdat->fufh[fufh_type]);
 
-    if (!isdir && (fvdat->flag & FN_CREATING)) {
-
-        fuse_lck_mtx_lock(fvdat->createlock);
-
-        if (fvdat->flag & FN_CREATING) { // check again
-            if (fvdat->creator == current_thread()) {
-
-                /*
-                 * For testing the race condition we want to prevent here,
-                 * try something like the following:
-                 *
-                 *     int dummyctr = 0;
-                 *
-                 *     for (; dummyctr < 2048000000; dummyctr++);
-                 */
-
-                fufh_rw = &(fvdat->fufh[FUFH_RDWR]);
-
-                fufh->open_flags = fufh_rw->open_flags;
-                fufh->fh_id = fufh_rw->fh_id;
-
-                /* Note that fufh_rw can be the same as fufh! Order is key. */
-                fufh_rw->open_count = 0;
-                fufh->open_count = 1;
-
-                /*
-                 * Creator has picked up stashed handle and moved it to the
-                 * fufh_type slot.
-                 */
-
-                fvdat->flag &= ~FN_CREATING;
-
-                fuse_lck_mtx_unlock(fvdat->createlock);
-                fuse_wakeup((caddr_t)fvdat->creator); // wake up all
-                goto ok; /* return 0 */
-            } else {
-
-                /* Contender is going to sleep now. */
-
-                error = fuse_msleep(fvdat->creator, fvdat->createlock,
-                                    PDROP | PINOD | PCATCH, "fuse_open", NULL);
-                /*
-                 * msleep will drop the mutex. since we have PDROP specified,
-                 * it will NOT regrab the mutex when it returns.
-                 */
-
-                /* Contender is awake now. */
-
-                if (error) {
-                    /*
-                     * Since we specified PCATCH above, we'll be woken up in
-                     * case a signal arrives. The value of error could be
-                     * EINTR or ERESTART.
-                     */
-                    return error;
-                }
-            }
-        } else {
-            fuse_lck_mtx_unlock(fvdat->createlock);
-            /* Can proceed from here. */
-        }
-    }
-
     if (FUFH_IS_VALID(fufh)) {
         FUFH_USE_INC(fufh);
         OSIncrementAtomic((SInt32 *)&fuse_fh_reuse_count);

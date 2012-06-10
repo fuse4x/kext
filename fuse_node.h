@@ -21,7 +21,6 @@ enum {
     kFSNodeBadMagic = 'FU**',
 };
 
-#define FN_CREATING          0x00000002
 #define FN_DIRECT_IO         0x00000004
 
 #define C_NEED_RVNODE_PUT    0x000000001
@@ -71,11 +70,6 @@ struct fuse_vnode_data {
     off_t             filesize;
     uint64_t          nlookup;
     enum vtype        vtype;
-
-    /** locking **/
-
-    lck_mtx_t *createlock;
-    void      *creator;
 
 #ifdef FUSE4X_ENABLE_TSLOCKING
     /*
