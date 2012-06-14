@@ -121,33 +121,34 @@ fuse_isdeadfs(vnode_t vp)
 
 static __inline__
 int
-fuse_isdirectio(vnode_t vp)
-{
-    /* Try global first. */
-    if (fuse_get_mpdata(vnode_mount(vp))->dataflags & FSESS_DIRECT_IO) {
-        return 1;
-    }
-
-    return (VTOFUD(vp)->flag & FN_DIRECT_IO);
-}
-
-static __inline__
-int
 fuse_isdirectio_mp(mount_t mp)
 {
     return (fuse_get_mpdata(mp)->dataflags & FSESS_DIRECT_IO);
 }
 
 static __inline__
-int
+bool
+fuse_isdirectio(vnode_t vp)
+{
+    /* Try global first. */
+    if (fuse_isdirectio_mp(vnode_mount(vp))) {
+        return true;
+    }
+
+    return (VTOFUD(vp)->flag & FN_DIRECT_IO);
+}
+
+
+static __inline__
+bool
 fuse_isnoattrcache(vnode_t vp)
 {
     /* Try global first. */
     if (fuse_get_mpdata(vnode_mount(vp))->dataflags & FSESS_NO_ATTRCACHE) {
-        return 1;
+        return true;
     }
 
-    return 0;
+    return false;
 }
 
 static __inline__

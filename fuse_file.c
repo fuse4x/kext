@@ -32,9 +32,7 @@ fuse_filehandle_get(vnode_t       vp,
     struct fuse_filehandle *fufh;
     struct fuse_vnode_data *fvdat = VTOFUD(vp);
 
-    int err    = 0;
-    int oflags = 0;
-    int op     = FUSE_OPEN;
+    int err = 0;
 
     fuse_trace_printf("fuse_filehandle_get(vp=%p, fufh_type=%d, mode=%x)\n",
                       vp, fufh_type, mode);
@@ -47,21 +45,19 @@ fuse_filehandle_get(vnode_t       vp,
         /* NOTREACHED */
     }
 
-    /*
-     * Note that this means we are effectively FILTERING OUT open() flags.
-     */
-    oflags = fuse_filehandle_xlate_to_oflags(fufh_type);
-
-    if (vnode_isdir(vp)) {
-        op = FUSE_OPENDIR;
-        if (fufh_type != FUFH_RDONLY) {
-            log("fuse4x: non-rdonly fufh requested for directory\n");
-            fufh_type = FUFH_RDONLY;
-        }
+    int op = vnode_isdir(vp) ? FUSE_OPENDIR : FUSE_OPEN;
+    if ((op == FUSE_OPENDIR) && (fufh_type != FUFH_RDONLY)) {
+        log("fuse4x: non-rdonly fufh requested for directory\n");
+        fufh_type = FUFH_RDONLY;
     }
 
     fuse_dispatcher_init(&fdi, sizeof(*foi));
     fuse_dispatcher_make_vp(&fdi, op, vp, context);
+
+    /*
+     * Note that this means we are effectively FILTERING OUT open() flags.
+     */
+    int oflags = fuse_filehandle_xlate_to_oflags(fufh_type);
 
     if (vnode_islnk(vp) && (mode & O_SYMLINK)) {
         oflags |= O_SYMLINK;

@@ -938,17 +938,16 @@ fuse_vnop_inactive(struct vnop_inactive_args *ap)
     struct fuse_vnode_data *fvdat = VTOFUD(vp);
     struct fuse_filehandle *fufh = NULL;
 
-    int fufh_type;
-
     fuse_trace_printf_vnop();
 
     /*
      * Cannot do early bail out on a dead file system in this case.
      */
 
-    for (fufh_type = 0; fufh_type < FUFH_MAXTYPE; fufh_type++) {
+    for (int fufh_type = 0; fufh_type < FUFH_MAXTYPE; fufh_type++) {
 
         fufh = &(fvdat->fufh[fufh_type]);
+        //TOTHINK: should we just check that all fuse_fh are zero??
 
         if (FUFH_IS_VALID(fufh)) {
             FUFH_USE_RESET(fufh);
@@ -1213,9 +1212,9 @@ fuse_vnop_lookup(struct vnop_lookup_args *ap)
             break;
 
         case ENOENT: /* negative match */
-             /* fall through */
+            /* fall through */
         default:
-             return err;
+            return err;
         }
     }
 
@@ -1733,10 +1732,6 @@ fuse_vnop_open(struct vnop_open_args *ap)
     fufh_type_t             fufh_type;
     struct fuse_vnode_data *fvdat;
     struct fuse_filehandle *fufh = NULL;
-    struct fuse_filehandle *fufh_rw = NULL;
-
-    int error = 0;
-    bool isdir = false;
 
     fuse_trace_printf_vnop();
 
@@ -1751,17 +1746,7 @@ fuse_vnop_open(struct vnop_open_args *ap)
     CHECK_BLANKET_DENIAL(vp, context, ENOENT);
 
     fvdat = VTOFUD(vp);
-
-    if (vnode_isdir(vp)) {
-        isdir = 1;
-    }
-
-    if (isdir) {
-        fufh_type = FUFH_RDONLY;
-    } else {
-        fufh_type = fuse_filehandle_xlate_from_fflags(mode);
-    }
-
+    fufh_type = vnode_isdir(vp) ? FUFH_RDONLY : fuse_filehandle_xlate_from_fflags(mode);
     fufh = &(fvdat->fufh[fufh_type]);
 
     if (FUFH_IS_VALID(fufh)) {
@@ -1770,7 +1755,7 @@ fuse_vnop_open(struct vnop_open_args *ap)
         goto ok; /* return 0 */
     }
 
-    error = fuse_filehandle_get(vp, context, fufh_type, mode);
+    int error = fuse_filehandle_get(vp, context, fufh_type, mode);
     if (error) {
         log("fuse4x: filehandle_get failed in open (type=%d, err=%d)\n",
               fufh_type, error);
@@ -1786,7 +1771,7 @@ ok:
      * no-cache and no-readahead are cleared by the kernel.
      */
 
-    if ((fufh->fuse_open_flags & FOPEN_DIRECT_IO) || (fuse_isdirectio(vp))) {
+    if ((fufh->fuse_open_flags & FOPEN_DIRECT_IO) || fuse_isdirectio(vp)) {
         /*
          * direct_io for a vnode implies:
          * - no ubc for the vnode
@@ -1806,7 +1791,6 @@ ok:
                   UBC_PUSHALL | UBC_INVALIDATE);
         fufh->fuse_open_flags &= ~FOPEN_PURGE_UBC;
         if (fufh->fuse_open_flags & FOPEN_PURGE_ATTR) {
-            int serr = 0;
             struct fuse_dispatcher fdi;
             fuse_invalidate_attr(vp);
 
@@ -1814,7 +1798,7 @@ ok:
             fuse_dispatcher_make_vp(&fdi, FUSE_GETATTR, vp, context);
             bzero(fdi.indata, sizeof(struct fuse_getattr_in));
 
-            serr = fuse_dispatcher_wait_answer(&fdi);
+            int serr = fuse_dispatcher_wait_answer(&fdi);
             if (!serr) {
                 /* XXX: Could check the sanity/volatility of va_mode here. */
                 if ((((struct fuse_attr_out*)fdi.answer)->attr.mode & S_IFMT)) {
@@ -2051,12 +2035,6 @@ fuse_vnop_read(struct vnop_read_args *ap)
     int           ioflag  = ap->a_ioflag;
     vfs_context_t context = ap->a_context;
 
-    struct fuse_vnode_data *fvdat;
-    struct fuse_data       *data;
-
-    off_t orig_resid;
-    off_t orig_offset;
-
     int err = EIO;
 
     /*
@@ -2073,19 +2051,11 @@ fuse_vnop_read(struct vnop_read_args *ap)
     fuse_trace_printf_vnop();
 
     if (fuse_isdeadfs(vp)) {
-        if (!vnode_ischr(vp)) {
-            return ENXIO;
-        } else {
-            return 0;
-        }
+        return vnode_ischr(vp) ? 0 : ENXIO;
     }
 
     if (!vnode_isreg(vp)) {
-        if (vnode_isdir(vp)) {
-            return EISDIR;
-        } else {
-            return EPERM;
-        }
+        return vnode_isdir(vp) ? EISDIR : EPERM;
     }
 
     /*
@@ -2094,27 +2064,26 @@ fuse_vnop_read(struct vnop_read_args *ap)
      * }
      */
 
-    orig_resid = uio_resid(uio);
+    off_t orig_resid = uio_resid(uio);
     if (orig_resid == 0) {
         return 0;
     }
 
-    orig_offset = uio_offset(uio);
+    off_t orig_offset = uio_offset(uio);
     if (orig_offset < 0) {
         return EINVAL;
     }
 
-    fvdat = VTOFUD(vp);
+    struct fuse_vnode_data *fvdat = VTOFUD(vp);
     if (!fvdat) {
         return EINVAL;
     }
 
     /* Protect against size change here. */
 
-    data = fuse_get_mpdata(vnode_mount(vp));
+    struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
 
     if (!fuse_isdirectio(vp)) {
-        int res;
         if (fuse_isnoubc(vp)) {
             /* In case we get here through a short cut (e.g. no open). */
             ioflag |= IO_NOCACHE;
@@ -2122,7 +2091,7 @@ fuse_vnop_read(struct vnop_read_args *ap)
 #ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_unlock(data->biglock);
 #endif
-        res = cluster_read(vp, uio, fvdat->filesize, ioflag);
+        int res = cluster_read(vp, uio, fvdat->filesize, ioflag);
 #ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_lock(data->biglock);
 #endif
@@ -2211,7 +2180,6 @@ fuse_vnop_readdir(struct vnop_readdir_args *ap)
     vnode_t        vp           = ap->a_vp;
     uio_t          uio          = ap->a_uio;
     int            flags        = ap->a_flags;
-    __unused int  *eofflagPtr   = ap->a_eofflag;
     int           *numdirentPtr = ap->a_numdirent;
     vfs_context_t  context      = ap->a_context;
 
@@ -2220,7 +2188,7 @@ fuse_vnop_readdir(struct vnop_readdir_args *ap)
     struct fuse_iov         cookediov;
 
     int err = 0;
-    int freefufh = 0;
+    bool freefufh = false;
 
     fuse_trace_printf_vnop();
 
@@ -2254,7 +2222,7 @@ fuse_vnop_readdir(struct vnop_readdir_args *ap)
             log("fuse4x: filehandle_get failed in readdir (err=%d)\n", err);
             return err;
         }
-        freefufh = 1;
+        freefufh = true;
     } else {
         OSIncrementAtomic((SInt32 *)&fuse_fh_reuse_count);
     }
@@ -2356,8 +2324,6 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
     struct fuse_filehandle *fufh = NULL;
     struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
 
-    int type;
-
     fuse_trace_printf_vnop();
 
     if (fuse_isdeadfs(vp)) {
@@ -2372,7 +2338,7 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
      * Cannot do early bail out on a dead file system in this case.
      */
 
-    for (type = 0; type < FUFH_MAXTYPE; type++) {
+    for (int type = 0; type < FUFH_MAXTYPE; type++) {
         fufh = &(fvdat->fufh[type]);
         if (FUFH_IS_VALID(fufh)) {
             FUFH_USE_RESET(fufh);
