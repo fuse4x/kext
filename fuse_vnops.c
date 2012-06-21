@@ -1145,7 +1145,6 @@ fuse_vnop_lookup(struct vnop_lookup_args *ap)
     fuse_trace_printf_vnop_novp();
 
     if (fuse_isdeadfs(dvp)) {
-        *ap->a_vpp = NULLVP;
         return ENXIO;
     }
 
