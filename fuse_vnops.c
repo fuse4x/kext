@@ -1184,6 +1184,10 @@ fuse_vnop_lookup(struct vnop_lookup_args *ap)
         fuse_dispatcher_init(&fdi, sizeof(struct fuse_getattr_in));
         op = FUSE_GETATTR;
         goto calldaemon;
+    } else if (fuse_isnovncache_mp(mp)) {
+        /* pretend it's a vncache miss */
+        OSIncrementAtomic((SInt32 *)&fuse_lookup_cache_overrides);
+        err = 0;
     } else {
 #ifdef FUSE4X_ENABLE_BIGLOCK
         struct fuse_data *data = fuse_get_mpdata(mp);
@@ -1196,14 +1200,6 @@ fuse_vnop_lookup(struct vnop_lookup_args *ap)
         switch (err) {
 
         case -1: /* positive match */
-            if (fuse_isnovncache(*vpp)) {
-                fuse_vncache_purge(*vpp);
-                vnode_put(*vpp);
-                *vpp = NULL;
-                OSIncrementAtomic((SInt32 *)&fuse_lookup_cache_overrides);
-                err = 0;
-                break; /* pretend it's a miss */
-            }
             OSIncrementAtomic((SInt32 *)&fuse_lookup_cache_hits);
             return 0;
 
