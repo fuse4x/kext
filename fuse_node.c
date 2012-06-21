@@ -261,7 +261,7 @@ fuse_vget_i(vnode_t               *vpp,
         return err;
     }
 
-    if (!fuse_isnovncache_mp(mp) && (cnp->cn_flags & MAKEENTRY)) {
+    if (cnp->cn_flags & MAKEENTRY) {
         fuse_vncache_enter(dvp, *vpp, cnp);
     }
 
