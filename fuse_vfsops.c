@@ -293,13 +293,6 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         mntopts |= FSESS_NO_VNCACHE;
     }
 
-    if (fusefs_args.altflags & FUSE_MOPT_NEGATIVE_VNCACHE) {
-        if (mntopts & FSESS_NO_VNCACHE) {
-            return EINVAL;
-        }
-        mntopts |= FSESS_NEGATIVE_VNCACHE;
-    }
-
     if (fusefs_args.altflags & FUSE_MOPT_NO_SYNCWRITES) {
 
         /* Cannot mix 'nosyncwrites' with 'noubc' or 'noreadahead'. */

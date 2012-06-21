@@ -1277,10 +1277,8 @@ calldaemon:
             goto out;
         }
 
-        if (fuse_isnegativevncache_mp(mp)) {
-            if ((cnp->cn_flags & MAKEENTRY) && (nameiop != CREATE)) {
-                fuse_vncache_enter(dvp, NULLVP, cnp);
-            }
+        if ((cnp->cn_flags & MAKEENTRY) && (nameiop != CREATE)) {
+            fuse_vncache_enter(dvp, NULLVP, cnp);
         }
 
         err = ENOENT;

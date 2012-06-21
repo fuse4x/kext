@@ -159,7 +159,6 @@ enum {
     FSESS_DIRECT_IO           = 1 << 5,
     FSESS_EXTENDED_SECURITY   = 1 << 6,
     FSESS_JAIL_SYMLINKS       = 1 << 7,
-    FSESS_NEGATIVE_VNCACHE    = 1 << 8,
     FSESS_NO_APPLEDOUBLE      = 1 << 9,
     FSESS_NO_APPLEXATTR       = 1 << 10,
     FSESS_NO_ATTRCACHE        = 1 << 11,
