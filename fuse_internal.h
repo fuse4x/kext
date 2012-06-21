@@ -242,23 +242,23 @@ fuse_isnegativevncache_mp(mount_t mp)
 }
 
 static __inline__
-int
-fuse_isnovncache(vnode_t vp)
+bool
+fuse_isnovncache_mp(mount_t mp)
 {
     /* Try global first. */
-    if (fuse_get_mpdata(vnode_mount(vp))->dataflags & FSESS_NO_VNCACHE) {
-        return 1;
+    if (fuse_get_mpdata(mp)->dataflags & FSESS_NO_VNCACHE) {
+        return true;
     }
 
     /* In our model, direct_io implies no vncache for this vnode. */
-    return fuse_isdirectio(vp);
+    return fuse_isdirectio_mp(mp);
 }
 
 static __inline__
-int
-fuse_isnovncache_mp(mount_t mp)
+bool
+fuse_isnovncache(vnode_t vp)
 {
-    return (fuse_get_mpdata(mp)->dataflags & FSESS_NO_VNCACHE);
+    return fuse_isnovncache_mp(vnode_mount(vp));
 }
 
 static __inline__
