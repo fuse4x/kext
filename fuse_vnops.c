@@ -761,7 +761,7 @@ fuse_vnop_getattr(struct vnop_getattr_args *ap)
     fuse_internal_attr_loadvap(vp, vap, context);
 
     /* ATTR_FUDGE_CASE */
-    if (vnode_isreg(vp) && fuse_isnoubc(vp)) {
+    if (vnode_isreg(vp) && fuse_isdirectio(vp)) {
         /*
          * This is for those cases when the file size changed without us
          * knowing, and we want to catch up.
@@ -1359,7 +1359,7 @@ calldaemon:
         if (op == FUSE_GETATTR) {
 
             /* ATTR_FUDGE_CASE */
-            if (vnode_isreg(*vpp) && fuse_isnoubc(vp)) {
+            if (vnode_isreg(*vpp) && fuse_isdirectio(vp)) {
                 VTOFUD(*vpp)->filesize =
                     ((struct fuse_attr_out *)fdi.answer)->attr.size;
             }
@@ -1368,7 +1368,7 @@ calldaemon:
         } else {
 
             /* ATTR_FUDGE_CASE */
-            if (vnode_isreg(*vpp) && fuse_isnoubc(vp)) {
+            if (vnode_isreg(*vpp) && fuse_isdirectio(vp)) {
                 VTOFUD(*vpp)->filesize =
                     ((struct fuse_entry_out *)fdi.answer)->attr.size;
             }
@@ -1811,7 +1811,7 @@ ok:
         vnode_setnoreadahead(vp);
     }
 
-    if (fuse_isnoubc(vp)) {
+    if (fuse_isdirectio(vp)) {
         vnode_setnocache(vp);
     }
 
@@ -2077,10 +2077,6 @@ fuse_vnop_read(struct vnop_read_args *ap)
     struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
 
     if (!fuse_isdirectio(vp)) {
-        if (fuse_isnoubc(vp)) {
-            /* In case we get here through a short cut (e.g. no open). */
-            ioflag |= IO_NOCACHE;
-        }
 #ifdef FUSE4X_ENABLE_BIGLOCK
         fuse_biglock_unlock(data->biglock);
 #endif
@@ -3203,9 +3199,7 @@ fuse_vnop_write(struct vnop_write_args *ap)
 
     lflag = (ioflag & (IO_SYNC | IO_NOCACHE));
 
-    if (fuse_isnoubc(vp)) {
-        lflag |= (IO_SYNC | IO_NOCACHE);
-    } else if (vfs_issynchronous(vnode_mount(vp))) {
+    if (vfs_issynchronous(vnode_mount(vp))) {
         lflag |= IO_SYNC;
     }
 

@@ -285,8 +285,8 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         mntopts |= FSESS_NO_READAHEAD;
     }
 
-    if (fusefs_args.altflags & (FUSE_MOPT_NO_UBC | FUSE_MOPT_DIRECT_IO)) {
-        mntopts |= FSESS_NO_UBC;
+    if (fusefs_args.altflags & FUSE_MOPT_DIRECT_IO) {
+        mntopts |= FSESS_DIRECT_IO;
     }
 
     if (fusefs_args.altflags & FUSE_MOPT_NO_VNCACHE) {
@@ -296,8 +296,8 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
     if (fusefs_args.altflags & FUSE_MOPT_NO_SYNCWRITES) {
 
         /* Cannot mix 'nosyncwrites' with 'noubc' or 'noreadahead'. */
-        if (mntopts & (FSESS_NO_READAHEAD | FSESS_NO_UBC)) {
-            log("fuse4x: cannot mix 'nosyncwrites' with 'noubc' or 'noreadahead'\n");
+        if (mntopts & (FSESS_NO_READAHEAD | FSESS_DIRECT_IO)) {
+            log("fuse4x: cannot mix 'nosyncwrites' with 'direct_io' or 'noreadahead'\n");
             return EINVAL;
         }
 
@@ -315,7 +315,7 @@ fuse_vfsop_mount(mount_t mp, __unused vnode_t devvp, user_addr_t udata,
         vfs_setflags(mp, MNT_SYNCHRONOUS);
     }
 
-    if (mntopts & FSESS_NO_UBC) {
+    if (mntopts & FSESS_DIRECT_IO) {
         /* If no buffer cache, disallow exec from file system. */
         vfs_setflags(mp, MNT_NOEXEC);
     }

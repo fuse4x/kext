@@ -165,7 +165,6 @@ enum {
     FSESS_NO_READAHEAD        = 1 << 12,
     FSESS_NO_SYNCONCLOSE      = 1 << 13,
     FSESS_NO_SYNCWRITES       = 1 << 14,
-    FSESS_NO_UBC              = 1 << 15,
     FSESS_NO_VNCACHE          = 1 << 16,
     FSESS_CASE_INSENSITIVE    = 1 << 17,
     FSESS_VOL_RENAME          = 1 << 18,

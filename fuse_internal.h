@@ -215,26 +215,6 @@ fuse_clearnosyncwrites_mp(mount_t mp)
 }
 
 static __inline__
-int
-fuse_isnoubc(vnode_t vp)
-{
-    /* Try global first. */
-    if (fuse_get_mpdata(vnode_mount(vp))->dataflags & FSESS_NO_UBC) {
-        return 1;
-    }
-
-    /* In our model, direct_io implies no UBC. */
-    return fuse_isdirectio(vp);
-}
-
-static __inline__
-int
-fuse_isnoubc_mp(mount_t mp)
-{
-    return (fuse_get_mpdata(mp)->dataflags & FSESS_NO_UBC);
-}
-
-static __inline__
 bool
 fuse_isnovncache_mp(mount_t mp)
 {
