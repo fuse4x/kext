@@ -1811,10 +1811,6 @@ ok:
         vnode_setnoreadahead(vp);
     }
 
-    if (fuse_isdirectio(vp)) {
-        vnode_setnocache(vp);
-    }
-
 out:
     return 0;
 }
@@ -2028,8 +2024,6 @@ fuse_vnop_read(struct vnop_read_args *ap)
     int           ioflag  = ap->a_ioflag;
     vfs_context_t context = ap->a_context;
 
-    int err = EIO;
-
     /*
      * XXX: Locking
      *
@@ -2076,23 +2070,12 @@ fuse_vnop_read(struct vnop_read_args *ap)
 
     struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
 
-    if (!fuse_isdirectio(vp)) {
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_unlock(data->biglock);
-#endif
-        int res = cluster_read(vp, uio, fvdat->filesize, ioflag);
-#ifdef FUSE4X_ENABLE_BIGLOCK
-        fuse_biglock_lock(data->biglock);
-#endif
-        return res;
-    }
-
-    /* direct_io */
-    {
+    if (fuse_isdirectio(vp)) {
         fufh_type_t             fufh_type = FUFH_RDONLY;
         struct fuse_dispatcher  fdi;
         struct fuse_filehandle *fufh = NULL;
         struct fuse_read_in    *fri = NULL;
+        int err = 0;
 
         fufh = &(fvdat->fufh[fufh_type]);
 
@@ -2116,6 +2099,7 @@ fuse_vnop_read(struct vnop_read_args *ap)
         fuse_dispatcher_init(&fdi, 0);
 
         while (uio_resid(uio) > 0) {
+
             fdi.iosize = sizeof(*fri);
             fuse_dispatcher_make_vp(&fdi, FUSE_READ, vp, context);
             fri = fdi.indata;
@@ -2134,21 +2118,25 @@ fuse_vnop_read(struct vnop_read_args *ap)
 #ifdef FUSE4X_ENABLE_BIGLOCK
             fuse_biglock_lock(data->biglock);
 #endif
-            if (err) {
-                break;
-            }
-
-            if (fdi.iosize < fri->size) {
-                err = -1;
+            if (err || fdi.iosize < fri->size) {
                 break;
             }
         }
-
         fuse_ticket_drop(fdi.ticket);
 
-    } /* direct_io */
+        return err;
 
-    return ((err == -1) ? 0 : err);
+    } else {  /* direct_io */
+#ifdef FUSE4X_ENABLE_BIGLOCK
+        fuse_biglock_unlock(data->biglock);
+#endif
+        int res = cluster_read(vp, uio, fvdat->filesize, ioflag);
+#ifdef FUSE4X_ENABLE_BIGLOCK
+        fuse_biglock_lock(data->biglock);
+#endif
+        return res;
+
+    }
 }
 
 /*
@@ -3039,8 +3027,6 @@ fuse_vnop_write(struct vnop_write_args *ap)
     off_t        original_size;
     user_ssize_t original_resid;
 
-    struct fuse_vnode_data *fvdat;
-
     /*
      * XXX: Locking
      *
@@ -3072,7 +3058,7 @@ fuse_vnop_write(struct vnop_write_args *ap)
         return ENXIO;
     }
 
-    fvdat = VTOFUD(vp);
+    struct fuse_vnode_data *fvdat = VTOFUD(vp);
 
     switch (vnode_vtype(vp)) {
     case VREG:
@@ -3097,7 +3083,7 @@ fuse_vnop_write(struct vnop_write_args *ap)
         return EINVAL;
     }
 
-    if (fuse_isdirectio(vp)) { /* direct_io */
+    if (fuse_isdirectio(vp)) {
         fufh_type_t             fufh_type = FUFH_WRONLY;
         struct fuse_dispatcher  fdi;
         struct fuse_filehandle *fufh = NULL;
@@ -3170,109 +3156,102 @@ fuse_vnop_write(struct vnop_write_args *ap)
 
         return error;
 
-    } /* direct_io */
+    } else { /* !direct_io */
 
-    /* !direct_io */
+        /* Be wary of a size change here. */
 
-    /* Be wary of a size change here. */
+        original_size = fvdat->filesize;
 
-    original_size = fvdat->filesize;
+        if (ioflag & IO_APPEND) {
+            /* Arrange for append */
+            uio_setoffset(uio, fvdat->filesize);
+            offset = fvdat->filesize;
+        }
 
-    if (ioflag & IO_APPEND) {
-        /* Arrange for append */
-        uio_setoffset(uio, fvdat->filesize);
-        offset = fvdat->filesize;
-    }
+        if (offset < 0) {
+            return EFBIG;
+        }
 
-    if (offset < 0) {
-        return EFBIG;
-    }
+        if (offset + original_resid > original_size) {
+            /* Need to extend the file. */
+            filesize = offset + original_resid;
+            fvdat->filesize = filesize;
+        } else {
+            /* Original size OK. */
+            filesize = original_size;
+        }
 
-    if (offset + original_resid > original_size) {
-        /* Need to extend the file. */
-        filesize = offset + original_resid;
-        fvdat->filesize = filesize;
-    } else {
-        /* Original size OK. */
-        filesize = original_size;
-    }
+        lflag = (ioflag & (IO_SYNC | IO_NOCACHE));
 
-    lflag = (ioflag & (IO_SYNC | IO_NOCACHE));
+        if (vfs_issynchronous(vnode_mount(vp))) {
+            lflag |= IO_SYNC;
+        }
 
-    if (vfs_issynchronous(vnode_mount(vp))) {
-        lflag |= IO_SYNC;
-    }
-
-    if (offset > original_size) {
-        zero_off = original_size;
-        lflag |= IO_HEADZEROFILL;
-        /* Zero-filling enabled. */
-    } else {
-        zero_off = 0;
-    }
+        if (offset > original_size) {
+            zero_off = original_size;
+            lflag |= IO_HEADZEROFILL;
+            /* Zero-filling enabled. */
+        } else {
+            zero_off = 0;
+        }
 
 #ifdef FUSE4X_ENABLE_BIGLOCK
-    struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
-    fuse_biglock_unlock(data->biglock);
+        struct fuse_data *data = fuse_get_mpdata(vnode_mount(vp));
+        fuse_biglock_unlock(data->biglock);
 #endif
-    error = cluster_write(vp, uio, (off_t)original_size, (off_t)filesize,
+        error = cluster_write(vp, uio, (off_t)original_size, (off_t)filesize,
                           (off_t)zero_off, (off_t)0, lflag);
 #ifdef FUSE4X_ENABLE_BIGLOCK
-    fuse_biglock_lock(data->biglock);
+        fuse_biglock_lock(data->biglock);
 #endif
 
-    if (!error) {
-        if (uio_offset(uio) > original_size) {
-            /* Updating to new size. */
-            fvdat->filesize = uio_offset(uio);
-            ubc_setsize(vp, (off_t)fvdat->filesize);
-        } else {
-            fvdat->filesize = original_size;
+        if (!error) {
+            if (uio_offset(uio) > original_size) {
+                /* Updating to new size. */
+                fvdat->filesize = uio_offset(uio);
+                ubc_setsize(vp, (off_t)fvdat->filesize);
+            } else {
+                fvdat->filesize = original_size;
+            }
+            fuse_invalidate_attr(vp);
         }
-        fuse_invalidate_attr(vp);
-    }
 
-    /*
-     * If original_resid > uio_resid(uio), we could set an internal
-     * flag bit to "update" (e.g., dep->de_flag |= DE_UPDATE).
-     */
+        /*
+         * If original_resid > uio_resid(uio), we could set an internal
+         * flag bit to "update" (e.g., dep->de_flag |= DE_UPDATE).
+         */
 
-    /*
-     * If the write failed and they want us to, truncate the file back
-     * to the size it was before the write was attempted.
-     */
+        /*
+         * If the write failed and they want us to, truncate the file back
+         * to the size it was before the write was attempted.
+         */
 
-/* errexit: */
-
-    if (error) {
-        if (ioflag & IO_UNIT) {
-            /*
-             * e.g.: detrunc(dep, original_size, ioflag & IO_SYNC, context);
-             */
-            uio_setoffset(uio, original_offset);
-            uio_setresid(uio, original_resid);
-        } else {
-            /*
-             * e.g.: detrunc(dep, dep->de_FileSize, ioflag & IO_SYNC, context);
-             */
-            if (uio_resid(uio) != original_resid) {
-                error = 0;
+        if (error) {
+            if (ioflag & IO_UNIT) {
+                /*
+                 * e.g.: detrunc(dep, original_size, ioflag & IO_SYNC, context);
+                 */
+                uio_setoffset(uio, original_offset);
+                uio_setresid(uio, original_resid);
+            } else {
+                /*
+                 * e.g.: detrunc(dep, dep->de_FileSize, ioflag & IO_SYNC, context);
+                 */
+                if (uio_resid(uio) != original_resid) {
+                    error = 0;
+                }
             }
         }
-    } else if (ioflag & IO_SYNC) {
-        /*
-         * e.g.: error = deupdat(dep, 1, context);
-         */
-    }
 
-    /*
-    if ((original_resid > uio_resid(uio)) &&
-        !fuse_vfs_context_issuser(context)) {
-        // clear setuid/setgid here
-    }
-     */
+        /*
+         if ((original_resid > uio_resid(uio)) &&
+         !fuse_vfs_context_issuser(context)) {
+            // clear setuid/setgid here
+         }
+         */
 
     return error;
+    }
 }
 
 /*
