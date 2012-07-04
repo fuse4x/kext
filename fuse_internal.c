@@ -211,10 +211,8 @@ fuse_internal_exchange(vnode_t       fvp,
         if (fdvp) {
             fuse_invalidate_attr(fdvp);
         }
-        if (tdvp != fdvp) {
-            if (tdvp) {
-                fuse_invalidate_attr(tdvp);
-            }
+        if (tdvp && (tdvp != fdvp)) {
+            fuse_invalidate_attr(tdvp);
         }
 
         fuse_invalidate_attr(fvp);
