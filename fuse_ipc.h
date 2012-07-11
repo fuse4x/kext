@@ -111,7 +111,6 @@ struct fuse_data {
     bool                       opened: 1;
     bool                       mounted: 1;
     bool                       inited: 1;
-    bool                       destroyed: 1;
     bool                       dead: 1;
 
     lck_mtx_t                 *ms_mtx;

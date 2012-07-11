@@ -242,13 +242,11 @@ fuse_ticket_wait_answer(struct fuse_ticket *ticket)
         goto out;
     }
 
-    if (data->dead || data->destroyed) {
+    if (data->dead) {
         err = ENOTCONN;
         ticket->answered = true;
         goto out;
     }
-    if (fuse_ticket_opcode(ticket) == FUSE_DESTROY)
-        data->destroyed = true;
 
 #ifdef FUSE4X_ENABLE_BIGLOCK
     // release biglock before going to sleep:
@@ -378,7 +376,6 @@ fuse_data_alloc(struct proc *p)
     data->opened        = false;
     data->mounted       = false;
     data->inited        = false;
-    data->destroyed     = false;
     data->dead          = false;
 
     data->ms_mtx        = lck_mtx_alloc_init(fuse_lock_group, fuse_lock_attr);
@@ -603,7 +600,7 @@ fuse_insert_callback(struct fuse_ticket *ticket, fuse_callback_t *callback)
 {
     struct fuse_data *data = ticket->data;
 
-    if (data->dead || data->destroyed) {
+    if (data->dead) {
         return;
     }
 
@@ -625,7 +622,7 @@ fuse_insert_message(struct fuse_ticket *ticket)
 
     ticket->dirty = true;
 
-    if (data->dead || data->destroyed) {
+    if (data->dead) {
         return;
     }
 
