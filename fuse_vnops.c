@@ -2326,7 +2326,7 @@ fuse_vnop_reclaim(struct vnop_reclaim_args *ap)
                  *
                  * One reason is that we are dead.
                  *
-                 * Another reason is an unmount-time vlush race with ongoing
+                 * Another reason is an unmount-time vflush race with ongoing
                  * vnops. Typically happens for a VDIR here.
                  *
                  * More often, the following happened:
