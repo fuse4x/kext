@@ -446,14 +446,12 @@ bringup:
     dispatcher->answer = gone_good_old ? NULL : feo + 1;
 
     if (!gone_good_old) {
-
-        uint64_t x_fh_id = ((struct fuse_open_out *)(feo + 1))->fh;
-        uint32_t x_open_flags = ((struct fuse_open_out *)(feo + 1))->open_flags;
+        struct fuse_open_out *foo = (struct fuse_open_out *)(feo + 1);
         struct fuse_vnode_data *fvdat = VTOFUD(*vpp);
         struct fuse_filehandle *fufh = &(fvdat->fufh[FUFH_RDWR]);
 
-        fufh->fh_id = x_fh_id;
-        fufh->open_flags = x_open_flags;
+        fufh->fh_id = foo->fh;
+        fufh->open_flags = foo->open_flags;
 
         /*
          * We're stashing this to be picked up by open. Meanwhile, we set
