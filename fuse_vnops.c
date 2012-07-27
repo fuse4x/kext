@@ -2163,7 +2163,6 @@ fuse_vnop_readdir(struct vnop_readdir_args *ap)
     struct fuse_iov         cookediov;
 
     int err = 0;
-    bool freefufh = false;
 
     fuse_trace_printf_vnop();
 
@@ -2191,15 +2190,15 @@ fuse_vnop_readdir(struct vnop_readdir_args *ap)
 
     fufh = &(fvdat->fufh[FUFH_RDONLY]);
 
-    if (!FUFH_IS_VALID(fufh)) {
+    if (FUFH_IS_VALID(fufh)) {
+        FUFH_USE_INC(fufh);
+        OSIncrementAtomic((SInt32 *)&fuse_fh_reuse_count);
+    } else {
         err = fuse_filehandle_get(vp, context, FUFH_RDONLY, 0 /* mode */);
         if (err) {
             log("fuse4x: filehandle_get failed in readdir (err=%d)\n", err);
             return err;
         }
-        freefufh = true;
-    } else {
-        OSIncrementAtomic((SInt32 *)&fuse_fh_reuse_count);
     }
 
     size_t dircookedsize = FUSE_DIRENT_ALIGN(FUSE_NAME_OFFSET + MAXNAMLEN + 1);
@@ -2210,8 +2209,8 @@ fuse_vnop_readdir(struct vnop_readdir_args *ap)
 
     fiov_teardown(&cookediov);
 
-    if (freefufh) {
-        FUFH_USE_DEC(fufh);
+    FUFH_USE_DEC(fufh);
+    if (!FUFH_IS_VALID(fufh)) {
         (void)fuse_filehandle_put(vp, context, FUFH_RDONLY);
     }
 
